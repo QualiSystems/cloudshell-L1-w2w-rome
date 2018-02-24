@@ -1,0 +1,2 @@
+cloudshell-core==2.2.176
+cloudshell-l1-networking-core>=1.0,<1.1
