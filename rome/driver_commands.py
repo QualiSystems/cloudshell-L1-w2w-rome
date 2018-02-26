@@ -5,8 +5,8 @@ import time
 
 from cloudshell.layer_one.core.driver_commands_interface import DriverCommandsInterface
 from cloudshell.layer_one.core.helper.runtime_configuration import RuntimeConfiguration
-from cloudshell.layer_one.core.response.response_info import GetStateIdResponseInfo, ResourceDescriptionResponseInfo, \
-    AttributeValueResponseInfo
+from cloudshell.layer_one.core.response.response_info import GetStateIdResponseInfo, AttributeValueResponseInfo, \
+    ResourceDescriptionResponseInfo
 from rome.cli.rome_cli_handler import RomeCliHandler
 from rome.command_actions.autoload_actions import AutoloadActions
 from rome.command_actions.mapping_actions import MappingActions
@@ -171,14 +171,15 @@ class DriverCommands(DriverCommandsInterface):
 
             return ResourceDescriptionResponseInfo([chassis])
         """
-        # with self._cli_handler.default_mode_service() as session:
-        #     autoload_actions = AutoloadActions(session, self._logger)
-        #     board_table = autoload_actions.board_table()
-        #     ports_table = autoload_actions.ports_table()
-        # autoload_helper = AutoloadHelper(address, board_table, ports_table, self._logger)
-        # response_info = ResourceDescriptionResponseInfo(autoload_helper.build_structure())
-        # return response_info
-        return self._ports_association_table
+        with self._cli_handler.default_mode_service() as session:
+            autoload_actions = AutoloadActions(session, self._logger)
+            connection_table = autoload_actions.connection_table()
+            system_actions = SystemActions(session, self._logger)
+            board_table = system_actions
+        autoload_helper = AutoloadHelper(address, board_table, self._ports_association_table, connection_table,
+                                         self._logger)
+        response_info = ResourceDescriptionResponseInfo(autoload_helper.build_structure())
+        return response_info
 
     @staticmethod
     def _convert_port(cs_port):
