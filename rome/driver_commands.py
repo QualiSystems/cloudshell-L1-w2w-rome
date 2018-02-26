@@ -66,8 +66,8 @@ class DriverCommands(DriverCommandsInterface):
         """
         self._cli_handler.define_session_attributes(address, username, password)
         with self._cli_handler.default_mode_service() as session:
-            autoload_actions = AutoloadActions(session, self._logger)
-            self._logger.info('Connected to ' + autoload_actions.board_table().get('model_name'))
+            system_actions = SystemActions(session, self._logger)
+            self._logger.info('Connected to ' + system_actions.board_table().get('model_name'))
 
     def get_state_id(self):
         """
@@ -175,7 +175,7 @@ class DriverCommands(DriverCommandsInterface):
             autoload_actions = AutoloadActions(session, self._logger)
             connection_table = autoload_actions.connection_table()
             system_actions = SystemActions(session, self._logger)
-            board_table = system_actions
+            board_table = system_actions.board_table()
         autoload_helper = AutoloadHelper(address, board_table, self._ports_association_table, connection_table,
                                          self._logger)
         response_info = ResourceDescriptionResponseInfo(autoload_helper.build_structure())
