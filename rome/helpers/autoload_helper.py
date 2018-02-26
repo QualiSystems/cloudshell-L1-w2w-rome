@@ -62,7 +62,7 @@ class AutoloadHelper(object):
             src_port = ports_dict.get(src_alias)
             dst_port = ports_dict.get(dst_alias)
             if src_port and dst_port:
-                src_port.add_mapping(dst_port)
+                dst_port.add_mapping(src_port)
 
     def build_structure(self):
         chassis_dict = self._build_chassis()
