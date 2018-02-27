@@ -1,9 +1,7 @@
 import re
 
-import rome.command_templates.autoload as command_template_autoload
 import rome.command_templates.mapping as command_template
 from cloudshell.cli.command_template.command_template_executor import CommandTemplateExecutor
-from rome.entities.port_entities import Port, PortInfo
 from rome.helpers.command_actions_helper import CommandActionsHelper
 
 
@@ -46,31 +44,14 @@ class MappingActions(object):
             dst_port=dst_port)
         return output
 
-    def ports_info(self, *port_ids):
-        self._logger.debug('Getting ports info for ports {}'.format(', '.join(port_ids)))
+    def port_info(self, port_id):
+        self._logger.debug('Getting port info for port {}'.format(port_id))
         port_output = CommandTemplateExecutor(self._cli_service,
-                                              command_template_autoload.PORT_SHOW).execute_command()
-        ports_info = []
+                                              command_template.PORT_INFO).execute_command(port=port_id)
 
-        for port_id in port_ids:
-            pattern = r'^\D{0}\s+\d+\s+\d+\s+\d+\s+\D{0}.*$'.format(port_id)
-            match_list = CommandActionsHelper.parse_table(port_output.strip(), pattern)
-            east_port = None
-            west_port = None
-            for record in match_list:
-                name = record[0]
-                connected = re.sub(r'\D', '', record[5]) if record[2] == '2' else None
-                locked = record[1] == '2'
-                disabled = record[3] == '2'
-                paired = record[4]
-                port = Port(name, paired, connected, locked, disabled)
-                if re.match(r'e', port.name, re.IGNORECASE):
-                    east_port = port
-                elif re.match(r'w', port.name, re.IGNORECASE):
-                    west_port = port
-            if east_port and west_port:
-                ports_info.append(PortInfo(port_id, east_port, west_port))
-            else:
-                raise Exception(self.__class__.__name__, 'Cannot collect information for port {}'.format(port_id))
-
-        return ports_info
+        port_info = list(CommandActionsHelper.parse_ports(port_output)[0])
+        port_info[0] = re.match(r'\w+\[(\w+)\]', port_info[0]).group(1).lower()
+        dst_port_match = re.match(r'\w+\[(\w+)\]', port_info[4])
+        if dst_port_match:
+            port_info[4] = dst_port_match.group(1).lower()
+        return port_info
