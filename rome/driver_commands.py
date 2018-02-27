@@ -213,9 +213,9 @@ class DriverCommands(DriverCommandsInterface):
         :return:
         """
         if port_info[1].lower() != 'unlocked':
-            raise Exception(self.__class__.__name__, 'Port {} is Locked'.format(port_info.port_id))
+            raise Exception(self.__class__.__name__, 'Port {} is Locked'.format(port_info[5]))
         if port_info[2].lower() != 'enabled':
-            raise Exception(self.__class__.__name__, 'Port {} is Disabled'.format(port_info.port_id))
+            raise Exception(self.__class__.__name__, 'Port {} is Disabled'.format(port_info[5]))
 
     def _connect_ports(self, src_port_id, dst_port_id):
         with self._cli_handler.default_mode_service() as session:
