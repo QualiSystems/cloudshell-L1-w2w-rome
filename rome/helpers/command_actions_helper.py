@@ -15,5 +15,5 @@ class CommandActionsHelper(object):
     @staticmethod
     def parse_ports(ports_data):
         regexp = r'^([\w\[\]]+)\s+((?:locked|unlocked))\s+((?:enabled|disabled))' \
-                 r'\s+((?:connected|disconnected))\s+\d+\s+([\w\[\]]*)\s+([\w\[\]]+)\s*$'
+                 r'\s+([\w\s]+)\s+\d+\s+([\w\[\]]*)\s+([\w\[\]]+)\s*$'
         return re.findall(regexp, ports_data, flags=re.MULTILINE | re.IGNORECASE)
