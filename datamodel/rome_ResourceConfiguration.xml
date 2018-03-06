@@ -174,7 +174,7 @@
             <AttachedAttributes/>
             <AttributeValues/>
             <Models>
-                <ResourceModel Name="Rome L1 Module A" Description="" SupportsConcurrentCommands="false">
+                <ResourceModel Name="Rome Matrix A" Description="" SupportsConcurrentCommands="false">
                     <AttachedAttributes>
                         <AttachedAttribute Name="Model Name" IsOverridable="true" IsLocal="true">
                             <AllowedValues/>
@@ -189,7 +189,7 @@
                     </ParentModels>
                     <Drivers/>
                 </ResourceModel>
-                <ResourceModel Name="Rome L1 Module B" Description="" SupportsConcurrentCommands="false">
+                <ResourceModel Name="Rome Matrix B" Description="" SupportsConcurrentCommands="false">
                     <AttachedAttributes>
                         <AttachedAttribute Name="Model Name" IsOverridable="true" IsLocal="true">
                             <AllowedValues/>
@@ -256,8 +256,8 @@
                         <AttributeValue Name="Protocol Type" Value="0"/>
                     </AttributeValues>
                     <ParentModels>
-                        <ParentModelName>Rome L1 Module A</ParentModelName>
-                        <ParentModelName>Rome L1 Module B</ParentModelName>
+                        <ParentModelName>Rome Matrix A</ParentModelName>
+                        <ParentModelName>Rome Matrix B</ParentModelName>
                     </ParentModels>
                     <Drivers/>
                 </ResourceModel>

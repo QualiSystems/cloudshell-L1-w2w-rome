@@ -30,9 +30,9 @@ class AutoloadHelper(object):
         """
         :type blade_name: str
         """
-        blade_model = 'Panel'
+        blade_model = 'Matrix ' + blade_name.upper()
         serial_number = 'NA'
-        resource_model = 'Rome L1 Module A' if blade_name.lower() == 'a' else 'Rome L1 Module B'
+        resource_model = 'Rome Matrix A' if blade_name.lower() == 'a' else 'Rome Matrix B'
         blade = Blade(blade_name.upper(), resource_model, serial_number)
         blade.set_model_name(blade_model)
         blade.set_serial_number(serial_number)

@@ -32,7 +32,11 @@ class SystemActions(object):
         if serial_search:
             board_table['serial_number'] = serial_search.group(1)
 
-        board_table['model_name'] = "Rome"
+        model_search = re.search(r'^rome\s+type\s+(\w+?)\s*$', output, flags=re.IGNORECASE | re.DOTALL)
+        if model_search:
+            board_table['model_name'] = model_search.group(1)
+        else:
+            board_table['model_name'] = "Rome"
 
         sw_version_search = re.search(r'ACTIVE\s+SW\s+VER\s+(\d+\.\d+\.\d+\.\d+)', output, re.DOTALL)
         if sw_version_search:
