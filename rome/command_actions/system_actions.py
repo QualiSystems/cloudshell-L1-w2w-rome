@@ -32,7 +32,7 @@ class SystemActions(object):
         if serial_search:
             board_table['serial_number'] = serial_search.group(1)
 
-        model_search = re.search(r'^rome\s+type\s+(\w+?)\s*$', output, flags=re.IGNORECASE | re.DOTALL)
+        model_search = re.search(r'^rome\s+type\s+(.+?)\s*$', output, flags=re.MULTILINE | re.IGNORECASE)
         if model_search:
             board_table['model_name'] = model_search.group(1)
         else:
