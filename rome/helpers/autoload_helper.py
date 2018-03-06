@@ -32,7 +32,8 @@ class AutoloadHelper(object):
         """
         blade_model = 'Panel'
         serial_number = 'NA'
-        blade = Blade(blade_name.upper(), 'Generic L1 Module', serial_number)
+        resource_model = 'Rome L1 Module A' if blade_name.lower() == 'a' else 'Rome L1 Module B'
+        blade = Blade(blade_name.upper(), resource_model, serial_number)
         blade.set_model_name(blade_model)
         blade.set_serial_number(serial_number)
         return blade

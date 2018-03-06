@@ -174,8 +174,22 @@
             <AttachedAttributes/>
             <AttributeValues/>
             <Models>
-                <ResourceModel Name="Generic L1 Module" Description=""
-                               SupportsConcurrentCommands="false">
+                <ResourceModel Name="Rome L1 Module A" Description="" SupportsConcurrentCommands="false">
+                    <AttachedAttributes>
+                        <AttachedAttribute Name="Model Name" IsOverridable="true" IsLocal="true">
+                            <AllowedValues/>
+                        </AttachedAttribute>
+                        <AttachedAttribute Name="Serial Number" IsOverridable="true" IsLocal="true">
+                            <AllowedValues/>
+                        </AttachedAttribute>
+                    </AttachedAttributes>
+                    <AttributeValues/>
+                    <ParentModels>
+                        <ParentModelName>Rome Chassis</ParentModelName>
+                    </ParentModels>
+                    <Drivers/>
+                </ResourceModel>
+                <ResourceModel Name="Rome L1 Module B" Description="" SupportsConcurrentCommands="false">
                     <AttachedAttributes>
                         <AttachedAttribute Name="Model Name" IsOverridable="true" IsLocal="true">
                             <AllowedValues/>
@@ -242,7 +256,8 @@
                         <AttributeValue Name="Protocol Type" Value="0"/>
                     </AttributeValues>
                     <ParentModels>
-                        <ParentModelName>Generic L1 Module</ParentModelName>
+                        <ParentModelName>Rome L1 Module A</ParentModelName>
+                        <ParentModelName>Rome L1 Module B</ParentModelName>
                     </ParentModels>
                     <Drivers/>
                 </ResourceModel>
