@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" L1PortFamilyName="L1 Switch Port" xmlns="http://schemas.qualisystems.com/ResourceManagement/Rules.xsd">
+  <Rules xsi:type="Prohibit" SourceBladeModel="EMPMC-36SFP">
+    <TargetModels>EMPMC-18T1E1</TargetModels>
+    <TargetModels>EMPMC-18DT3E3</TargetModels>
+    <TargetModels>EMPMC-9XFP</TargetModels>
+    <TargetModels>EMPMC-8XFP</TargetModels>
+  </Rules>
+  <Rules xsi:type="Prohibit" SourceBladeModel="EMPMC-36SFP3R">
+    <TargetModels>EMPMC-18T1E1</TargetModels>
+    <TargetModels>EMPMC-18DT3E3</TargetModels>
+    <TargetModels>EMPMC-9XFP</TargetModels>
+    <TargetModels>EMPMC-8XFP</TargetModels>
+  </Rules>
+  <Rules xsi:type="Prohibit" SourceBladeModel="EMPMC-36SFP3RMR">
+    <TargetModels>EMPMC-18T1E1</TargetModels>
+    <TargetModels>EMPMC-18DT3E3</TargetModels>
+    <TargetModels>EMPMC-9XFP</TargetModels>
+    <TargetModels>EMPMC-8XFP</TargetModels>
+  </Rules>
+  <Rules xsi:type="Prohibit" SourceBladeModel="EMPMC-36FC8G">
+    <TargetModels>EMPMC-18T1E1</TargetModels>
+    <TargetModels>EMPMC-18DT3E3</TargetModels>
+    <TargetModels>EMPMC-9XFP</TargetModels>
+    <TargetModels>EMPMC-8XFP</TargetModels>
+  </Rules>
+  <Rules xsi:type="Prohibit" SourceBladeModel="EMPMC-3610GMR">
+    <TargetModels>EMPMC-18T1E1</TargetModels>
+    <TargetModels>EMPMC-18DT3E3</TargetModels>
+    <TargetModels>EMPMC-9XFP</TargetModels>
+    <TargetModels>EMPMC-8XFP</TargetModels>
+  </Rules>
+  <Rules xsi:type="Prohibit" SourceBladeModel="EMPMC-36RJ">
+    <TargetModels>EMPMC-36SAS</TargetModels>
+    <TargetModels>EMPMC-18T1E1</TargetModels>
+    <TargetModels>EMPMC-36T1E1</TargetModels>
+    <TargetModels>EMPMC-18DT3E3</TargetModels>
+    <TargetModels>EMPMC-9XFP</TargetModels>
+    <TargetModels>EMPMC-8XFP</TargetModels>
+  </Rules>
+  <Rules xsi:type="Prohibit" SourceBladeModel="EMPMC-36RJ-C">
+    <TargetModels>EMPMC-36SAS</TargetModels>
+    <TargetModels>EMPMC-18T1E1</TargetModels>
+    <TargetModels>EMPMC-36T1E1</TargetModels>
+    <TargetModels>EMPMC-18DT3E3</TargetModels>
+    <TargetModels>EMPMC-9XFP</TargetModels>
+    <TargetModels>EMPMC-8XFP</TargetModels>
+  </Rules>
+ 
+  <Rules xsi:type="Prohibit" SourceBladeModel="EMPMC-36SAS">
+    <TargetModels>EMPMC-36RJ</TargetModels>
+    <TargetModels>EMPMC-36RJ-C</TargetModels>
+    <TargetModels>EMPMC-18T1E1</TargetModels>
+    <TargetModels>EMPMC-36T1E1</TargetModels>
+    <TargetModels>EMPMC-18DT3E3</TargetModels>
+    <TargetModels>EMPMC-9XFP</TargetModels>
+    <TargetModels>EMPMC-8XFP</TargetModels>
+  </Rules>
+   <Rules xsi:type="Prohibit" SourceBladeModel="Rome Matrix A">
+    <TargetModels>Rome Matrix B</TargetModels>
+  </Rules>
+  <Rules xsi:type="Prohibit" SourceBladeModel="Rome Matrix B">
+    <TargetModels>Rome Matrix A</TargetModels>
+  </Rules>
+  <Rules xsi:type="Restriction" SourceBladeModel="EMPMC-18T1E1">
+    <TargetModels>EMPMC-18T1E1</TargetModels>
+  </Rules>
+  <Rules xsi:type="Restriction" SourceBladeModel="EMPMC-36T1E1">
+    <TargetModels>EMPMC-36SFP</TargetModels>
+    <TargetModels>EMPMC-36SFP3R</TargetModels>
+    <TargetModels>EMPMC-36SFP3RMR</TargetModels>
+    <TargetModels>EMPMC-36FC8G</TargetModels>
+    <TargetModels>EMPMC-3610GMR</TargetModels>
+    <TargetModels>EMPMC-36T1E1</TargetModels>
+  </Rules>
+  <Rules xsi:type="Restriction" SourceBladeModel="EMPMC-18DT3E3">
+    <TargetModels>EMPMC-18DT3E3</TargetModels>
+  </Rules>
+  <Rules xsi:type="Restriction" SourceBladeModel="S-Blade">
+    <TargetModels>S-Blade</TargetModels>
+  </Rules>
+  <Rules xsi:type="Restriction" SourceBladeModel="O-Blade">
+    <TargetModels>O-Blade</TargetModels>
+  </Rules>
+  <Rules xsi:type="Restriction" SourceBladeModel="G-Blade">
+    <TargetModels>G-Blade</TargetModels>
+  </Rules>
+  <Rules xsi:type="Restriction" SourceBladeModel="P-Blade">
+    <TargetModels>P-Blade</TargetModels>
+  </Rules>
+  <Rules xsi:type="Restriction" SourceBladeModel="EMPMC-9XFP">
+    <TargetModels>EMPMC-9XFP</TargetModels>
+  </Rules>
+  
+  <!--Cannot be mapped to any thing-->
+  <Rules xsi:type="Restriction" SourceBladeModel="EMPMC-8XFP" />
+</root>
