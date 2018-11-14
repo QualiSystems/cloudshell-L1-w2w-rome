@@ -93,3 +93,5 @@ ENV/
 
 .DS_Store
 
+# Ignore packages
+packages/

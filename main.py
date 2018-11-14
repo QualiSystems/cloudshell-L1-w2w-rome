@@ -38,7 +38,7 @@ class Main(object):
 
         # Importing and creating driver commands instance
         driver_commands = importlib.import_module('{}.driver_commands'.format(driver_name), package=None)
-        driver_instance = driver_commands.DriverCommands(command_logger)
+        driver_instance = driver_commands.DriverCommands(command_logger, runtime_config)
 
         # Creating command executor instance
         command_executor = CommandExecutor(driver_instance, command_logger)

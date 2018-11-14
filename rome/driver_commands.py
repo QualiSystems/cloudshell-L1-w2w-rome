@@ -4,7 +4,6 @@
 import time
 
 from cloudshell.layer_one.core.driver_commands_interface import DriverCommandsInterface
-from cloudshell.layer_one.core.helper.runtime_configuration import RuntimeConfiguration
 from cloudshell.layer_one.core.response.response_info import GetStateIdResponseInfo, AttributeValueResponseInfo, \
     ResourceDescriptionResponseInfo
 from rome.cli.rome_cli_handler import RomeCliHandler
@@ -23,18 +22,19 @@ class DriverCommands(DriverCommandsInterface):
     Driver commands implementation
     """
 
-    def __init__(self, logger):
+    def __init__(self, logger, runtime_config):
         """
-        :param logger:
         :type logger: logging.Logger
+        :type runtime_config: cloudshell.layer_one.core.helper.runtime_configuration.RuntimeConfiguration
         """
         self._logger = logger
+        self._runtime_config = runtime_config
         self._cli_handler = RomeCliHandler(logger)
         # self._cli_handler = TestCliHandler(
         #       os.path.join(os.path.dirname(__file__), 'helpers', 'test_fiberzone_data'), logger)
 
-        self._mapping_timeout = RuntimeConfiguration().read_key('MAPPING.TIMEOUT')
-        self._mapping_check_delay = RuntimeConfiguration().read_key('MAPPING.CHECK_DELAY')
+        self._mapping_timeout = runtime_config.read_key('MAPPING.TIMEOUT', 120)
+        self._mapping_check_delay = runtime_config.read_key('MAPPING.CHECK_DELAY', 3)
 
         self.__ports_association_table = None
 
