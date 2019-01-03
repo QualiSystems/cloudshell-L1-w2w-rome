@@ -30,11 +30,11 @@ L1 switch shells allow CloudShell to manage networking connectivity between phys
 For additional information, see the [L1 Switches](http://help.quali.com/Online%20Help/9.0/Portal/Content/Admn/Cnct-Ctrl-L1-Swch.htm?Highlight=L1%20switch) online help topic.
 
 ### **Rome L1 Shell**
-Rome shell provides you with the capability to communicate with network topology managed by the Rome switch.
+The Rome L1 shell provides you with the capability to communicate with network topology managed by the Rome switch.
 
 The shell allows CloudShell users to interact with the device, for example, create and modify route mappings, get device information, and more.
 
-For more information on the **Rome**, see the official [**Wave-2-Wave**](http://www.wave-2-wave.com) product documentation.
+For more information on the **Rome robotic fibre switches**, see the official [**Wave-2-Wave**](http://www.wave-2-wave.com) product documentation.
 
 ### Standard version
 The Rome shell is based on the [**Layer 1 Switch Shell Standard**](https://github.com/QualiSystems/shell-L1-template).
@@ -108,15 +108,15 @@ This section describes the automation (drivers) associated with the data model. 
 **Note:** You can only activate a TAP connection after activating a parent MapUni/MapBidi connection. 
 
 # Downloading the Shell
-The **Rome** shell is available from the [Quali Community Integrations](https://community.quali.com/integrations) page. 
+The **Rome** L1 shell is available from the [Quali Community Integrations](https://community.quali.com/integrations) page. 
 
 The shell comprises:
 
 |File name|Description|
 |:---|:---|
-|cloudshell-L1-rome-x.x.x.zip|Rome shell package|
-|install_driver.bat|Rome shell installation script|
-|rome_runtime_config.yml|Rome shell configuration file|
+|cloudshell-L1-rome-x.x.x.zip|Rome L1 shell package|
+|install_driver.bat|Rome L1 shell installation script|
+|rome_runtime_config.yml|Rome L1 shell configuration file|
 |rome_ResourceConfiguration.xml|XML file containing the resource structure, attributes and capabilities of the L1 switches of the same vendor|
 
 # Importing and Configuring the Shell
