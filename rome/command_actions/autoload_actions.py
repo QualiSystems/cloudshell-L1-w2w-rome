@@ -3,9 +3,9 @@
 
 import re
 
-import rome.command_templates.autoload as command_template
+import rome.command_templates.system as command_template
 from cloudshell.cli.command_template.command_template_executor import CommandTemplateExecutor
-from rome.helpers.command_actions_helper import CommandActionsHelper
+from rome.helpers.command_actions_helper import parse_ports
 
 
 class AutoloadActions(object):
@@ -27,7 +27,7 @@ class AutoloadActions(object):
     def connection_table(self):
         connection_table = {}
         ports_output = CommandTemplateExecutor(self._cli_service, command_template.PORT_SHOW).execute_command()
-        for record in CommandActionsHelper.parse_ports(ports_output):
+        for record in parse_ports(ports_output):
             src_record = record[0].lower()
             dst_record = record[4].lower()
             if dst_record and src_record.lower().startswith('e'):
