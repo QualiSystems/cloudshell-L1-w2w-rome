@@ -1,0 +1,25 @@
+CURR SW VERSION  creationDate(May 20 2013, 00:23:51)
+AFM STATUS       adminStatus(enabled) operStatus(enable) alarmState(Cleared)
+AFM STATE        OPER
+AFM NAME         s75
+AFM TYPE         2
+RTOS             VxWorks (6.8)
+BOARD            ver(LCU-100) rev(1) S/N(9727-4733-2222)
+MATRIX SIZE:
+                 MIN_PORT_EAST 1  MAX_PORT_EAST 180
+                 MIN_PORT_WEST 1  MAX_PORT_WEST 180
+IP               IP addr(172.17.24.61) subnet(255.255.255.0/0xffffff00)
+                 gateway(172.17.24.1) dns(192.168.10.2)
+VERSIONS         nonTffsDbVer(0) nextLoadImage(active)
+ACTIVE SW DESC   active image was created at 05-19-2013 23:24
+ACTIVE SW VER    1.6.2.1
+STANDBY SW DESC  standby image was created at 05-19-2013 23:24
+STANDBY SW VER   1.6.2.1
+UP TIME          2 days,20 hours,0 minutes and 14 seconds (total 244814 seconds)
+Recovery         recovery was done
+CONNECTIONS      connections are enabled
+PAIRED PORT      Enabled
+OPERATION COUNT  62493
+FPGA VER         LCU3_1_98.rbf
+TIME SOURCE      RTC
+AUTHENTICATION   local

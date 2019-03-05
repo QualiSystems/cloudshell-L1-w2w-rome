@@ -1,0 +1,183 @@
+Port                          Port                          Customer            Customer      Disabled/Enabled      locked/unlocked
+ A                             B                               A                   B
+=============================================================================================================================================
+1                                                           1                                       Enabled             Unlocked
+2                             10                            2                   10                  Enabled             Unlocked
+3                                                           3                                       Enabled             Unlocked
+4                             5                             4                   5                   Enabled             Unlocked
+5                             4                             5                   4                   Enabled             Unlocked
+6                             11                            6                   11                  Enabled             Unlocked
+7                                                           7                                       Enabled             Unlocked
+8                                                           8                                       Enabled             Unlocked
+9                                                           9                                       Enabled             Unlocked
+10                            2                             10                  2                   Enabled             Unlocked
+11                            6                             11                  6                   Enabled             Unlocked
+12                                                          12                                      Enabled             Unlocked
+13                                                          13                                      Enabled             Unlocked
+14                                                          14                                      Enabled             Unlocked
+15                                                          15                                      Enabled             Unlocked
+16                                                          16                                      Enabled             Unlocked
+17                                                          17                                      Enabled             Unlocked
+18                                                          18                                      Enabled             Unlocked
+19                            20                            19                  20                  Enabled             Unlocked
+20                            19                            20                  19                  Enabled             Unlocked
+21                            22                            21                  22                  Enabled             Unlocked
+22                            21                            22                  21                  Enabled             Unlocked
+23                            24                            23                  24                  Enabled             Unlocked
+24                            23                            24                  23                  Enabled             Unlocked
+25                            26                            25                  26                  Enabled             Unlocked
+26                            25                            26                  25                  Enabled             Unlocked
+27                                                          27                                      Enabled             Unlocked
+28                            83                            28                  83                  Enabled             Unlocked
+29                            30                            29                  30                  Enabled             Unlocked
+30                            29                            30                  29                  Enabled             Unlocked
+31                            32                            31                  32                  Enabled             Unlocked
+32                            31                            32                  31                  Enabled             Unlocked
+33                            34                            33                  34                  Enabled             Unlocked
+34                            33                            34                  33                  Enabled             Unlocked
+35                                                          35                                      Enabled             Unlocked
+36                                                          36                                      Enabled             Unlocked
+37                            38                            37                  38                  Enabled             Unlocked
+38                            37                            38                  37                  Enabled             Unlocked
+39                                                          39                                      Enabled             Unlocked
+40                                                          40                                      Enabled             Locked
+41                                                          41                                      Enabled             Unlocked
+42                                                          42                                      Enabled             Unlocked
+43                                                          43                                      Enabled             Unlocked
+44                            45                            44                  45                  Disabled            Locked
+45                            44                            45                  44                  Disabled            Unlocked
+46                                                          46                                      Enabled             Unlocked
+47                                                          47                                      Enabled             Unlocked
+48                                                          48                                      Enabled             Unlocked
+49                            50                            49                  50                  Enabled             Unlocked
+50                            49                            50                  49                  Enabled             Unlocked
+51                            52                            51                  52                  Disabled            Unlocked
+52                            51                            52                  51                  Disabled            Locked
+53                            54                            53                  54                  Enabled             Unlocked
+54                            53                            54                  53                  Enabled             Unlocked
+55                            56                            55                  56                  Disabled            Unlocked
+56                            55                            56                  55                  Disabled            Locked
+57                            58                            57                  58                  Enabled             Unlocked
+58                            57                            58                  57                  Enabled             Unlocked
+59                                                          59                                      Enabled             Unlocked
+60                                                          60                                      Enabled             Locked
+61                            65                            61                  65                  Enabled             Unlocked
+62                                                          62                                      Enabled             Unlocked
+63                            96                            63                  96                  Enabled             Unlocked
+64                                                          64                                      Enabled             Unlocked
+65                            61                            65                  61                  Enabled             Unlocked
+66                                                          66                                      Enabled             Unlocked
+67                                                          67                                      Enabled             Unlocked
+68                                                          68                                      Enabled             Unlocked
+69                                                          69                                      Enabled             Unlocked
+70                                                          70                                      Enabled             Unlocked
+71                                                          71                                      Enabled             Unlocked
+72                                                          72                                      Enabled             Unlocked
+73                            74                            73                  74                  Enabled             Unlocked
+74                            73                            74                  73                  Enabled             Unlocked
+75                                                          75                                      Enabled             Unlocked
+76                            109                           76                  109                 Enabled             Unlocked
+77                            78                            77                  78                  Enabled             Unlocked
+78                            77                            78                  77                  Enabled             Unlocked
+79                                                          79                                      Enabled             Unlocked
+80                            123                           80                  123                 Disabled            Locked
+81                                                          81                                      Enabled             Unlocked
+82                            79                            82                  79                  Disabled            Unlocked
+83                            28                            83                  28                  Enabled             Unlocked
+84                            93                            84                  93                  Disabled            Locked
+85                            108                           85                  108                 Disabled            Locked
+86                            124                           86                  124                 Enabled             Unlocked
+87                            105                           87                  105                 Enabled             Unlocked
+88                                                          88                                      Enabled             Unlocked
+89                            102                           89                  102                 Disabled            Locked
+90                                                          90                                      Enabled             Unlocked
+91                            92                            91                  92                  Enabled             Unlocked
+92                            91                            92                  91                  Enabled             Unlocked
+93                            84                            93                  84                  Disabled            Unlocked
+94                            150                           94                  150                 Enabled             Unlocked
+95                            99                            95                  99                  Enabled             Unlocked
+96                            63                            96                  63                  Enabled             Unlocked
+97                            98                            97                  98                  Enabled             Unlocked
+98                            97                            98                  97                  Enabled             Unlocked
+99                            95                            99                  95                  Enabled             Unlocked
+100                                                         100                                     Enabled             Unlocked
+101                                                         101                                     Enabled             Unlocked
+102                           89                            102                 89                  Disabled            Unlocked
+103                           104                           103                 104                 Disabled            Unlocked
+104                           103                           104                 103                 Disabled            Locked
+105                           87                            105                 87                  Enabled             Unlocked
+106                           107                           106                 107                 Enabled             Unlocked
+107                           106                           107                 106                 Enabled             Unlocked
+108                           85                            108                 85                  Disabled            Unlocked
+109                           76                            109                 76                  Enabled             Unlocked
+110                                                         110                                     Enabled             Unlocked
+111                                                         111                                     Enabled             Unlocked
+112                           113                           112                 113                 Enabled             Unlocked
+113                           112                           113                 112                 Enabled             Unlocked
+114                                                         114                                     Enabled             Unlocked
+115                                                         115                                     Enabled             Unlocked
+116                                                         116                                     Enabled             Unlocked
+117                                                         117                                     Enabled             Unlocked
+118                                                         118                                     Enabled             Unlocked
+119                                                         119                                     Enabled             Unlocked
+120                           122                           120                 122                 Enabled             Unlocked
+121                                                         121                                     Enabled             Unlocked
+122                           120                           122                 120                 Enabled             Unlocked
+123                           80                            123                 80                  Disabled            Unlocked
+124                           86                            124                 86                  Enabled             Unlocked
+125                                                         125                                     Enabled             Unlocked
+126                                                         126                                     Enabled             Unlocked
+127                                                         127                                     Enabled             Unlocked
+128                                                         128                                     Enabled             Unlocked
+129                                                         129                                     Enabled             Unlocked
+130                           138                           130                 138                 Enabled             Unlocked
+131                           141                           131                 141                 Enabled             Unlocked
+132                                                         132                                     Enabled             Unlocked
+133                                                         133                                     Enabled             Unlocked
+134                           142                           134                 142                 Enabled             Unlocked
+135                           149                           135                 149                 Disabled            Locked
+136                                                         136                                     Enabled             Unlocked
+137                                                         137                                     Enabled             Unlocked
+138                           130                           138                 130                 Enabled             Unlocked
+139                                                         139                                     Enabled             Unlocked
+140                                                         140                                     Enabled             Unlocked
+141                           131                           141                 131                 Enabled             Unlocked
+142                           134                           142                 134                 Enabled             Unlocked
+143                           144                           143                 144                 Disabled            Unlocked
+144                           143                           144                 143                 Disabled            Locked
+145                                                         145                                     Enabled             Unlocked
+146                                                         146                                     Enabled             Unlocked
+147                                                         147                                     Enabled             Unlocked
+148                                                         148                                     Enabled             Unlocked
+149                           135                           149                 135                 Disabled            Unlocked
+150                           94                            150                 94                  Enabled             Unlocked
+151                                                         151                                     Enabled             Unlocked
+152                                                         152                                     Enabled             Unlocked
+153                                                         153                                     Enabled             Unlocked
+154                                                         154                                     Enabled             Unlocked
+155                                                         155                                     Enabled             Unlocked
+156                                                         156                                     Enabled             Unlocked
+157                                                         157                                     Enabled             Unlocked
+158                                                         158                                     Enabled             Unlocked
+159                                                         159                                     Enabled             Unlocked
+160                                                         160                                     Enabled             Unlocked
+161                                                         161                                     Enabled             Unlocked
+162                                                         162                                     Enabled             Unlocked
+163                                                         163                                     Enabled             Unlocked
+164                                                         164                                     Enabled             Unlocked
+165                                                         165                                     Enabled             Unlocked
+166                                                         166                                     Enabled             Unlocked
+167                                                         167                                     Enabled             Unlocked
+168                                                         168                                     Enabled             Unlocked
+169                                                         169                                     Enabled             Unlocked
+170                                                         170                                     Enabled             Unlocked
+171                                                         171                                     Enabled             Unlocked
+172                                                         172                                     Enabled             Unlocked
+173                           177                           173                 177                 Enabled             Unlocked
+174                           178                           174                 178                 Enabled             Unlocked
+175                           179                           175                 179                 Enabled             Unlocked
+176                           180                           176                 180                 Enabled             Unlocked
+177                           173                           177                 173                 Enabled             Unlocked
+178                           174                           178                 174                 Enabled             Unlocked
+179                           175                           179                 175                 Enabled             Unlocked
+180                           176                           180                 176                 Enabled             Unlocked
