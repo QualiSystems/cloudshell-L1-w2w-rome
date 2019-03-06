@@ -4,6 +4,7 @@ from collections import defaultdict
 import rome.command_templates.system as command_template
 from cloudshell.cli.command_template.command_template_executor import CommandTemplateExecutor
 from rome.helpers.command_actions_helper import parse_ports
+from rome.helpers.port_entity import PortTable, SubPort
 
 
 class SystemActions(object):
@@ -21,6 +22,20 @@ class SystemActions(object):
         """
         self._cli_service = cli_service
         self._logger = logger
+
+    def get_port_table(self):
+        port_table = PortTable()
+
+        port_table_output = CommandTemplateExecutor(
+            self._cli_service, command_template.PORT_SHOW).execute_command()
+
+        for line in port_table_output.splitlines():
+            sub_port = SubPort.from_line(line)
+            if sub_port:
+                port = port_table.get_or_create(sub_port.port_id)
+                port.add_sub_port(sub_port)
+
+        return port_table
 
     def board_table(self):
         """

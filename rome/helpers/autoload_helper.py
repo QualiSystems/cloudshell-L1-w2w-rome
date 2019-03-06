@@ -4,27 +4,31 @@ from cloudshell.layer_one.core.response.resource_info.entities.port import Port
 
 
 class AutoloadHelper(object):
-    def __init__(self, resource_address, board_table, ports_association_table, connections_table, logger):
-        self._logger = logger
-        self._board_table = board_table
-        self._ports_association_table = ports_association_table
-        self._connection_table = connections_table
-        self._resource_address = resource_address
+    def __init__(self, resource_address, board_table, port_table, matrix_letter, logger):
+        self.board_table = board_table
+        self.port_table = port_table
+        self.matrix_letter = matrix_letter
+        self.resource_address = resource_address
+        self.logger = logger
 
         self._chassis_id = '1'
+        self._chassis = None
 
-    def _build_chassis(self):
-        chassis_dict = {}
+    @property
+    def chassis(self):
+        if self._chassis is not None:
+            return self._chassis
 
-        serial_number = self._board_table.get('serial_number')
-        model_name = self._board_table.get('model_name')
-        sw_version = self._board_table.get('sw_version')
-        chassis = Chassis(self._chassis_id, self._resource_address, 'Rome Chassis', serial_number)
+        serial_number = self.board_table.get('serial_number')
+        model_name = self.board_table.get('model_name')
+        sw_version = self.board_table.get('sw_version')
+        chassis = Chassis(self._chassis_id, self.resource_address, 'Rome Chassis', serial_number)
         chassis.set_model_name(model_name)
         chassis.set_serial_number(serial_number)
         chassis.set_os_version(sw_version)
-        chassis_dict[self._chassis_id] = chassis
-        return chassis_dict
+
+        self._chassis = chassis
+        return chassis
 
     def _build_blade(self, blade_name):
         """
@@ -36,37 +40,33 @@ class AutoloadHelper(object):
         blade = Blade(blade_name.upper(), resource_model, serial_number)
         blade.set_model_name(blade_model)
         blade.set_serial_number(serial_number)
+        blade.set_parent_resource(self.chassis)
         return blade
 
-    def _build_ports_and_blades(self, chassis_dict):
+    def build_ports_and_blades(self):
         blades_dict = {}
         ports_dict = {}
-        for record_id, port_aliases in self._ports_association_table.iteritems():
-            blade_id = record_id[0]
-            port_id = record_id[1:]
-            if blade_id not in blades_dict:
-                blade = self._build_blade(blade_id)
-                blades_dict[blade_id] = blade
-                blade.set_parent_resource(chassis_dict.get(self._chassis_id))
-            else:
-                blade = blades_dict.get(blade_id)
+        for rome_port in self.port_table:
+            if self.matrix_letter and self.matrix_letter != rome_port.blade_letter:
+                continue
 
-            port = Port(port_id, 'Generic L1 Port', 'NA')
+            try:
+                blade = blades_dict[rome_port.blade_letter]
+            except KeyError:
+                blade = self._build_blade(rome_port.blade_letter)
+                blades_dict[rome_port.blade_letter] = blade
+
+            port = Port(rome_port.port_id, 'Generic L1 Port', 'NA')
             port.set_model_name('Port Paired')
             port.set_parent_resource(blade)
-            ports_dict[port_aliases[0]] = port
-            ports_dict[port_aliases[1]] = port
-        return ports_dict
+            ports_dict[rome_port.port_id] = port
 
-    def _build_mappings(self, ports_dict):
-        for src_alias, dst_alias in self._connection_table.iteritems():
-            src_port = ports_dict.get(src_alias)
-            dst_port = ports_dict.get(dst_alias)
-            if src_port and dst_port:
-                dst_port.add_mapping(src_port)
+        for rome_port in self.port_table:
+            if rome_port.connected_to_port_id:
+                port = ports_dict[rome_port.port_id]
+                other_port = ports_dict[rome_port.connected_to_port_id]
+                port.add_mapping(other_port)
 
     def build_structure(self):
-        chassis_dict = self._build_chassis()
-        ports_dict = self._build_ports_and_blades(chassis_dict)
-        self._build_mappings(ports_dict)
-        return chassis_dict.values()
+        self.build_ports_and_blades()
+        return self.chassis
