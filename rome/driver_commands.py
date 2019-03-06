@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+import re
 
 import time
 
@@ -7,20 +8,19 @@ from cloudshell.layer_one.core.driver_commands_interface import DriverCommandsIn
 from cloudshell.layer_one.core.response.response_info import GetStateIdResponseInfo, AttributeValueResponseInfo, \
     ResourceDescriptionResponseInfo
 from rome.cli.rome_cli_handler import RomeCliHandler
-from rome.command_actions.autoload_actions import AutoloadActions
 from rome.command_actions.mapping_actions import MappingActions
 from rome.command_actions.system_actions import SystemActions
 from rome.helpers.autoload_helper import AutoloadHelper
-
-
-class PortsPartiallyConnectedException(Exception):
-    pass
+from rome.helpers.errors import BaseRomeException
+from rome.helpers.port_entity import verify_ports_for_connection, SubPort
 
 
 class DriverCommands(DriverCommandsInterface):
     """
     Driver commands implementation
     """
+
+    ADDRESS_PATTERN = re.compile(r':(matrix)?(?P<letter>[a|b])$', re.IGNORECASE)
 
     def __init__(self, logger, runtime_config):
         """
@@ -35,16 +35,9 @@ class DriverCommands(DriverCommandsInterface):
 
         self._mapping_timeout = runtime_config.read_key('MAPPING.TIMEOUT', 120)
         self._mapping_check_delay = runtime_config.read_key('MAPPING.CHECK_DELAY', 3)
+        self.support_multiple_blades = runtime_config.read_key('SUPPORT_MULTIPLE_BLADES', False)
 
         self.__ports_association_table = None
-
-    @property
-    def _ports_association_table(self):
-        if not self.__ports_association_table:
-            with self._cli_handler.default_mode_service() as session:
-                system_actions = SystemActions(session, self._logger)
-                self.__ports_association_table = system_actions.ports_association_table()
-        return self.__ports_association_table
 
     def login(self, address, username, password):
         """
@@ -142,10 +135,23 @@ class DriverCommands(DriverCommandsInterface):
         dst_port_w = self._get_port_aliases(self._convert_port(dst_ports[0]))[1]
         self._connect_ports(src_port_e, dst_port_w)
 
+    def get_matrix_letter(self, address):
+        letter = None
+        if not self.support_multiple_blades:
+            try:
+                letter = self.ADDRESS_PATTERN.search(address).group('letter')
+            except AttributeError:
+                msg = ('Resource address should specify MatrixA or MatrixB. '
+                       'Format [IP]:[Matrix Letter]')
+                self._logger.error(msg)
+                raise BaseRomeException(msg)
+        return letter
+
     def get_resource_description(self, address):
         """
         Auto-load function to retrieve all information from the device
-        :param address: resource address, '192.168.42.240'
+        :param address: resource address, '192.168.42.240' if Shell run without support multiple
+            blades address should be IP:[Matrix]A|B, '192.168.42.240:MatrixB'
         :type address: str
         :return: resource description
         :rtype: cloudshell.layer_one.core.response.response_info.ResourceDescriptionResponseInfo
@@ -175,13 +181,13 @@ class DriverCommands(DriverCommandsInterface):
 
             return ResourceDescriptionResponseInfo([chassis])
         """
+        letter = self.get_matrix_letter(address)
+
         with self._cli_handler.default_mode_service() as session:
-            autoload_actions = AutoloadActions(session, self._logger)
-            connection_table = autoload_actions.connection_table()
             system_actions = SystemActions(session, self._logger)
+            port_table = system_actions.get_port_table()
             board_table = system_actions.board_table()
-        autoload_helper = AutoloadHelper(address, board_table, self._ports_association_table, connection_table,
-                                         self._logger)
+        autoload_helper = AutoloadHelper(address, board_table, port_table, letter, self._logger)
         response_info = ResourceDescriptionResponseInfo(autoload_helper.build_structure())
         return response_info
 
