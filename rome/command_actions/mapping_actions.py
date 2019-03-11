@@ -1,8 +1,7 @@
-import re
-
 import rome.command_templates.mapping as command_template
 from cloudshell.cli.command_template.command_template_executor import CommandTemplateExecutor
-from rome.helpers.command_actions_helper import parse_ports
+
+from rome.helpers.port_entity import SubPort
 
 
 class MappingActions(object):
@@ -44,14 +43,10 @@ class MappingActions(object):
             dst_port=dst_port)
         return output
 
-    def port_info(self, port_id):
+    def get_sub_port(self, port_id):
         self._logger.debug('Getting port info for port {}'.format(port_id))
-        port_output = CommandTemplateExecutor(self._cli_service,
-                                              command_template.PORT_INFO).execute_command(port=port_id)
-
-        port_info = list(parse_ports(port_output)[0])
-        port_info[0] = re.match(r'\w+\[(\w+)\]', port_info[0]).group(1).lower()
-        dst_port_match = re.match(r'\w+\[(\w+)\]', port_info[4])
-        if dst_port_match:
-            port_info[4] = dst_port_match.group(1).lower()
-        return port_info
+        port_output = CommandTemplateExecutor(
+            self._cli_service,
+            command_template.PORT_INFO
+        ).execute_command(port=port_id)
+        return SubPort.from_line(port_output)

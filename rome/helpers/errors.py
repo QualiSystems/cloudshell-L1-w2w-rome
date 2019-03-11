@@ -2,5 +2,5 @@ class BaseRomeException(Exception):
     pass
 
 
-class PortsPartiallyConnectedException(BaseRomeException):
+class ConnectionPortsError(BaseRomeException):
     pass
