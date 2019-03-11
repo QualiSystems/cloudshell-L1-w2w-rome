@@ -1,9 +1,7 @@
 import re
-from collections import defaultdict
 
 import rome.command_templates.system as command_template
 from cloudshell.cli.command_template.command_template_executor import CommandTemplateExecutor
-from rome.helpers.command_actions_helper import parse_ports
 from rome.helpers.port_entity import PortTable, SubPort
 
 
@@ -58,22 +56,3 @@ class SystemActions(object):
             board_table['sw_version'] = sw_version_search.group(1)
 
         return board_table
-
-    def ports_association_table(self):
-        """
-        :rtype: dict
-        """
-        ports_table = defaultdict(lambda: ['', ''])
-        ports_output = CommandTemplateExecutor(self._cli_service, command_template.PORT_SHOW).execute_command()
-
-        for record in parse_ports(ports_output):
-            alias_record = record[0].lower()
-            match_alias = re.match(r'\w+\[(\w+)\]', alias_record)
-            logic_id = record[5].lower()
-            if logic_id and match_alias:
-                alias = match_alias.group(1)
-                if alias_record.startswith('e'):
-                    ports_table[logic_id][0] = alias
-                else:
-                    ports_table[logic_id][1] = alias
-        return ports_table
