@@ -11,7 +11,7 @@ from rome.cli.rome_cli_handler import RomeCliHandler
 from rome.command_actions.mapping_actions import MappingActions
 from rome.command_actions.system_actions import SystemActions
 from rome.helpers.autoload_helper import AutoloadHelper
-from rome.helpers.errors import BaseRomeException
+from rome.helpers.errors import BaseRomeException, ConnectionPortsError
 from rome.helpers.port_entity import verify_ports_for_connection, SubPort
 
 
@@ -94,6 +94,10 @@ class DriverCommands(DriverCommandsInterface):
         """
         pass
 
+    @staticmethod
+    def convert_cs_port_to_port_num(cs_port):
+        return cs_port.rsplit('/', 1)[-1]
+
     def map_bidi(self, src_port, dst_port):
         """
         Create a bidirectional connection between source and destination ports
@@ -111,7 +115,11 @@ class DriverCommands(DriverCommandsInterface):
         """
         self._logger.info('MapBidi, SrcPort: {0}, DstPort: {1}'.format(src_port, dst_port))
         self.map_uni(src_port, [dst_port])
-        self.map_uni(dst_port, [src_port])
+        try:
+            self.map_uni(dst_port, [src_port])
+        except ConnectionPortsError:
+            self.map_clear_to(src_port, [dst_port])
+            raise
 
     def map_uni(self, src_port, dst_ports):
         """
@@ -128,12 +136,14 @@ class DriverCommands(DriverCommandsInterface):
                 for dst_port in dst_ports:
                     session.send_command('map {0} also-to {1}'.format(convert_port(src_port), convert_port(dst_port)))
         """
-        self._logger.info('MapUni, SrcPort: {0}, DstPort: {1}'.format(src_port, dst_ports[0]))
         if len(dst_ports) != 1:
-            raise Exception(self.__class__.__name__, 'MapUni operation is not allowed for multiple Dst ports')
-        src_port_e = self._get_port_aliases(self._convert_port(src_port))[0]
-        dst_port_w = self._get_port_aliases(self._convert_port(dst_ports[0]))[1]
-        self._connect_ports(src_port_e, dst_port_w)
+            raise BaseRomeException('MapUni operation is not allowed for multiple Dst ports')
+
+        self._logger.info('MapUni, SrcPort: {0}, DstPort: {1}'.format(src_port, dst_ports[0]))
+        self._connect_ports(
+            self.convert_cs_port_to_port_num(src_port),
+            self.convert_cs_port_to_port_num(dst_ports[0]),
+        )
 
     def get_matrix_letter(self, address):
         letter = None
@@ -191,102 +201,62 @@ class DriverCommands(DriverCommandsInterface):
         response_info = ResourceDescriptionResponseInfo(autoload_helper.build_structure())
         return response_info
 
-    @staticmethod
-    def _convert_port(cs_port):
-        port_addr_list = cs_port.split('/')
-        return port_addr_list[-2] + port_addr_list[-1]
-
-    def _get_port_aliases(self, port_id):
-        aliases = self._ports_association_table.get(port_id.lower())
-        if aliases and len(aliases) == 2:
-            return aliases
-        raise Exception(self.__class__.__name__, 'Could not find correct aliases for port {}'.format(port_id))
-
-    def _get_connected_port(self, port_info):
-        """
-        Get connected
-        :param port_info:
-        :type port_info: fiberzone_afm.entities.port_entities.PortInfo
-        :return:
-        """
-        return port_info[4]
-
-    def _check_port_locked_or_disabled(self, port_info):
-        """
-        Check disabled or locked
-        :param port_info:
-        :type port_info: fiberzone_afm.entities.port_entities.PortInfo
-        :return:
-        """
-        if port_info[1].lower() != 'unlocked':
-            raise Exception(self.__class__.__name__, 'Port {} is Locked'.format(port_info[5]))
-        if port_info[2].lower() != 'enabled':
-            raise Exception(self.__class__.__name__, 'Port {} is Disabled'.format(port_info[5]))
-
     def _connect_ports(self, src_port_id, dst_port_id):
         with self._cli_handler.default_mode_service() as session:
+            system_actions = SystemActions(session, self._logger)
             mapping_actions = MappingActions(session, self._logger)
-            src_port_info = mapping_actions.port_info(src_port_id)
-            dst_port_info = mapping_actions.port_info(dst_port_id)
-            self._check_port_locked_or_disabled(src_port_info)
-            self._check_port_locked_or_disabled(dst_port_info)
-            src_connected_port = self._get_connected_port(src_port_info)
-            dst_connected_port = self._get_connected_port(dst_port_info)
-            if (src_connected_port and src_connected_port != dst_port_id) or (
-                    dst_connected_port and dst_connected_port != src_port_id):
-                raise Exception(self.__class__.__name__,
-                                'Port {0}, or port {1} connected to a different port'.format(src_port_id, dst_port_id))
-            mapping_actions.connect(src_port_id, dst_port_id)
-            start_time = time.time()
-            while time.time() - start_time < self._mapping_timeout:
-                src_port_info = mapping_actions.port_info(src_port_id)
-                dst_port_info = mapping_actions.port_info(dst_port_id)
-                self._check_port_locked_or_disabled(src_port_info)
-                self._check_port_locked_or_disabled(dst_port_info)
-                if self._get_connected_port(src_port_info) == dst_port_id and self._get_connected_port(
-                        dst_port_info) == src_port_id:
+            port_table = system_actions.get_port_table()
+
+            src_rome_port, dst_rome_port = port_table[src_port_id], port_table[dst_port_id]
+            e_port, w_port = src_rome_port.e_port, dst_rome_port.w_port
+
+            if e_port.connected_to_port_id == w_port.port_id:
+                self._logger.debug(
+                    'Ports {} and {} already connected'.format(e_port.name, w_port.name))
+                return
+
+            verify_ports_for_connection(e_port, w_port)
+            mapping_actions.connect(e_port.port_id, w_port.port_id)
+
+            end_time = time.time() + self._mapping_timeout
+            while time.time() < end_time:
+                e_port = mapping_actions.get_sub_port(e_port.name)
+                w_port = mapping_actions.get_sub_port(w_port.name)
+
+                verify_ports_for_connection(e_port, w_port)
+                if e_port.connected_to_port_id == w_port.port_id:
                     return
                 else:
                     time.sleep(self._mapping_check_delay)
-        raise Exception(self.__class__.__name__,
-                        'Cannot connect port {0} to port {1} during {2}sec'.format(src_port_id, dst_port_id,
-                                                                                   self._mapping_timeout))
 
-    def _disconnect_ports(self, src_port_id, dst_port_id=None):
+            raise ConnectionPortsError(
+                'Cannot connect port {} to port {} during {}sec'.format(
+                    e_port.name, w_port.name, self._mapping_timeout))
+
+    def _disconnect_ports(self, e_port, w_port):
+        if w_port is None or not e_port.connected_to_port_id and not w_port.connected_to_port_id:
+            return
+
+        verify_ports_for_connection(e_port, w_port)
+
         with self._cli_handler.default_mode_service() as session:
             mapping_actions = MappingActions(session, self._logger)
+            mapping_actions.disconnect(e_port.port_id, w_port.port_id)
 
-            src_port_info = mapping_actions.port_info(src_port_id)
-            if not dst_port_id:
-                dst_port_id = self._get_connected_port(src_port_info)
-                if not dst_port_id:
-                    return
-            dst_port_info = mapping_actions.port_info(dst_port_id)
-            if not self._get_connected_port(src_port_info) and not self._get_connected_port(dst_port_info):
-                return
-            if self._get_connected_port(src_port_info) != dst_port_id or self._get_connected_port(
-                    dst_port_info) != src_port_id:
-                raise Exception(self.__class__.__name__,
-                                'Port {0} or port {1} connected to a different port'.format(src_port_id, dst_port_id))
+            end_time = time.time() + self._mapping_timeout
+            while time.time() < end_time:
+                e_port = mapping_actions.get_sub_port(e_port.name)
+                w_port = mapping_actions.get_sub_port(w_port.name)
 
-            self._check_port_locked_or_disabled(src_port_info)
-            self._check_port_locked_or_disabled(dst_port_info)
-
-            mapping_actions.disconnect(src_port_id, dst_port_id)
-            start_time = time.time()
-            while time.time() - start_time < self._mapping_timeout:
-                src_port_info = mapping_actions.port_info(src_port_id)
-                dst_port_info = mapping_actions.port_info(dst_port_id)
-                self._check_port_locked_or_disabled(src_port_info)
-                self._check_port_locked_or_disabled(dst_port_info)
-                if not self._get_connected_port(src_port_info) and not self._get_connected_port(dst_port_info):
+                verify_ports_for_connection(e_port, w_port)
+                if not e_port.connected_to_port_id and not w_port.connected_to_port_id:
                     return
                 else:
                     time.sleep(self._mapping_check_delay)
 
-            raise Exception(self.__class__.__name__,
-                            'Cannot disconnect port {0} from port {1} during {2}sec'.format(src_port_id, dst_port_id,
-                                                                                            self._mapping_timeout))
+            raise BaseRomeException(
+                'Cannot disconnect port {} from port {} during {}sec'.format(
+                    e_port.name, w_port.name, self._mapping_timeout))
 
     def map_clear(self, ports):
         """
@@ -305,9 +275,21 @@ class DriverCommands(DriverCommandsInterface):
         exception_messages = []
         for src_port in ports:
             try:
-                src_port_e, src_port_w = self._get_port_aliases(self._convert_port(src_port))
-                self._disconnect_ports(src_port_e)
-                self._disconnect_ports(src_port_w)
+                with self._cli_handler.default_mode_service() as session:
+                    system_actions = SystemActions(session, self._logger)
+                    port_table = system_actions.get_port_table()
+
+                    src_rome_port = port_table[self.convert_cs_port_to_port_num(src_port)]
+                    e_port, w_port = src_rome_port.e_port, src_rome_port.w_port
+
+                self._disconnect_ports(
+                    e_port,
+                    port_table.get(e_port.connected_to_port_id),
+                )
+                self._disconnect_ports(
+                    port_table.get(w_port.connected_to_port_id),
+                    w_port,
+                )
             except Exception as e:
                 if len(e.args) > 1:
                     exception_messages.append(e.args[1])
@@ -335,12 +317,19 @@ class DriverCommands(DriverCommandsInterface):
                     session.send_command('map clear-to {0} {1}'.format(_src_port, _dst_port))
         """
         if len(dst_ports) != 1:
-            raise Exception(self.__class__.__name__, 'MapClearTo operation is not allowed for multiple Dst ports')
+            raise BaseRomeException('MapClearTo operation is not allowed for multiple Dst ports')
 
         self._logger.info('MapClearTo, SrcPort: {0}, DstPort: {1}'.format(src_port, dst_ports[0]))
-        src_port_e = self._get_port_aliases(self._convert_port(src_port))[0]
-        dst_port_w = self._get_port_aliases(self._convert_port(dst_ports[0]))[1]
-        self._disconnect_ports(src_port_e, dst_port_w)
+
+        with self._cli_handler.default_mode_service() as session:
+            system_actions = SystemActions(session, self._logger)
+            port_table = system_actions.get_port_table()
+
+            src_rome_port = port_table[self.convert_cs_port_to_port_num(src_port)]
+            dst_rome_port = port_table[self.convert_cs_port_to_port_num(dst_ports[0])]
+            e_port, w_port = src_rome_port.e_port, dst_rome_port.w_port
+
+        self._disconnect_ports(e_port, w_port)
 
     def get_attribute_value(self, cs_address, attribute_name):
         """

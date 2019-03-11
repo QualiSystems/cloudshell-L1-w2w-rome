@@ -56,7 +56,7 @@ class AutoloadHelper(object):
                 blade = self._build_blade(rome_port.blade_letter)
                 blades_dict[rome_port.blade_letter] = blade
 
-            port = Port(rome_port.port_id, 'Generic L1 Port', 'NA')
+            port = Port(rome_port.port_id.zfill(3), 'Generic L1 Port', 'NA')
             port.set_model_name('Port Paired')
             port.set_parent_resource(blade)
             ports_dict[rome_port.port_id] = port
