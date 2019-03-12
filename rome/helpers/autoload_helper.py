@@ -61,9 +61,9 @@ class AutoloadHelper(object):
             port.set_parent_resource(blade)
             ports_dict[rome_port.port_id] = port
 
-        for rome_port in self.port_table:
+        for port_id, port in ports_dict.items():
+            rome_port = self.port_table[port_id]
             if rome_port.connected_to_port_id:
-                port = ports_dict[rome_port.port_id]
                 other_port = ports_dict[rome_port.connected_to_port_id]
                 port.add_mapping(other_port)
 
