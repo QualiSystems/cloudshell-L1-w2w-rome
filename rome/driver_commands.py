@@ -12,7 +12,7 @@ from rome.command_actions.mapping_actions import MappingActions
 from rome.command_actions.system_actions import SystemActions
 from rome.helpers.autoload_helper import AutoloadHelper
 from rome.helpers.errors import BaseRomeException, ConnectionPortsError
-from rome.helpers.port_entity import verify_ports_for_connection, SubPort
+from rome.helpers.port_entity import verify_ports_for_connection
 
 
 class DriverCommands(DriverCommandsInterface):
@@ -20,7 +20,7 @@ class DriverCommands(DriverCommandsInterface):
     Driver commands implementation
     """
 
-    ADDRESS_PATTERN = re.compile(r':(matrix)?(?P<letter>[a|b])$', re.IGNORECASE)
+    ADDRESS_PATTERN = re.compile(r'^(?P<address>.+):(matrix)?(?P<letter>[a|b])$', re.IGNORECASE)
 
     def __init__(self, logger, runtime_config):
         """
@@ -57,6 +57,7 @@ class DriverCommands(DriverCommandsInterface):
                 device_info = session.send_command('show version')
                 self._logger.info(device_info)
         """
+        address, _ = self.split_address_and_letter(address)
         self._cli_handler.define_session_attributes(address, username, password)
         with self._cli_handler.default_mode_service() as session:
             system_actions = SystemActions(session, self._logger)
@@ -145,17 +146,19 @@ class DriverCommands(DriverCommandsInterface):
             self.convert_cs_port_to_port_num(dst_ports[0]),
         )
 
-    def get_matrix_letter(self, address):
+    def split_address_and_letter(self, address):
         letter = None
         if not self.support_multiple_blades:
             try:
-                letter = self.ADDRESS_PATTERN.search(address).group('letter')
+                match = self.ADDRESS_PATTERN.search(address)
+                address = match.group('address')
+                letter = match.group('letter')
             except AttributeError:
                 msg = ('Resource address should specify MatrixA or MatrixB. '
                        'Format [IP]:[Matrix Letter]')
                 self._logger.error(msg)
                 raise BaseRomeException(msg)
-        return letter
+        return address, letter
 
     def get_resource_description(self, address):
         """
@@ -191,7 +194,7 @@ class DriverCommands(DriverCommandsInterface):
 
             return ResourceDescriptionResponseInfo([chassis])
         """
-        letter = self.get_matrix_letter(address)
+        address, letter = self.split_address_and_letter(address)
 
         with self._cli_handler.default_mode_service() as session:
             system_actions = SystemActions(session, self._logger)
