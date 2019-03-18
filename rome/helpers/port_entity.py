@@ -9,7 +9,7 @@ class SubPort(object):
         r'\[\w+\]\s+'
         r'(?P<admin_status>(locked|unlocked))\s+'
         r'(?P<oper_status>(enabled|disabled))\s+'
-        r'(?P<port_status>(dis)?connected)\s+'
+        r'(?P<port_status>((dis)?connected)|in process)\s+'
         r'\d+\s+'
         r'((?P<conn_to_direction>[EW])(?P<conn_to_port_id>\d+)'
         r'\[\w+\])?\s+'
@@ -32,6 +32,8 @@ class SubPort(object):
 
     def __str__(self):
         return '<SubPort "{0.direction}{0.port_id}">'.format(self)
+
+    __repr__ = __str__
 
     @property
     def blade_letter(self):
@@ -65,6 +67,8 @@ class RomePort(object):
 
     def __str__(self):
         return '<RomePort "{}">'.format(self.port_id)
+
+    __repr__ = __str__
 
     @property
     def blade_letter(self):
@@ -125,7 +129,7 @@ def verify_ports_for_connection(e_port, w_port):
     verify_port_is_not_locked_or_disabled(e_port)
     verify_port_is_not_locked_or_disabled(w_port)
 
-    if (e_port.connected_to_port_id != w_port.port_id or
-            w_port.connected_to_port_id != e_port.port_id):
+    if (e_port.connected_to_port_id and e_port.connected_to_port_id != w_port.port_id or
+            w_port.connected_to_port_id and w_port.connected_to_port_id != e_port.port_id):
         raise BaseRomeException('Port {}, or port {} connected to a different port'.format(
             e_port.port_id, w_port.port_id))
