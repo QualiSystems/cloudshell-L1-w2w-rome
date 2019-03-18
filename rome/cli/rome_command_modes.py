@@ -6,7 +6,7 @@ from cloudshell.cli.command_mode import CommandMode
 
 
 class DefaultCommandMode(CommandMode):
-    PROMPT = r'.+\[.+\]#'
+    PROMPT = r'\w+\[\w+\]#\s*$'
     ENTER_COMMAND = ''
     EXIT_COMMAND = 'exit'
 
