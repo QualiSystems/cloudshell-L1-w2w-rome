@@ -36,7 +36,7 @@ class AutoloadHelper(object):
         """
         blade_model = 'Matrix ' + blade_name.upper()
         serial_number = 'NA'
-        resource_model = 'Rome Matrix A' if blade_name.lower() == 'a' else 'Rome Matrix B'
+        resource_model = 'Rome Matrix {}'.format(blade_name.upper())
         blade = Blade(blade_name.upper(), resource_model, serial_number)
         blade.set_model_name(blade_model)
         blade.set_serial_number(serial_number)
@@ -65,7 +65,7 @@ class AutoloadHelper(object):
             rome_port = self.port_table[port_id]
             if rome_port.connected_to_port_id:
                 other_port = ports_dict[rome_port.connected_to_port_id]
-                port.add_mapping(other_port)
+                other_port.add_mapping(port)
 
     def build_structure(self):
         self.build_ports_and_blades()
