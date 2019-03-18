@@ -97,7 +97,7 @@ class DriverCommands(DriverCommandsInterface):
 
     @staticmethod
     def convert_cs_port_to_port_num(cs_port):
-        return cs_port.rsplit('/', 1)[-1]
+        return cs_port.rsplit('/', 1)[-1].lstrip('0')
 
     def map_bidi(self, src_port, dst_port):
         """
@@ -194,7 +194,7 @@ class DriverCommands(DriverCommandsInterface):
 
             return ResourceDescriptionResponseInfo([chassis])
         """
-        address, letter = self.split_address_and_letter(address)
+        host, letter = self.split_address_and_letter(address)
 
         with self._cli_handler.default_mode_service() as session:
             system_actions = SystemActions(session, self._logger)
@@ -219,7 +219,7 @@ class DriverCommands(DriverCommandsInterface):
                 return
 
             verify_ports_for_connection(e_port, w_port)
-            mapping_actions.connect(e_port.port_id, w_port.port_id)
+            mapping_actions.connect(e_port.name, w_port.name)
 
             end_time = time.time() + self._mapping_timeout
             while time.time() < end_time:
@@ -244,7 +244,7 @@ class DriverCommands(DriverCommandsInterface):
 
         with self._cli_handler.default_mode_service() as session:
             mapping_actions = MappingActions(session, self._logger)
-            mapping_actions.disconnect(e_port.port_id, w_port.port_id)
+            mapping_actions.disconnect(e_port.name, w_port.name)
 
             end_time = time.time() + self._mapping_timeout
             while time.time() < end_time:
