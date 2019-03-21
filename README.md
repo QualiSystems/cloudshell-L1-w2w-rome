@@ -3,11 +3,11 @@
 
 # **Rome L1 Shell**
 
-Release date: 28/12/2018 
+Release date: 22/03/2019 
 
-Shell version: 2.1.1
+Shell version: 3.0.0
 
-Document version: 1.0
+Document version: 1.1
 
 # In This Guide
 
@@ -139,7 +139,7 @@ This section describes how to import the L1 shell and configure and modify the s
 	
   5. Create an L1 resource.
       1. In **Resource Explorer**, right-click **Root** and select **New>Resource**.
-      2. Enter the **Name** and **Address**.
+      2. Enter the **Name** and **Address**. If **SUPPORT MULTIPLE BLADES** set to False (by default). You have to specify address as **\<IP\>:\<\[Matrix\]A/B\>**, for example 192.168.1.12:MatrixA or 192.168.1.12:B
       3. Select the **L1 Switch** family.
       4. Ensure that the correct **Model** Rome Chassis and **Driver** ROME are selected.
       5. Click **OK**.
