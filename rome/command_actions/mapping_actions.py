@@ -49,4 +49,5 @@ class MappingActions(object):
             self._cli_service,
             command_template.PORT_INFO
         ).execute_command(port=port_id)
-        return SubPort.from_line(port_output)
+        port_info = port_output.splitlines()[3]
+        return SubPort.from_line(port_info)
