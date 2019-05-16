@@ -12,7 +12,7 @@ install:
     - pip install coveralls
 
 script:
-    - nosetests --with-coverage --cover-package=rome tests
+    - nosetests --with-coverage --cover-package=w2w_rome tests
 
 after_success:
     - coveralls

@@ -1,6 +1,6 @@
 import re
 
-from rome.helpers.errors import BaseRomeException
+from w2w_rome.helpers.errors import BaseRomeException
 
 
 class SubPort(object):
