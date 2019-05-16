@@ -1,10 +1,10 @@
 import re
 
-import rome.command_templates.mapping as command_template
+import w2w_rome.command_templates.mapping as command_template
 from cloudshell.cli.command_template.command_template_executor import CommandTemplateExecutor
 
-from rome.helpers.errors import BaseRomeException
-from rome.helpers.port_entity import SubPort
+from w2w_rome.helpers.errors import BaseRomeException
+from w2w_rome.helpers.port_entity import SubPort
 
 
 class MappingActions(object):

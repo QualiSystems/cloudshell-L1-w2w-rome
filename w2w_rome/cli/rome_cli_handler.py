@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from cloudshell.cli.command_mode_helper import CommandModeHelper
-from rome.cli.l1_cli_handler import L1CliHandler
-from rome.cli.rome_command_modes import DefaultCommandMode
+from w2w_rome.cli.l1_cli_handler import L1CliHandler
+from w2w_rome.cli.rome_command_modes import DefaultCommandMode
 
 
 class RomeCliHandler(L1CliHandler):

@@ -2,7 +2,7 @@ import os
 import re
 
 from cloudshell.cli.cli_service import CliService
-from rome.cli.l1_cli_handler import L1CliHandler
+from w2w_rome.cli.l1_cli_handler import L1CliHandler
 
 
 class TestCliContextManager(object):

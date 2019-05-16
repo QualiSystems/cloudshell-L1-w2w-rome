@@ -3,7 +3,7 @@ from unittest import TestCase
 from mock import Mock
 
 from cloudshell.layer_one.core.driver_commands_interface import DriverCommandsInterface
-from rome.driver_commands import DriverCommands
+from w2w_rome.driver_commands import DriverCommands
 
 
 
