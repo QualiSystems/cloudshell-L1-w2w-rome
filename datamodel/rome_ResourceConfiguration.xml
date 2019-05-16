@@ -161,7 +161,7 @@
                     <AttributeValues/>
                     <ParentModels/>
                     <Drivers>
-                        <DriverName>ROME</DriverName>
+                        <DriverName>W2W-ROME</DriverName>
                     </Drivers>
                 </ResourceModel>
             </Models>
@@ -265,7 +265,7 @@
         </ResourceFamily>
     </ResourceFamilies>
     <DriverDescriptors>
-        <DriverDescriptor Name="ROME" DriverType="L1SwitchTclDriver"
-                          CustomParams="rome.exe"/>
+        <DriverDescriptor Name="W2W-ROME" DriverType="L1SwitchTclDriver"
+                          CustomParams="w2w-rome.exe"/>
     </DriverDescriptors>
 </ResourceManagementExportImport>
