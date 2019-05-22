@@ -114,10 +114,10 @@ The shell comprises:
 
 |File name|Description|
 |:---|:---|
-|cloudshell-L1-rome-x.x.x.zip|Rome L1 shell package|
+|cloudshell-L1-w2w-rome-x.x.x.zip|Rome L1 shell package|
 |install_driver.bat|Rome L1 shell installation script|
-|rome_runtime_config.yml|Rome L1 shell configuration file|
-|rome_ResourceConfiguration.xml|XML file containing the resource structure, attributes and capabilities of the L1 switches of the same vendor|
+|w2w_rome_runtime_config.yml|Rome L1 shell configuration file|
+|w2w_rome_ResourceConfiguration.xml|XML file containing the resource structure, attributes and capabilities of the L1 switches of the same vendor|
 
 # Importing and Configuring the Shell
 This section describes how to import the L1 shell and configure and modify the shell’s devices.
@@ -130,11 +130,11 @@ This section describes how to import the L1 shell and configure and modify the s
   2. Extract the *Rome shell zip* package to the following location on the Quali Server machine: 
   *C:\Program Files (x86)\QualiSystems\CloudShell\Server\Drivers*
   
-  3. Run the *C:\Program Files (x86)\QualiSystems\CloudShell\Server\Drivers\cloudshell-L1-rome\install_driver.bat* file.
+  3. Run the *C:\Program Files (x86)\QualiSystems\CloudShell\Server\Drivers\cloudshell-L1-w2w-rome\install_driver.bat* file.
   
   4. Import the new data model.
       1. In **Resource Manager Client>Admin**, right-click **Resource Families** and select **Import**.
-      2. Select the *C:\Program Files (x86)\QualiSystems\CloudShell\Server\Drivers\cloudshell-L1-rome\datamodel\rome_ResourceConfiguration.xml* file.
+      2. Select the *C:\Program Files (x86)\QualiSystems\CloudShell\Server\Drivers\cloudshell-L1-w2w-rome\datamodel\w2w_rome_ResourceConfiguration.xml* file.
       3. Click **Open**.
 	
   5. Create an L1 resource.
@@ -159,7 +159,7 @@ This section describes how to import the L1 shell and configure and modify the s
 ### Offline installation of a shell
 Shell installation installs the required dependencies from the shell's zip package.
 
-The *install_driver.bat* script creates a virtual environment on the Quali Server machine under *C:\Program Files (x86)\QualiSystems\CloudShell\Server\Drivers\cloudshell-L1-rome* and installs the required dependencies in this virtual environment from the extracted L1 shell folder (under *~cloudshell-L1-rome\packages*).
+The *install_driver.bat* script creates a virtual environment on the Quali Server machine under *C:\Program Files (x86)\QualiSystems\CloudShell\Server\Drivers\cloudshell-L1-w2w-rome* and installs the required dependencies in this virtual environment from the extracted L1 shell folder (under *~cloudshell-L1-w2w-rome\packages*).
 
 # Updating Python Dependencies for Shells
 This section explains how to update your Python dependencies folder. This is required when you upgrade a shell that uses new/updated dependencies. It applies to both online and offline dependencies. 
@@ -181,7 +181,7 @@ L1 shells do not have separate Python dependencies files. All dependencies are i
 
 5. Copy the upgraded shell's datamodel file from:
 
-	*C:\Program Files (x86)\QualiSystems\CloudShell\Server\Drivers\cloudshell-L1-rome\datamodel\rome_ResourceConfiguration.xml*
+	*C:\Program Files (x86)\QualiSystems\CloudShell\Server\Drivers\cloudshell-L1-w2w-rome\datamodel\w2w_rome_ResourceConfiguration.xml*
 	
 	to:
 	
@@ -202,4 +202,4 @@ To connect with Quali users and experts from around the world, ask questions and
 
 ### What's New
 
-For release updates, see the shell's [GitHub releases page](https://github.com/QualiSystems/cloudshell-L1-rome/releases).
+For release updates, see the shell's [GitHub releases page](https://github.com/QualiSystems/cloudshell-L1-w2w-rome/releases).
