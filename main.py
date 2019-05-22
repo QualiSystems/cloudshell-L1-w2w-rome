@@ -51,4 +51,4 @@ class Main(object):
 
 
 if __name__ == '__main__':
-    Main(*sys.argv).run_driver('rome')
+    Main(*sys.argv).run_driver('w2w_rome')

@@ -7,12 +7,12 @@ import time
 from cloudshell.layer_one.core.driver_commands_interface import DriverCommandsInterface
 from cloudshell.layer_one.core.response.response_info import GetStateIdResponseInfo, AttributeValueResponseInfo, \
     ResourceDescriptionResponseInfo
-from rome.cli.rome_cli_handler import RomeCliHandler
-from rome.command_actions.mapping_actions import MappingActions
-from rome.command_actions.system_actions import SystemActions
-from rome.helpers.autoload_helper import AutoloadHelper
-from rome.helpers.errors import BaseRomeException, ConnectionPortsError
-from rome.helpers.port_entity import verify_ports_for_connection
+from w2w_rome.cli.rome_cli_handler import RomeCliHandler
+from w2w_rome.command_actions.mapping_actions import MappingActions
+from w2w_rome.command_actions.system_actions import SystemActions
+from w2w_rome.helpers.autoload_helper import AutoloadHelper
+from w2w_rome.helpers.errors import BaseRomeException, ConnectionPortsError
+from w2w_rome.helpers.port_entity import verify_ports_for_connection
 
 
 class DriverCommands(DriverCommandsInterface):

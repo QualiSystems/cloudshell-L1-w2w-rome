@@ -1,8 +1,8 @@
 import re
 
-import rome.command_templates.system as command_template
+import w2w_rome.command_templates.system as command_template
 from cloudshell.cli.command_template.command_template_executor import CommandTemplateExecutor
-from rome.helpers.port_entity import PortTable, SubPort
+from w2w_rome.helpers.port_entity import PortTable, SubPort
 
 
 class SystemActions(object):

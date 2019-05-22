@@ -7,7 +7,7 @@ PACKAGE_FILES:               # Files will be added to the driver's package zip
   - requirements.txt
   - version.txt
   - INSTALL.txt
-  - rome_runtime_config.yml
+  - w2w_rome_runtime_config.yml
   - package_config.yml
   - MappingCompatibilityRulesData.xml
 #  - test_requirements.txt
