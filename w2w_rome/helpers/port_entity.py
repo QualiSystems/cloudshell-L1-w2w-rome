@@ -6,21 +6,26 @@ from w2w_rome.helpers.errors import BaseRomeException
 class SubPort(object):
     PORT_PATTERN = re.compile(
         r'^(?P<direction>[EW])(?P<port_id>\d+)'
-        r'\[\w+\]\s+'
+        r'\[(?P<port_full_name>\w+?)\]\s+'
         r'(?P<admin_status>(locked|unlocked))\s+'
         r'(?P<oper_status>(enabled|disabled))\s+'
         r'(?P<port_status>((dis)?connected)|in process)\s+'
         r'\d+\s+'
         r'((?P<conn_to_direction>[EW])(?P<conn_to_port_id>\d+)'
         r'\[\w+\])?\s+'
-        r'(?P<logical_name>[AB]\d+)\s*$',
+        r'(?P<logical_name>\w+\d+)\s*$',
         re.IGNORECASE,
     )
+    PORT_FULL_NAME_PATTERN = re.compile(r'\d+(?P<blade_letter>[AB])[EW]\d+')
 
-    def __init__(self, direction, port_id, locked, enabled, connected, connected_to_direction,
-                 connected_to_port_id, logical):
+    def __init__(self, direction, port_id, port_full_name, locked, enabled, connected,
+                 connected_to_direction, connected_to_port_id, logical):
         self.direction = direction
         self.port_id = port_id
+        self.port_full_name = port_full_name
+        self.blade_letter = self.PORT_FULL_NAME_PATTERN.search(
+            port_full_name
+        ).group('blade_letter')
         self.name = '{}{}'.format(direction, port_id)
         self.locked = locked
         self.enabled = enabled
@@ -35,10 +40,6 @@ class SubPort(object):
 
     __repr__ = __str__
 
-    @property
-    def blade_letter(self):
-        return self.logical[0].upper()
-
     @classmethod
     def from_line(cls, line):
         match = cls.PORT_PATTERN.search(line)
@@ -50,6 +51,7 @@ class SubPort(object):
         return cls(
             group_dict['direction'].upper(),
             group_dict['port_id'],
+            group_dict['port_full_name'],
             group_dict['admin_status'].lower() == 'locked',
             group_dict['oper_status'].lower() == 'enabled',
             group_dict['port_status'].lower() == 'connected',
