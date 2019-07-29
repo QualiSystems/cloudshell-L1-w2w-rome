@@ -20,7 +20,7 @@ class DriverCommands(DriverCommandsInterface):
     Driver commands implementation
     """
 
-    ADDRESS_PATTERN = re.compile(r'^(?P<address>.+):(matrix)?(?P<letter>[a|b])$', re.IGNORECASE)
+    ADDRESS_PATTERN = re.compile(r'^(?P<address>.+):(matrix)?(?P<letter>[abq])$', re.IGNORECASE)
 
     def __init__(self, logger, runtime_config):
         """
@@ -30,8 +30,6 @@ class DriverCommands(DriverCommandsInterface):
         self._logger = logger
         self._runtime_config = runtime_config
         self._cli_handler = RomeCliHandler(logger)
-        # self._cli_handler = TestCliHandler(
-        #       os.path.join(os.path.dirname(__file__), 'helpers', 'test_fiberzone_data'), logger)
 
         self._mapping_timeout = runtime_config.read_key('MAPPING.TIMEOUT', 120)
         self._mapping_check_delay = runtime_config.read_key('MAPPING.CHECK_DELAY', 3)

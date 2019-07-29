@@ -30,8 +30,8 @@ class SystemActions(object):
         for line in port_table_output.splitlines():
             sub_port = SubPort.from_line(line)
             if sub_port:
-                port = port_table.get_or_create(sub_port.port_id)
-                port.add_sub_port(sub_port)
+                rome_logical_port = port_table.get_or_create(sub_port.logical)
+                rome_logical_port.add_sub_port(sub_port)
 
         return port_table
 
