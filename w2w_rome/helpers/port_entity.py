@@ -4,6 +4,7 @@ from w2w_rome.helpers.errors import BaseRomeException
 
 
 class SubPort(object):
+    """Sub port that keep fiber port for one direction."""
     PORT_PATTERN = re.compile(
         r'^(?P<direction>[EW])(?P<port_id>\d+)'
         r'\[(?P<port_full_name>\w+?)\]\s+'
@@ -13,7 +14,7 @@ class SubPort(object):
         r'\d+\s+'
         r'((?P<conn_to_direction>[EW])(?P<conn_to_port_id>\d+)'
         r'\[\w+\])?\s+'
-        r'(?P<logical_name>\w+\d+)\s*$',
+        r'(?P<logical_name>[ABQ]\d+)\s*$',
         re.IGNORECASE,
     )
     PORT_FULL_NAME_PATTERN = re.compile(r'\d+(?P<blade_letter>[AB])[EW]\d+')
@@ -23,9 +24,7 @@ class SubPort(object):
         self.direction = direction
         self.port_id = port_id
         self.port_full_name = port_full_name
-        self.blade_letter = self.PORT_FULL_NAME_PATTERN.search(
-            port_full_name
-        ).group('blade_letter')
+        self.blade_letter = logical[0].upper()
         self.name = '{}{}'.format(direction, port_id)
         self.locked = locked
         self.enabled = enabled
@@ -34,6 +33,7 @@ class SubPort(object):
         self.connected_to_port_id = connected_to_port_id
         self.connected_to_port_name = '{}{}'.format(connected_to_direction, connected_to_port_id)
         self.logical = logical
+        self.port_name = '{}{}'.format(self.blade_letter, self.port_id)  # A13, B25
 
     def __str__(self):
         return '<SubPort "{0.direction}{0.port_id}">'.format(self)
@@ -62,13 +62,21 @@ class SubPort(object):
 
 
 class RomePort(object):
-    def __init__(self, port_id):
-        self.port_id = port_id
-        self.e_port = None  # type: SubPort
-        self.w_port = None  # type: SubPort
+    """Port keeps east and west ports.
+
+    :param port_name: A1 or B2
+    :type port_name: str
+    :type e_port: SubPort
+    :type w_port: SubPort
+    """
+    def __init__(self, port_name):
+        self.port_name = port_name
+        self.port_id = port_name[1:]
+        self.e_port = None
+        self.w_port = None
 
     def __str__(self):
-        return '<RomePort "{}">'.format(self.port_id)
+        return '<RomePort "{}">'.format(self.port_name)
 
     __repr__ = __str__
 
@@ -88,35 +96,88 @@ class RomePort(object):
         setattr(self, attr_name, sub_port)
 
 
-class PortTable(object):
-    def __init__(self):
-        self.map_ports_num = {}
+class RomeLogicalPort(object):
+    """Rome logical port.
 
-    def get_or_create(self, port_id):
-        try:
-            port_obj = self.map_ports_num[port_id]
-        except KeyError:
-            port_obj = RomePort(port_id)
-            self.map_ports_num[port_id] = port_obj
+    Can keeps a few Logical ports if it's a Q-port.
 
-        return port_obj
+    :type name: str
+    :type rome_ports: dict[str, RomePort]
+    """
+    def __init__(self, name):
+        self.name = name
+        self.blade_letter = name[0].lower()
+        self.port_id = name[1:]
+        self.rome_ports = {}
 
-    def get(self, port_id, default=None):
-        return self.map_ports_num.get(port_id, default)
+    def add_sub_port(self, sub_port):
+        """Adding sub port.
 
-    def __getitem__(self, port_id):
-        """Return Port with port id
-        :type port_id: str
-        :rtype: RomePort
+        :type sub_port: SubPort
         """
         try:
-            val = self.map_ports_num[port_id]
+            rome_port = self.rome_ports[sub_port.port_name]
         except KeyError:
-            raise BaseRomeException('Ups we don\'t have port id "{}" in Ports table'.format(port_id))
+            rome_port = RomePort(sub_port.port_name)
+            self.rome_ports[sub_port.port_name] = rome_port
+
+        rome_port.add_sub_port(sub_port)
+
+    @property
+    def connected_to_sub_port_ids(self):
+        return [
+            rome_port.connected_to_port_id for rome_port in self.rome_ports.values()
+        ]
+
+
+class PortTable(object):
+    """Table with Rome ports.
+
+    :type map_ports: dict[str, RomeLogicalPort]
+    """
+    def __init__(self):
+        self.map_ports = {}
+        self._map_sub_port_id_to_ports = {}
+
+    @property
+    def map_sub_port_id_to_ports(self):
+        if not self._map_sub_port_id_to_ports:
+            self._map_sub_port_id_to_ports = {
+                rome_port.port_id: rome_logical_port
+                for rome_logical_port in self.map_ports.values()
+                for rome_port in rome_logical_port.rome_ports.values()
+            }
+        return self._map_sub_port_id_to_ports
+
+    def get_or_create(self, logical_name):
+        try:
+            rome_logical_port = self.map_ports[logical_name]
+        except KeyError:
+            rome_logical_port = RomeLogicalPort(logical_name)
+            self.map_ports[logical_name] = rome_logical_port
+
+        return rome_logical_port
+
+    def get(self, logical_name, default=None):
+        return self.map_ports.get(logical_name, default)
+
+    def __getitem__(self, logical_name):
+        """Return Rome Logical Port.
+
+        :type logical_name: str
+        :rtype: RomeLogicalPort
+        """
+        try:
+            val = self.map_ports[logical_name]
+        except KeyError:
+            raise BaseRomeException('Ups we don\'t have port "{}" in Ports table'.format(logical_name))
         return val
 
+    def get_by_sub_port_id(self, sub_port_id):
+        return self.map_sub_port_id_to_ports[sub_port_id]
+
     def __iter__(self):
-        return iter(self.map_ports_num.values())
+        return iter(self.map_ports.values())
 
 
 def verify_port_is_not_locked_or_disabled(sub_port):

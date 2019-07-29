@@ -2,9 +2,15 @@ from cloudshell.layer_one.core.response.resource_info.entities.blade import Blad
 from cloudshell.layer_one.core.response.resource_info.entities.chassis import Chassis
 from cloudshell.layer_one.core.response.resource_info.entities.port import Port
 
+from w2w_rome.helpers.errors import BaseRomeException
+
 
 class AutoloadHelper(object):
     def __init__(self, resource_address, board_table, port_table, matrix_letter, logger):
+        """Autoload helper.
+
+        :type port_table: w2w_rome.helpers.port_entity.PortTable
+        """
         self.board_table = board_table
         self.port_table = port_table
         self.matrix_letter = matrix_letter
@@ -46,27 +52,57 @@ class AutoloadHelper(object):
     def build_ports_and_blades(self):
         blades_dict = {}
         ports_dict = {}
-        for rome_port in self.port_table:
-            if self.matrix_letter and self.matrix_letter != rome_port.blade_letter:
+
+        max_port_id = max(
+            (rome_logical_port.port_id for rome_logical_port in self.port_table),
+            key=int,
+        )
+
+        for rome_logical_port in self.port_table:
+            if self.matrix_letter \
+                    and self.matrix_letter.lower() != rome_logical_port.blade_letter:
                 continue
 
             try:
-                blade = blades_dict[rome_port.blade_letter]
+                blade = blades_dict[rome_logical_port.blade_letter]
             except KeyError:
-                blade = self._build_blade(rome_port.blade_letter)
-                blades_dict[rome_port.blade_letter] = blade
+                blade = self._build_blade(rome_logical_port.blade_letter)
+                blades_dict[rome_logical_port.blade_letter] = blade
 
-            port = Port(rome_port.port_id.zfill(3), 'Generic L1 Port', 'NA')
+            port = Port(
+                rome_logical_port.port_id.zfill(len(max_port_id)),
+                'Generic L1 Port',
+                'NA',
+            )
             port.set_model_name('Port Paired')
             port.set_parent_resource(blade)
-            ports_dict[rome_port.port_id] = port
+            ports_dict[rome_logical_port.port_id] = port
 
         for port_id, port in ports_dict.items():
-            rome_port = self.port_table[port_id]
-            if rome_port.connected_to_port_id:
-                other_port = ports_dict[rome_port.connected_to_port_id]
+            rome_logical_port = self.port_table[port_id]
+            connected_ports = [
+                self.port_table.get_by_sub_port_id(sub_port_id)
+                for sub_port_id in rome_logical_port.connected_to_sub_port_ids
+            ]
+            if connected_ports:
+                if len(set(connected_ports)) > 1:
+                    raise BaseRomeException(
+                        "Logical port {} connected to multiple logical ports {}."
+                        "This is not supported.".format(
+                            rome_logical_port.name, connected_ports
+                        )
+                    )
+                other_port = ports_dict[connected_ports[0].port_id]
                 other_port.add_mapping(port)
 
+    def _verify_matrix_letter(self):
+        rome_logical_port = next(self.port_table)
+        if rome_logical_port.name.startswith('Q') and self.matrix_letter != 'Q':
+            raise BaseRomeException(
+                'This device is with Q ports. You should specify Q in device address.'
+            )
+
     def build_structure(self):
+        self._verify_matrix_letter()
         self.build_ports_and_blades()
         return self.chassis
