@@ -98,7 +98,7 @@ class TestMain(TestCase):
         runtime_config_instance.read_key.assert_called_once_with('LOGGING.LEVEL', 'INFO')
         command_logger.setLevel.assert_called_once_with(log_level)
         importlib_mod.import_module.assert_called_once_with('{}.driver_commands'.format(driver_name), package=None)
-        driver_commands_mod.DriverCommands.assert_called_once_with(command_logger)
+        driver_commands_mod.DriverCommands.assert_called_once_with(command_logger, runtime_config_instance)
         command_executor_class.assert_called_once_with(driver_commands_inst, command_logger)
         driver_listener_class.assert_called_once_with(command_executor_inst, xml_logger_inst, command_logger)
         server_inst.start_listening.assert_called_once_with(port=self._port)
