@@ -152,7 +152,7 @@ class DriverCommands(DriverCommandsInterface):
                 address = match.group('address')
                 letter = match.group('letter')
             except AttributeError:
-                msg = ('Resource address should specify MatrixA or MatrixB. '
+                msg = ('Resource address should specify MatrixA, MatrixB or Q. '
                        'Format [IP]:[Matrix Letter]')
                 self._logger.error(msg)
                 raise BaseRomeException(msg)
