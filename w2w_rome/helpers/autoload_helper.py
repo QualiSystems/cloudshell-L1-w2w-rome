@@ -28,7 +28,9 @@ class AutoloadHelper(object):
         serial_number = self.board_table.get('serial_number')
         model_name = self.board_table.get('model_name')
         sw_version = self.board_table.get('sw_version')
-        chassis = Chassis(self._chassis_id, self.resource_address, 'Rome Chassis', serial_number)
+        chassis = Chassis(
+            self._chassis_id, self.resource_address, model_name, serial_number
+        )
         chassis.set_model_name(model_name)
         chassis.set_serial_number(serial_number)
         chassis.set_os_version(sw_version)
@@ -76,30 +78,21 @@ class AutoloadHelper(object):
             )
             port.set_model_name('Port Paired')
             port.set_parent_resource(blade)
-            ports_dict[rome_logical_port.port_id] = port
+            ports_dict[rome_logical_port.name] = port
 
-        for port_id, port in ports_dict.items():
-            rome_logical_port = self.port_table[port_id]
-            connected_ports = [
-                self.port_table.get_by_sub_port_id(sub_port_id)
-                for sub_port_id in rome_logical_port.connected_to_sub_port_ids
-            ]
-            if connected_ports:
-                if len(set(connected_ports)) > 1:
-                    raise BaseRomeException(
-                        "Logical port {} connected to multiple logical ports {}."
-                        "This is not supported.".format(
-                            rome_logical_port.name, connected_ports
-                        )
-                    )
-                other_port = ports_dict[connected_ports[0].port_id]
+        for port_name, port in ports_dict.items():
+            rome_logical_port = self.port_table[port_name]
+            connected_port = self.port_table.get_connected_port(rome_logical_port)
+            if connected_port:
+                other_port = ports_dict[connected_port.name]
                 other_port.add_mapping(port)
 
     def _verify_matrix_letter(self):
-        rome_logical_port = next(self.port_table)
+        rome_logical_port = self.port_table.map_ports.values()[0]
         if rome_logical_port.name.startswith('Q') and self.matrix_letter != 'Q':
             raise BaseRomeException(
-                'This device is with Q ports. You should specify Q in device address.'
+                'This device has MPO ports. '
+                'You should specify MatrixQ in device address.'
             )
 
     def build_structure(self):

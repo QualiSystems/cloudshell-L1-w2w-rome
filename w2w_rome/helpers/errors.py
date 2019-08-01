@@ -4,3 +4,7 @@ class BaseRomeException(Exception):
 
 class ConnectionPortsError(BaseRomeException):
     pass
+
+
+class ConnectedToDifferentPortsError(BaseRomeException):
+    """Sub ports of the logical port connected to different logical ports."""
