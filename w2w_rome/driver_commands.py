@@ -11,7 +11,8 @@ from w2w_rome.cli.rome_cli_handler import RomeCliHandler
 from w2w_rome.command_actions.mapping_actions import MappingActions
 from w2w_rome.command_actions.system_actions import SystemActions
 from w2w_rome.helpers.autoload_helper import AutoloadHelper
-from w2w_rome.helpers.errors import BaseRomeException, ConnectionPortsError
+from w2w_rome.helpers.errors import BaseRomeException, ConnectionPortsError, \
+    NotSupportedError
 from w2w_rome.helpers.port_entity import verify_ports_for_connection
 
 
@@ -20,7 +21,9 @@ class DriverCommands(DriverCommandsInterface):
     Driver commands implementation
     """
 
-    ADDRESS_PATTERN = re.compile(r'^(?P<address>.+):(matrix)?(?P<letter>[abq])$', re.IGNORECASE)
+    ADDRESS_PATTERN = re.compile(
+        r'^(?P<address>.+):(matrix)?(?P<letter>[abq])(/.+)?$', re.IGNORECASE
+    )
 
     def __init__(self, logger, runtime_config):
         """
@@ -93,9 +96,11 @@ class DriverCommands(DriverCommandsInterface):
         """
         pass
 
-    @staticmethod
-    def convert_cs_port_to_port_num(cs_port):
-        return cs_port.rsplit('/', 1)[-1].lstrip('0')
+    def convert_cs_port_to_port_name(self, cs_port):
+        _, matrix_letter = self.split_address_and_letter(cs_port)
+        return '{}{}'.format(
+            matrix_letter, cs_port.rsplit('/', 1)[-1].lstrip('0')
+        )
 
     def map_bidi(self, src_port, dst_port):
         """
@@ -138,10 +143,14 @@ class DriverCommands(DriverCommandsInterface):
         if len(dst_ports) != 1:
             raise BaseRomeException('MapUni operation is not allowed for multiple Dst ports')
 
+        _, letter = self.split_address_and_letter(src_port)
+        if letter.lower() == 'q':
+            raise NotSupportedError("MapUni for matrix Q doesn't supported")
+
         self._logger.info('MapUni, SrcPort: {0}, DstPort: {1}'.format(src_port, dst_ports[0]))
         self._connect_ports(
-            self.convert_cs_port_to_port_num(src_port),
-            self.convert_cs_port_to_port_num(dst_ports[0]),
+            self.convert_cs_port_to_port_name(src_port),
+            self.convert_cs_port_to_port_name(dst_ports[0]),
         )
 
     def split_address_and_letter(self, address):
@@ -202,14 +211,30 @@ class DriverCommands(DriverCommandsInterface):
         response_info = ResourceDescriptionResponseInfo(autoload_helper.build_structure())
         return response_info
 
-    def _connect_ports(self, src_port_id, dst_port_id):
+    @staticmethod
+    def _verify_connect_two_ports(src_rome_logic_port, dst_rome_logic_port):
+        for logic_port in (src_rome_logic_port, dst_rome_logic_port):
+            if len(logic_port.rome_ports) > 1:
+                raise BaseRomeException(
+                    "We don't support connecting multiple sub ports of the logic port. "
+                    "But {} has {}".format(
+                        logic_port.name, logic_port.rome_ports.keys()
+                    )
+                )
+
+    def _connect_ports(self, src_port_name, dst_port_name):
         with self._cli_handler.default_mode_service() as session:
             system_actions = SystemActions(session, self._logger)
             mapping_actions = MappingActions(session, self._logger)
             port_table = system_actions.get_port_table()
 
-            src_rome_port, dst_rome_port = port_table[src_port_id], port_table[dst_port_id]
-            e_port, w_port = src_rome_port.e_port, dst_rome_port.w_port
+            src_rome_logic_port = port_table[src_port_name]
+            dst_rome_logic_port = port_table[dst_port_name]
+
+            self._verify_connect_two_ports(src_rome_logic_port, dst_rome_logic_port)
+
+            e_port = src_rome_logic_port.rome_ports.values()[0].e_port
+            w_port = dst_rome_logic_port.rome_ports.values()[0].w_port
 
             if e_port.connected_to_port_id == w_port.port_id:
                 self._logger.debug(
@@ -280,7 +305,7 @@ class DriverCommands(DriverCommandsInterface):
                     system_actions = SystemActions(session, self._logger)
                     port_table = system_actions.get_port_table()
 
-                    src_rome_port = port_table[self.convert_cs_port_to_port_num(src_port)]
+                    src_rome_port = port_table[self.convert_cs_port_to_port_name(src_port)]
                     e_port, w_port = src_rome_port.e_port, src_rome_port.w_port
 
                 self._disconnect_ports(
@@ -326,8 +351,8 @@ class DriverCommands(DriverCommandsInterface):
             system_actions = SystemActions(session, self._logger)
             port_table = system_actions.get_port_table()
 
-            src_rome_port = port_table[self.convert_cs_port_to_port_num(src_port)]
-            dst_rome_port = port_table[self.convert_cs_port_to_port_num(dst_ports[0])]
+            src_rome_port = port_table[self.convert_cs_port_to_port_name(src_port)]
+            dst_rome_port = port_table[self.convert_cs_port_to_port_name(dst_ports[0])]
             e_port, w_port = src_rome_port.e_port, dst_rome_port.w_port
 
         self._disconnect_ports(e_port, w_port)
