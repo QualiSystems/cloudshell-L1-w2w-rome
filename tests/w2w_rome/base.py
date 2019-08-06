@@ -47,7 +47,7 @@ PORT_SHOW_MATRIX_A = '''ROME[OPER]# port show
 ================ ============ =========== ============= ======= ============== ========
 Port             Admin Status Oper Status Port Status   Counter ConnectedTo    Logical
 ================ ============ =========== ============= ======= ============== ========
-E1[1AE1]         Unlocked     Enabled     Disconnected  2       W2[1BW2]       A1      
+E1[1AE1]         Unlocked     Enabled     Disconnected  2       W2[1AW2]       A1      
 E2[1AE2]         Unlocked     Enabled     Disconnected  0                      A2      
 E3[1AE3]         Unlocked     Enabled     Disconnected  0                      A3      
 E4[1AE4]         Unlocked     Enabled     Disconnected  0                      A4      
@@ -308,7 +308,7 @@ E256[1BE128]     Unlocked     Enabled     Disconnected  0                      B
 1BE129           Unlocked     Enabled     Disconnected  0                              
 1BE130           Unlocked     Enabled     Disconnected  0                              
 W1[1AW1]         Unlocked     Enabled     Disconnected  0                      A1      
-W2[1AW2]         Unlocked     Enabled     Disconnected  0       E1[1BE1]       A2      
+W2[1AW2]         Unlocked     Enabled     Disconnected  0       E1[1AE1]       A2      
 W3[1AW3]         Unlocked     Enabled     Disconnected  0                      A3      
 W4[1AW4]         Unlocked     Enabled     Disconnected  0                      A4      
 W5[1AW5]         Unlocked     Enabled     Disconnected  0                      A5      
@@ -824,7 +824,7 @@ E242[1BE114]     Unlocked     Enabled     Disconnected  0                      B
 E243[1BE115]     Unlocked     Enabled     Disconnected  0                      B243    
 E244[1BE116]     Unlocked     Enabled     Disconnected  0                      B244    
 E245[1BE117]     Unlocked     Enabled     Disconnected  0                      B245    
-E246[1BE118]     Unlocked     Enabled     Disconnected  0                      B246    
+E246[1BE118]     Unlocked     Enabled     Disconnected  0       W247[1BW247]   B246    
 E247[1BE119]     Unlocked     Enabled     Disconnected  0                      B247    
 E248[1BE120]     Unlocked     Enabled     Disconnected  0                      B248    
 E249[1BE121]     Unlocked     Enabled     Connected     13      W253[1BW125]   B249    
@@ -1087,7 +1087,7 @@ W243[1BW115]     Unlocked     Enabled     Disconnected  0                      B
 W244[1BW116]     Unlocked     Enabled     Disconnected  0                      B244    
 W245[1BW117]     Unlocked     Enabled     Disconnected  0                      B245    
 W246[1BW118]     Unlocked     Enabled     Disconnected  0                      B246    
-W247[1BW119]     Unlocked     Enabled     Disconnected  0                      B247    
+W247[1BW119]     Unlocked     Enabled     Disconnected  0       E246[1BW246]   B247    
 W248[1BW120]     Unlocked     Enabled     Disconnected  0                      B248    
 W249[1BW121]     Unlocked     Enabled     Connected     13      E253[1BE125]   B249    
 W250[1BW122]     Unlocked     Enabled     Disconnected  0                      B250    

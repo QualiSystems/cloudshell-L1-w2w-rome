@@ -72,9 +72,10 @@ class RomeTestAutoload(BaseRomeTestCase):
             if port.mapping:
                 connected_ports.append(port)
 
-        self.assertEqual(2, len(connected_ports))
+        self.assertEqual(3, len(connected_ports))
         self.assertDictEqual(
             {
+                'Port 247': 'Port 246',
                 'Port 249': 'Port 253',
                 'Port 253': 'Port 249',
             },
