@@ -6,10 +6,16 @@ from w2w_rome.helpers.errors import BaseRomeException
 
 
 class AutoloadHelper(object):
-    def __init__(self, resource_address, board_table, port_table, matrix_letter, logger):
+    def __init__(
+            self, resource_address, board_table, port_table, matrix_letter, logger
+    ):
         """Autoload helper.
 
+        :type resource_address: str
+        :type board_table: dict
         :type port_table: w2w_rome.helpers.port_entity.PortTable
+        :type matrix_letter: str
+        :type logger: logging.Logger
         """
         self.board_table = board_table
         self.port_table = port_table
@@ -52,44 +58,38 @@ class AutoloadHelper(object):
         return blade
 
     def build_ports_and_blades(self):
-        blades_dict = {}
+        blade = self._build_blade(self.matrix_letter)
         ports_dict = {}
 
-        max_port_id = max(
-            (rome_logical_port.port_id for rome_logical_port in self.port_table),
-            key=int,
+        zfill_n = max(
+            map(
+                len,
+                (rome_logical_port.port_id for rome_logical_port in self.port_table),
+            )
         )
 
-        for rome_logical_port in self.port_table:
-            if self.matrix_letter \
-                    and self.matrix_letter.lower() != rome_logical_port.blade_letter:
+        for logical_port in self.port_table:
+            if self.matrix_letter != logical_port.blade_letter:
                 continue
 
-            try:
-                blade = blades_dict[rome_logical_port.blade_letter]
-            except KeyError:
-                blade = self._build_blade(rome_logical_port.blade_letter)
-                blades_dict[rome_logical_port.blade_letter] = blade
-
             port = Port(
-                rome_logical_port.port_id.zfill(len(max_port_id)),
+                logical_port.port_id.zfill(zfill_n),
                 'Generic L1 Port',
                 'NA',
             )
             port.set_model_name('Port Paired')
             port.set_parent_resource(blade)
-            ports_dict[rome_logical_port.name] = port
+            ports_dict[logical_port.name] = port
 
         for port_name, port in ports_dict.items():
-            rome_logical_port = self.port_table[port_name]
-            connected_port = self.port_table.get_connected_port(rome_logical_port)
-            if connected_port:
-                other_port = ports_dict[connected_port.name]
+            logical_port = self.port_table[port_name]
+            connected_to_port = self.port_table.get_connected_to_port(logical_port)
+            if connected_to_port:
+                other_port = ports_dict[connected_to_port.name]
                 other_port.add_mapping(port)
 
     def _verify_matrix_letter(self):
-        rome_logical_port = self.port_table.map_ports.values()[0]
-        if rome_logical_port.name.startswith('Q') and self.matrix_letter != 'Q':
+        if self.port_table.is_matrix_q and self.matrix_letter.upper() != 'Q':
             raise BaseRomeException(
                 'This device has MPO ports. '
                 'You should specify MatrixQ in device address.'
