@@ -3,6 +3,9 @@
 
 # **Rome L1 Shell**
 
+[![Build status](https://travis-ci.org/QualiSystems/cloudshell-L1-w2w-rome.svg?branch=dev)](https://travis-ci.org/QualiSystems/cloudshell-L1-w2w-rome)
+[![codecov](https://codecov.io/gh/QualiSystems/cloudshell-L1-w2w-rome/branch/dev/graph/badge.svg)](https://codecov.io/gh/QualiSystems/cloudshell-L1-w2w-rome)
+
 Release date: 22/03/2019 
 
 Shell version: 3.0.1
