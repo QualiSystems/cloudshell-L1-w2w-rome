@@ -24,7 +24,7 @@ class SubPort(object):
                  connected_to_direction, connected_to_port_id, logical):
         self.direction = direction
         self.sub_port_id = port_id
-        self.port_full_name = port_full_name
+        self.sub_port_full_name = port_full_name
         self.blade_letter = logical[0].upper()
         self.sub_port_name = '{}{}'.format(direction, port_id)  # E12
         self.locked = locked
@@ -36,7 +36,7 @@ class SubPort(object):
             connected_to_direction, connected_to_port_id
         )
         self.logical = logical
-        self.port_name = '{}{}'.format(self.blade_letter, self.sub_port_id)  # A13, B25
+        self.port_name = '{}{}'.format(self.blade_letter, self.sub_port_id)  # A13, B130
 
     def __str__(self):
         return '<SubPort {}>'.format(self.sub_port_name)

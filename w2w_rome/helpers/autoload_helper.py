@@ -72,11 +72,13 @@ class AutoloadHelper(object):
             if self.matrix_letter != logical_port.blade_letter:
                 continue
 
+            str_port_id = logical_port.port_id.zfill(zfill_n)
             port = Port(
-                logical_port.port_id.zfill(zfill_n),
+                str_port_id,
                 'Generic L1 Port',
                 'NA',
             )
+            port.name = 'Port {}{}'.format(logical_port.blade_letter, str_port_id)
             port.set_model_name('Port Paired')
             port.set_parent_resource(blade)
             ports_dict[logical_port.name] = port
