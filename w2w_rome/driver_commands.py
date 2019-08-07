@@ -326,9 +326,17 @@ class DriverCommands(DriverCommandsInterface):
             for e_port, w_port in sorted(connected_sub_ports):
                 mapping_actions.disconnect(e_port.sub_port_name, w_port.sub_port_name)
 
-            port_table = system_actions.get_port_table()
-            connected_ports = port_table.get_connected_port_pairs(port_names, bidi=True)
-            if connected_ports:
+            end_time = time.time() + self._mapping_timeout
+            while time.time() < end_time:
+                port_table = system_actions.get_port_table()
+                connected_ports = port_table.get_connected_port_pairs(
+                    port_names, bidi=True
+                )
+                if not connected_ports:
+                    break
+
+                time.sleep(self._mapping_check_delay)
+            else:
                 connected_port_names = [
                     (src.name, dst.name) for src, dst in connected_ports
                 ]
@@ -392,9 +400,15 @@ class DriverCommands(DriverCommandsInterface):
             for e_port, w_port in sorted(connected_sub_ports):
                 mapping_actions.disconnect(e_port.sub_port_name, w_port.sub_port_name)
 
-            port_table = system_actions.get_port_table()
-            connected_ports = port_table.get_connected_port_pairs([src_port_name])
-            if connected_ports:
+            end_time = time.time() + self._mapping_timeout
+            while time.time() < end_time:
+                port_table = system_actions.get_port_table()
+                connected_ports = port_table.get_connected_port_pairs([src_port_name])
+                if not connected_ports:
+                    break
+
+                time.sleep(self._mapping_check_delay)
+            else:
                 raise BaseRomeException(
                     "Cannot disconnect ports: {}".format(
                         ' - '.join((src_logic_port.name, dst_logic_port.name))
