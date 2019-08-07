@@ -55,7 +55,7 @@ class RomeTestAutoload(BaseRomeTestCase):
         chassis = info.resource_info_list[0]
         self.assertIsInstance(chassis, Chassis)
         self.assertEqual('9727-4733-2222', chassis.serial_number)
-        self.assertEqual('ROME500', chassis.model_name)
+        self.assertEqual('Rome Chassis', chassis.model_name)
         self.assertEqual(1, len(chassis.child_resources))
 
         blade = chassis.child_resources.values()[0]
@@ -111,7 +111,7 @@ class RomeTestAutoload(BaseRomeTestCase):
         chassis = info.resource_info_list[0]
         self.assertIsInstance(chassis, Chassis)
         self.assertEqual('9727-4733-2222', chassis.serial_number)
-        self.assertEqual('ROME500', chassis.model_name)
+        self.assertEqual('Rome Chassis', chassis.model_name)
         self.assertEqual(1, len(chassis.child_resources))
 
         blade = chassis.child_resources.values()[0]
@@ -163,7 +163,7 @@ class RomeTestAutoload(BaseRomeTestCase):
         chassis = info.resource_info_list[0]
         self.assertIsInstance(chassis, Chassis)
         self.assertEqual('9727-4733-2222', chassis.serial_number)
-        self.assertEqual('ROME500', chassis.model_name)
+        self.assertEqual('Rome Chassis', chassis.model_name)
         self.assertEqual(1, len(chassis.child_resources))
 
         blade = chassis.child_resources.values()[0]
