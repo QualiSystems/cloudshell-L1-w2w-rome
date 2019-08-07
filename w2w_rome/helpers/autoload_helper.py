@@ -35,7 +35,7 @@ class AutoloadHelper(object):
         model_name = self.board_table.get('model_name')
         sw_version = self.board_table.get('sw_version')
         chassis = Chassis(
-            self._chassis_id, self.resource_address, model_name, serial_number
+            self._chassis_id, self.resource_address, 'Rome Chassis', serial_number
         )
         chassis.set_model_name(model_name)
         chassis.set_serial_number(serial_number)
@@ -48,9 +48,9 @@ class AutoloadHelper(object):
         """
         :type blade_name: str
         """
-        blade_model = 'Matrix ' + blade_name.upper()
+        blade_model = 'Matrix ' + blade_name
         serial_number = 'NA'
-        resource_model = 'Rome Matrix {}'.format(blade_name.upper())
+        resource_model = 'Rome Matrix {}'.format(blade_name)
         blade = Blade(blade_name.upper(), resource_model, serial_number)
         blade.set_model_name(blade_model)
         blade.set_serial_number(serial_number)
