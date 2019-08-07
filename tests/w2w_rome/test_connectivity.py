@@ -105,6 +105,57 @@ ROME[TECH]# 08-05-2019 09:20 CONNECTING...
 
     @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
     @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
+    def test_map_uni_a_few_checks(self, send_mock, recv_mock):
+        address = '192.168.122.10:A'
+        user = 'user'
+        password = 'password'
+        src_port = '{}/1/003'.format(address)
+        dst_ports = ['{}/1/004'.format(address)]
+
+        self.driver_commands._mapping_check_delay = 0.1
+
+        connected_port_show_a = re.sub(
+            r"^E3\[.+A3.*$",
+            "E3[1AE3]         Unlocked     Enabled     Disconnected  0"
+            "       W4[1AW4]       A3",
+            PORT_SHOW_MATRIX_A,
+            flags=re.MULTILINE,
+        )
+        connected_port_show_a = re.sub(
+            r"W4\[.+A4.*$",
+            "W4[1AW4]         Unlocked     Enabled     Disconnected  0"
+            "       E3[1AE3]       A4",
+            connected_port_show_a,
+            flags=re.MULTILINE,
+        )
+
+        emu = CliEmulator([
+            Command('', DEFAULT_PROMPT),
+            Command('port show', PORT_SHOW_MATRIX_A),
+            Command(
+                'connection create E3 to W4',
+                '''ROME[TECH]# connection create E3 to W4'''
+            ),
+            Command(
+                'port show', '''OK - request added to pending queue (E3-W4)
+ROME[TECH]# 08-05-2019 09:20 CONNECTING...
+08-05-2019 09:20 CONNECTION OPERATION SUCCEEDED:E3[1AE3]<->W4[1AW4] OP:connect
+{}
+'''.format(PORT_SHOW_MATRIX_A),
+            ),
+            Command('port show', PORT_SHOW_MATRIX_A),
+            Command('port show', connected_port_show_a),
+        ])
+        send_mock.side_effect = emu.send_line
+        recv_mock.side_effect = emu.receive_all
+
+        self.driver_commands.login(address, user, password)
+        self.driver_commands.map_uni(src_port, dst_ports)
+
+        emu.check_calls()
+
+    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
+    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
     def test_map_uni_failed(self, send_mock, recv_mock):
         address = '192.168.122.10:A'
         user = 'user'
@@ -303,6 +354,72 @@ ROME[TECH]# 08-06-2019 09:01 CONNECTING...
 
         emu.check_calls()
 
+    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
+    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
+    def test_map_bidi_a_few_checks(self, send_mock, recv_mock):
+        address = '192.168.122.10:A'
+        user = 'user'
+        password = 'password'
+        src_port = '{}/1/003'.format(address)
+        dst_port = '{}/1/004'.format(address)
+
+        self.driver_commands._mapping_check_delay = 0.1
+
+        connected_port_show_a = re.sub(
+            r"^E3\[.+A3.*$",
+            "E3[1AE3]         Unlocked     Enabled     Disconnected  0"
+            "       W4[1AW4]       A3",
+            PORT_SHOW_MATRIX_A,
+            flags=re.MULTILINE,
+        )
+        connected_port_show_a = re.sub(
+            r"^E4\[.+A4.*$",
+            "E4[1AE4]         Unlocked     Enabled     Disconnected  0"
+            "       W3[1AW3]       A4",
+            connected_port_show_a,
+            flags=re.MULTILINE,
+        )
+        connected_port_show_a = re.sub(
+            r"W3\[.+A3.*$",
+            "W3[1AW3]         Unlocked     Enabled     Disconnected  0"
+            "       E4[1AE4]       A3",
+            connected_port_show_a,
+            flags=re.MULTILINE,
+        )
+        connected_port_show_a = re.sub(
+            r"W4\[.+A4.*$",
+            "W4[1AW4]         Unlocked     Enabled     Disconnected  0"
+            "       E3[1AE3]       A4",
+            connected_port_show_a,
+            flags=re.MULTILINE,
+        )
+
+        emu = CliEmulator([
+            Command('', DEFAULT_PROMPT),
+            Command('port show', PORT_SHOW_MATRIX_A),
+            Command(
+                'connection create A3 to A4',
+                '''ROME[TECH]# connection create A3 to A4
+OK - request added to pending queue (A3-A4)
+ROME[TECH]# 08-06-2019 09:01 CONNECTING...
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E3[1AE3]<->W4[1AW4] OP:connect
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E4[1AE2]<->W3[1AW3] OP:connect
+08-06-2019 09:01 Connection A3<->A4 completed successfully
+'''
+            ),
+            Command('port show', PORT_SHOW_MATRIX_A),
+            Command('port show', PORT_SHOW_MATRIX_A),
+            Command('port show', PORT_SHOW_MATRIX_A),
+            Command('port show', connected_port_show_a),
+        ])
+        send_mock.side_effect = emu.send_line
+        recv_mock.side_effect = emu.receive_all
+
+        self.driver_commands.login(address, user, password)
+        self.driver_commands.map_bidi(src_port, dst_port)
+
+        emu.check_calls()
+
 
 @patch('cloudshell.cli.session.ssh_session.paramiko', MagicMock())
 @patch(
@@ -388,6 +505,98 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E253[1AE253]<->W249[1AW249] OP:disconnect
 '''
             ),
+            Command('port show', disconnected_port_show_b),
+        ])
+        send_mock.side_effect = emu.send_line
+        recv_mock.side_effect = emu.receive_all
+
+        self.driver_commands.login(address, user, password)
+        self.driver_commands.map_clear(ports)
+
+        emu.check_calls()
+
+    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
+    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
+    def test_map_clear_matrix_b_a_few_checks(self, send_mock, recv_mock):
+        address = '192.168.122.10:B'
+        user = 'user'
+        password = 'password'
+        ports = ['{}/1/{}'.format(address, port_id) for port_id in (249, 218, 246)]
+
+        self.driver_commands._mapping_check_delay = 0.1
+
+        disconnected_port_show_b = re.sub(
+            r"^E246\[.+B246.+$",
+            "E246[1BE118]     Unlocked     Enabled     Disconnected  0"
+            "                      B246",
+            PORT_SHOW_MATRIX_B,
+            flags=re.MULTILINE,
+        )
+        disconnected_port_show_b = re.sub(
+            r"^E249\[.+B249.+$",
+            "E249[1BE121]     Unlocked     Enabled     Connected     13"
+            "                     B249",
+            disconnected_port_show_b,
+            flags=re.MULTILINE,
+        )
+        disconnected_port_show_b = re.sub(
+            r"^E253\[.+B253.+$",
+            "E253[1BE125]     Unlocked     Enabled     Connected     13"
+            "                     B253",
+            disconnected_port_show_b,
+            flags=re.MULTILINE,
+        )
+        disconnected_port_show_b = re.sub(
+            r"^W247\[.+B247.+$",
+            "W247[1BW119]     Unlocked     Enabled     Disconnected  0"
+            "                      B247",
+            disconnected_port_show_b,
+            flags=re.MULTILINE,
+        )
+        disconnected_port_show_b = re.sub(
+            r"^W249\[.+B249.+$",
+            "W249[1BW121]     Unlocked     Enabled     Connected     13"
+            "                     B249",
+            disconnected_port_show_b,
+            flags=re.MULTILINE,
+        )
+        disconnected_port_show_b = re.sub(
+            r"^E253\[.+B253.+$",
+            "W253[1BW125]     Unlocked     Enabled     Connected     13"
+            "                     B253",
+            disconnected_port_show_b,
+            flags=re.MULTILINE,
+        )
+
+        emu = CliEmulator([
+            Command('', DEFAULT_PROMPT),
+            Command('port show', PORT_SHOW_MATRIX_B),
+            Command(
+                'connection disconnect E246 from W247',
+                '''ROME[TECH]# connection disconnect E246 from W247
+OK - request added to pending queue (E246-W247)
+ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
+08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E246[1AE246]<->W247[1AW247] OP:disconnect
+'''
+            ),
+            Command(
+                'connection disconnect E249 from W253',
+                '''ROME[TECH]# connection disconnect E249 from W253
+OK - request added to pending queue (E249-W253)
+ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
+08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E249[1AE249]<->W253[1AW253] OP:disconnect
+'''
+            ),
+            Command(
+                'connection disconnect E253 from W249',
+                '''ROME[TECH]# connection disconnect E253 from W249
+OK - request added to pending queue (E253-W249)
+ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
+08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E253[1AE253]<->W249[1AW249] OP:disconnect
+'''
+            ),
+            Command('port show', PORT_SHOW_MATRIX_B),
+            Command('port show', PORT_SHOW_MATRIX_B),
             Command('port show', disconnected_port_show_b),
         ])
         send_mock.side_effect = emu.send_line
@@ -566,6 +775,55 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E249[1AE249]<->W253[1AW253] OP:disconnect
 '''
             ),
+            Command('port show', disconnected_port_show_b),
+        ])
+        send_mock.side_effect = emu.send_line
+        recv_mock.side_effect = emu.receive_all
+
+        self.driver_commands.login(address, user, password)
+        self.driver_commands.map_clear_to(src_port, dst_ports)
+
+        emu.check_calls()
+
+    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
+    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
+    def test_map_clear_to_matrix_b_a_few_checks(self, send_mock, recv_mock):
+        address = '192.168.122.10:B'
+        user = 'user'
+        password = 'password'
+        src_port = '{}/1/249'.format(address)
+        dst_ports = ['{}/1/253'.format(address)]
+
+        self.driver_commands._mapping_check_delay = 0.1
+
+        disconnected_port_show_b = re.sub(
+            r"^E249\[.+B249.+$",
+            "E249[1BE121]     Unlocked     Enabled     Connected     13"
+            "                     B249",
+            PORT_SHOW_MATRIX_B,
+            flags=re.MULTILINE,
+        )
+        disconnected_port_show_b = re.sub(
+            r"^W249\[.+B249.+$",
+            "W249[1BW121]     Unlocked     Enabled     Connected     13"
+            "                     B249",
+            disconnected_port_show_b,
+            flags=re.MULTILINE,
+        )
+
+        emu = CliEmulator([
+            Command('', DEFAULT_PROMPT),
+            Command('port show', PORT_SHOW_MATRIX_B),
+            Command(
+                'connection disconnect E249 from W253',
+                '''ROME[TECH]# connection disconnect E249 from W253
+OK - request added to pending queue (E249-W253)
+ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
+08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E249[1AE249]<->W253[1AW253] OP:disconnect
+'''
+            ),
+            Command('port show', PORT_SHOW_MATRIX_B),
+            Command('port show', PORT_SHOW_MATRIX_B),
             Command('port show', disconnected_port_show_b),
         ])
         send_mock.side_effect = emu.send_line
