@@ -64,20 +64,28 @@ class RomeTestAutoload(BaseRomeTestCase):
         self.assertEqual('NA', blade.serial_number)
         self.assertEqual('Blade B', blade.name)
         self.assertEqual(128, len(blade.child_resources))
+        self.assertItemsEqual(
+            (str(i).zfill(3) for i in range(129, 257)),
+            blade.child_resources.keys(),
+        )
+        self.assertItemsEqual(
+            ('Port B{}'.format(str(i).zfill(3)) for i in range(129, 257)),
+            (port.name for port in blade.child_resources.values()),
+        )
 
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual('Port {}'.format(port.resource_id), port.name)
+            self.assertEqual('Port B{}'.format(port.resource_id), port.name)
             if port.mapping:
                 connected_ports.append(port)
 
         self.assertEqual(3, len(connected_ports))
         self.assertDictEqual(
             {
-                'Port 247': 'Port 246',
-                'Port 249': 'Port 253',
-                'Port 253': 'Port 249',
+                'Port B247': 'Port B246',
+                'Port B249': 'Port B253',
+                'Port B253': 'Port B249',
             },
             {p.name: p.mapping.name for p in connected_ports},
         )
@@ -120,17 +128,25 @@ class RomeTestAutoload(BaseRomeTestCase):
         self.assertEqual('NA', blade.serial_number)
         self.assertEqual('Blade A', blade.name)
         self.assertEqual(128, len(blade.child_resources))
+        self.assertItemsEqual(
+            (str(i).zfill(3) for i in range(1, 129)),
+            blade.child_resources.keys(),
+        )
+        self.assertItemsEqual(
+            ('Port A{}'.format(str(i).zfill(3)) for i in range(1, 129)),
+            (port.name for port in blade.child_resources.values()),
+        )
 
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual('Port {}'.format(port.resource_id), port.name)
+            self.assertEqual('Port A{}'.format(port.resource_id), port.name)
             if port.mapping:
                 connected_ports.append(port)
 
         self.assertEqual(len(connected_ports), 1)
         self.assertDictEqual(
-            {'Port 002': 'Port 001'},
+            {'Port A002': 'Port A001'},
             {p.name: p.mapping.name for p in connected_ports},
         )
 
@@ -172,19 +188,27 @@ class RomeTestAutoload(BaseRomeTestCase):
         self.assertEqual('NA', blade.serial_number)
         self.assertEqual('Blade Q', blade.name)
         self.assertEqual(64, len(blade.child_resources))
+        self.assertItemsEqual(
+            (str(i).zfill(2) for i in range(1, 65)),
+            blade.child_resources.keys(),
+        )
+        self.assertItemsEqual(
+            ('Port Q{}'.format(str(i).zfill(2)) for i in range(1, 65)),
+            (port.name for port in blade.child_resources.values()),
+        )
 
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual('Port {}'.format(port.resource_id), port.name)
+            self.assertEqual('Port Q{}'.format(port.resource_id), port.name)
             if port.mapping:
                 connected_ports.append(port)
 
         self.assertEqual(2, len(connected_ports))
         self.assertDictEqual(
             {
-                'Port 01': 'Port 02',
-                'Port 02': 'Port 01',
+                'Port Q01': 'Port Q02',
+                'Port Q02': 'Port Q01',
             },
             {p.name: p.mapping.name for p in connected_ports},
         )
