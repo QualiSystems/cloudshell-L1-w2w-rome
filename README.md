@@ -8,7 +8,7 @@
 
 Release date: 22/03/2019 
 
-Shell version: 3.0.1
+Shell version: 3.1.0
 
 Document version: 1.1
 
@@ -61,6 +61,7 @@ The L1 switch families and models are listed in the following table:
 |L1 Switch|Rome Chassis|L1 Switch Chassis|
 |L1 Switch Blade|Rome Matrix A|Rome Module type A|
 |L1 Switch Blade|Rome Matrix B|Rome Module type B|
+|L1 Switch Blade|Rome Matrix Q|Rome Module with Q ports|
 |L1 Switch Port|Generic L1 Port|Generic L1 Port|
 
 #### **Rome Attributes**
@@ -142,7 +143,7 @@ This section describes how to import the L1 shell and configure and modify the s
 	
   5. Create an L1 resource.
       1. In **Resource Explorer**, right-click **Root** and select **New>Resource**.
-      2. Enter the **Name** and **Address**. If **SUPPORT MULTIPLE BLADES** set to False (by default). You have to specify address as **\<IP\>:\<\[Matrix\]A/B\>**, for example 192.168.1.12:MatrixA or 192.168.1.12:B
+      2. Enter the **Name** and **Address**. You have to specify address as **\<IP\>:\<\[Matrix\]A/B/Q\>**, for example 192.168.1.12:MatrixA or 192.168.1.12:B. Matrix Q is used for the devices with MPO ports.
       3. Select the **L1 Switch** family.
       4. Ensure that the correct **Model** Rome Chassis and **Driver** ROME are selected.
       5. Click **OK**.
