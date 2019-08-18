@@ -142,23 +142,31 @@ class DriverCommands(DriverCommandsInterface):
                 src_logic_port, dst_logic_port, bidi=True
             )
             mapping_actions.connect(src_logic_port.name, dst_logic_port.name)
+            self._wait_no_pending_connections(mapping_actions)
 
-            end_time = time.time() + self._mapping_timeout
-            while time.time() < end_time:
-                port_table = system_actions.get_port_table()
-                src_logic_port = port_table[src_port_name]
-                dst_logic_port = port_table[dst_port_name]
+            port_table = system_actions.get_port_table()
+            src_logic_port = port_table[src_port_name]
+            dst_logic_port = port_table[dst_port_name]
 
-                if port_table.is_connected(src_logic_port, dst_logic_port, bidi=True):
-                    return
-                else:
-                    time.sleep(self._mapping_check_delay)
-
-            raise ConnectionPortsError(
-                'Cannot connect port {} to port {} during {}sec'.format(
-                    src_logic_port.name, dst_logic_port.name, self._mapping_timeout
+            if not port_table.is_connected(src_logic_port, dst_logic_port, bidi=True):
+                mapping_actions.disconnect(src_logic_port.name, dst_logic_port.name)
+                raise ConnectionPortsError(
+                    'Cannot connect port {} to port {} during {}sec'.format(
+                        src_logic_port.name, dst_logic_port.name, self._mapping_timeout
+                    )
                 )
+
+    def _wait_no_pending_connections(self, mapping_actions):
+        end_time = time.time() + self._mapping_timeout
+        while time.time() < end_time:
+            time.sleep(self._mapping_check_delay)
+            if mapping_actions.is_not_pending_connections():
+                break
+        else:
+            msg = 'There are some pending connections after {}sec'.format(
+                self._mapping_timeout
             )
+            raise BaseRomeException(msg)
 
     def map_uni(self, src_port, dst_ports):
         """
@@ -211,25 +219,20 @@ class DriverCommands(DriverCommandsInterface):
                 src_logic_port.e_sub_ports[0].sub_port_name,
                 dst_logic_port.w_sub_ports[0].sub_port_name,
             )
+            self._wait_no_pending_connections(mapping_actions)
 
-            end_time = time.time() + self._mapping_timeout
-            while time.time() < end_time:
-                port_table = system_actions.get_port_table()
-                src_logic_port = port_table[src_port_name]
-                dst_logic_port = port_table[dst_port_name]
+            port_table = system_actions.get_port_table()
+            src_logic_port = port_table[src_port_name]
+            dst_logic_port = port_table[dst_port_name]
 
-                if port_table.is_connected(src_logic_port, dst_logic_port):
-                    return
-                else:
-                    time.sleep(self._mapping_check_delay)
-
-            raise ConnectionPortsError(
-                'Cannot connect port {} to port {} during {}sec'.format(
-                    src_logic_port.e_sub_ports[0].sub_port_name,
-                    dst_logic_port.w_sub_ports[0].sub_port_name,
-                    self._mapping_timeout
+            if not port_table.is_connected(src_logic_port, dst_logic_port):
+                raise ConnectionPortsError(
+                    'Cannot connect port {} to port {} during {}sec'.format(
+                        src_logic_port.e_sub_ports[0].sub_port_name,
+                        dst_logic_port.w_sub_ports[0].sub_port_name,
+                        self._mapping_timeout
+                    )
                 )
-            )
 
     def split_address_and_letter(self, address):
         """Extract resource address and matrix letter.
@@ -325,18 +328,13 @@ class DriverCommands(DriverCommandsInterface):
             )
             for e_port, w_port in sorted(connected_sub_ports):
                 mapping_actions.disconnect(e_port.sub_port_name, w_port.sub_port_name)
+            self._wait_no_pending_connections(mapping_actions)
 
-            end_time = time.time() + self._mapping_timeout
-            while time.time() < end_time:
-                port_table = system_actions.get_port_table()
-                connected_ports = port_table.get_connected_port_pairs(
-                    port_names, bidi=True
-                )
-                if not connected_ports:
-                    break
-
-                time.sleep(self._mapping_check_delay)
-            else:
+            port_table = system_actions.get_port_table()
+            connected_ports = port_table.get_connected_port_pairs(
+                port_names, bidi=True
+            )
+            if connected_ports:
                 connected_port_names = [
                     (src.name, dst.name) for src, dst in connected_ports
                 ]
@@ -399,16 +397,11 @@ class DriverCommands(DriverCommandsInterface):
             )
             for e_port, w_port in sorted(connected_sub_ports):
                 mapping_actions.disconnect(e_port.sub_port_name, w_port.sub_port_name)
+            self._wait_no_pending_connections(mapping_actions)
 
-            end_time = time.time() + self._mapping_timeout
-            while time.time() < end_time:
-                port_table = system_actions.get_port_table()
-                connected_ports = port_table.get_connected_port_pairs([src_port_name])
-                if not connected_ports:
-                    break
-
-                time.sleep(self._mapping_check_delay)
-            else:
+            port_table = system_actions.get_port_table()
+            connected_ports = port_table.get_connected_port_pairs([src_port_name])
+            if connected_ports:
                 raise BaseRomeException(
                     "Cannot disconnect ports: {}".format(
                         ' - '.join((src_logic_port.name, dst_logic_port.name))
