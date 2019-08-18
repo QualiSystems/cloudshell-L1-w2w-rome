@@ -9,3 +9,4 @@ ERROR_MAP = OrderedDict([(r'[Pp]orts\s+are\s+not\s+of\s+the\s+same\s+matrix', 'P
 CONNECT = CommandTemplate('connection create {src_port} to {dst_port}', ACTION_MAP, ERROR_MAP)
 DISCONNECT = CommandTemplate('connection disconnect {src_port} from {dst_port}', ACTION_MAP, ERROR_MAP)
 PORT_INFO = CommandTemplate('port show {port}', ACTION_MAP, ERROR_MAP)
+CONNECTION_SHOW_PENDING = CommandTemplate('connection show pending')
