@@ -371,7 +371,7 @@ class PortTable(object):
 
         if bidi:
             src_logic_port.verify_w_ports_is_not_locked_or_disabled()
-            dst_logic_port.verify_w_ports_is_not_locked_or_disabled()
+            dst_logic_port.verify_e_ports_is_not_locked_or_disabled()
 
             src_connected_from = self.get_connected_from_port(src_logic_port)
             dst_connected_to = self.get_connected_to_port(dst_logic_port)
@@ -381,7 +381,7 @@ class PortTable(object):
                         src_connected_from
                     )
                 )
-            if dst_connected_to and dst_connected_to != dst_logic_port:
+            if dst_connected_to and dst_connected_to != src_logic_port:
                 raise ConnectionPortsError(
                     "Destination port connected to another port - {}".format(
                         dst_connected_to

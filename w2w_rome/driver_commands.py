@@ -379,12 +379,12 @@ class DriverCommands(DriverCommandsInterface):
             port_table = system_actions.get_port_table()
 
             connected_ports = port_table.get_connected_port_pairs([src_port_name])
-            src_logic_port, dst_logic_port = next(iter(connected_ports))
 
             if not connected_ports:
                 self._logger.debug("Ports already disconnected.")
                 return
 
+            src_logic_port, dst_logic_port = next(iter(connected_ports))
             if dst_logic_port.name != dst_port_name:
                 raise BaseRomeException(
                     "Source port connected to another port - {}".format(
