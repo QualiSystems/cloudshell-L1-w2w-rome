@@ -142,7 +142,9 @@ class DriverCommands(DriverCommandsInterface):
                 src_logic_port, dst_logic_port, bidi=True
             )
             mapping_actions.connect(src_logic_port.name, dst_logic_port.name)
-            self._wait_no_pending_connections(mapping_actions)
+            self._wait_ports_not_in_pending_connections(
+                mapping_actions, [(src_logic_port.name, dst_logic_port.name)]
+            )
 
             port_table = system_actions.get_port_table()
             src_logic_port = port_table[src_port_name]
@@ -156,11 +158,11 @@ class DriverCommands(DriverCommandsInterface):
                     )
                 )
 
-    def _wait_no_pending_connections(self, mapping_actions):
+    def _wait_ports_not_in_pending_connections(self, mapping_actions, ports):
         end_time = time.time() + self._mapping_timeout
         while time.time() < end_time:
             time.sleep(self._mapping_check_delay)
-            if mapping_actions.is_not_pending_connections():
+            if not mapping_actions.ports_in_pending_connections(ports):
                 break
         else:
             msg = 'There are some pending connections after {}sec'.format(
@@ -215,11 +217,10 @@ class DriverCommands(DriverCommandsInterface):
                 return
 
             port_table.verify_ports_for_connection(src_logic_port, dst_logic_port)
-            mapping_actions.connect(
-                src_logic_port.e_sub_ports[0].sub_port_name,
-                dst_logic_port.w_sub_ports[0].sub_port_name,
-            )
-            self._wait_no_pending_connections(mapping_actions)
+            src = src_logic_port.e_sub_ports[0].sub_port_name
+            dst = dst_logic_port.w_sub_ports[0].sub_port_name
+            mapping_actions.connect(src, dst)
+            self._wait_ports_not_in_pending_connections(mapping_actions, [(src, dst)])
 
             port_table = system_actions.get_port_table()
             src_logic_port = port_table[src_port_name]
@@ -228,9 +229,7 @@ class DriverCommands(DriverCommandsInterface):
             if not port_table.is_connected(src_logic_port, dst_logic_port):
                 raise ConnectionPortsError(
                     'Cannot connect port {} to port {} during {}sec'.format(
-                        src_logic_port.e_sub_ports[0].sub_port_name,
-                        dst_logic_port.w_sub_ports[0].sub_port_name,
-                        self._mapping_timeout
+                        src, dst, self._mapping_timeout
                     )
                 )
 
@@ -326,9 +325,15 @@ class DriverCommands(DriverCommandsInterface):
             connected_sub_ports = port_table.get_connected_sub_ports_pairs(
                 connected_ports, bidi=True
             )
-            for e_port, w_port in sorted(connected_sub_ports):
-                mapping_actions.disconnect(e_port.sub_port_name, w_port.sub_port_name)
-            self._wait_no_pending_connections(mapping_actions)
+            connected_sub_port_names = [
+                (e_port.sub_port_name, w_port.sub_port_name)
+                for e_port, w_port in sorted(connected_sub_ports)
+            ]
+            for e_port_name, w_port_name in connected_sub_port_names:
+                mapping_actions.disconnect(e_port_name, w_port_name)
+            self._wait_ports_not_in_pending_connections(
+                mapping_actions, connected_sub_port_names
+            )
 
             port_table = system_actions.get_port_table()
             connected_ports = port_table.get_connected_port_pairs(
@@ -395,9 +400,15 @@ class DriverCommands(DriverCommandsInterface):
             connected_sub_ports = port_table.get_connected_sub_ports_pairs(
                 connected_ports
             )
-            for e_port, w_port in sorted(connected_sub_ports):
-                mapping_actions.disconnect(e_port.sub_port_name, w_port.sub_port_name)
-            self._wait_no_pending_connections(mapping_actions)
+            connected_sub_port_names = [
+                (e_port.sub_port_name, w_port.sub_port_name)
+                for e_port, w_port in sorted(connected_sub_ports)
+            ]
+            for e_port_name, w_port_name in connected_sub_port_names:
+                mapping_actions.disconnect(e_port_name, w_port_name)
+            self._wait_ports_not_in_pending_connections(
+                mapping_actions, connected_sub_port_names
+            )
 
             port_table = system_actions.get_port_table()
             connected_ports = port_table.get_connected_port_pairs([src_port_name])

@@ -83,3 +83,29 @@ class MappingActions(object):
         if not match:
             raise BaseRomeException('Can\'t get port info')
         return SubPort.from_line(match.group())
+
+    def ports_in_pending_connections(self, ports):
+        """Check ports in process or pending.
+
+        Command in process:
+        connect, ports: A3-A4, status: in process with payload
+
+        ======= ========= ========= ================== ======= ===================
+        Request Port1     Port2     Command            Source  User
+        ======= ========= ========= ================== ======= ===================
+        772     A1        A2        connect            CLI     admin
+        """
+        output = CommandTemplateExecutor(
+            self._cli_service,
+            command_template.CONNECTION_SHOW_PENDING,
+        ).execute_command()
+
+        for src, dst in ports:
+            match = re.search(r'ports:\s+{}-{}\D'.format(src, dst), output, re.I)
+            match = match or re.search(
+                r'\w+\s+{}\s+{}\s+\w+'.format(src, dst), output, re.I
+            )
+            if match:
+                return True
+
+        return False
