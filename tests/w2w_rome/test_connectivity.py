@@ -168,7 +168,7 @@ ROME[TECH]# 08-05-2019 09:20 CONNECTING...
             ),
             Command(
                 'connection show pending',
-                get_connection_pending(src_port, dst_ports[0]),
+                get_connection_pending('E3', 'W4'),
             ),
             Command('connection show pending', CONNECTION_PENDING_EMPTY),
             Command('port show', connected_port_show_a),
