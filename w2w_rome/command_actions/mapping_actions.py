@@ -58,7 +58,9 @@ class MappingActions(object):
         :return:
         """
         return CommandTemplateExecutor(
-            self._cli_service, command_template.CONNECT
+            self._cli_service,
+            command_template.CONNECT,
+            self.CONNECTION_PENDING_RESET_MAP,
         ).execute_command(src_port=src_port, dst_port=dst_port)
 
     def disconnect(self, src_port, dst_port):
@@ -69,7 +71,9 @@ class MappingActions(object):
         :return:
         """
         return CommandTemplateExecutor(
-            self._cli_service, command_template.DISCONNECT
+            self._cli_service,
+            command_template.DISCONNECT,
+            self.CONNECTION_PENDING_RESET_MAP,
         ).execute_command(src_port=src_port, dst_port=dst_port)
 
     def ports_in_pending_connections(self, ports):
@@ -88,6 +92,7 @@ class MappingActions(object):
         output = CommandTemplateExecutor(
             self._cli_service,
             command_template.CONNECTION_SHOW_PENDING,
+            self.CONNECTION_PENDING_RESET_MAP,
         ).execute_command()
 
         self.check_full_output()
