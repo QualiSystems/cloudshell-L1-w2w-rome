@@ -2,18 +2,19 @@
 # -*- coding: utf-8 -*-
 
 from cloudshell.cli.cli import CLI
-from cloudshell.cli.session.ssh_session import SSHSession
 from cloudshell.cli.session_pool_manager import SessionPoolManager
 from cloudshell.layer_one.core.helper.runtime_configuration import RuntimeConfiguration
 from cloudshell.layer_one.core.layer_one_driver_exception import LayerOneDriverException
-from w2w_rome.cli.rome_telnet_session import RomeTelnetSession
+from w2w_rome.cli.rome_sessions import RomeTelnetSession, RomeSSHSession
 
 
 class L1CliHandler(object):
     def __init__(self, logger):
         self._logger = logger
         self._cli = CLI(session_pool=SessionPoolManager(max_pool_size=1))
-        self._defined_session_types = {'SSH': SSHSession, 'TELNET': RomeTelnetSession}
+        self._defined_session_types = {
+            'SSH': RomeSSHSession, 'TELNET': RomeTelnetSession
+        }
 
         self._session_types = RuntimeConfiguration().read_key(
             'CLI.TYPE') or self._defined_session_types.keys()
