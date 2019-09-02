@@ -143,7 +143,9 @@ class DriverCommands(DriverCommandsInterface):
             )
             mapping_actions.connect(src_logic_port.name, dst_logic_port.name)
             self._wait_ports_not_in_pending_connections(
-                mapping_actions, [(src_logic_port.name, dst_logic_port.name)]
+                mapping_actions,
+                [(src_logic_port.name, dst_logic_port.name)],
+                2 * len(src_logic_port.rome_ports),
             )
 
             port_table = system_actions.get_port_table()
@@ -158,8 +160,17 @@ class DriverCommands(DriverCommandsInterface):
                     )
                 )
 
-    def _wait_ports_not_in_pending_connections(self, mapping_actions, ports):
-        end_time = time.time() + self._mapping_timeout
+    def _wait_ports_not_in_pending_connections(
+            self, mapping_actions, ports, amount_ports_to_connect
+    ):
+        """Wait for ports go away from pending connections.
+
+        :type mapping_actions: MappingActions
+        :param ports: src and dst ports that connects
+        :type ports: list[tuple[str, str]]
+        :type amount_ports_to_connect: int
+        """
+        end_time = time.time() + (self._mapping_timeout * amount_ports_to_connect)
         while time.time() < end_time:
             time.sleep(self._mapping_check_delay)
             if not mapping_actions.ports_in_pending_connections(ports):
@@ -220,7 +231,9 @@ class DriverCommands(DriverCommandsInterface):
             src = src_logic_port.e_sub_ports[0].sub_port_name
             dst = dst_logic_port.w_sub_ports[0].sub_port_name
             mapping_actions.connect(src, dst)
-            self._wait_ports_not_in_pending_connections(mapping_actions, [(src, dst)])
+            self._wait_ports_not_in_pending_connections(
+                mapping_actions, [(src, dst)], 1
+            )
 
             port_table = system_actions.get_port_table()
             src_logic_port = port_table[src_port_name]
@@ -332,7 +345,7 @@ class DriverCommands(DriverCommandsInterface):
             for e_port_name, w_port_name in connected_sub_port_names:
                 mapping_actions.disconnect(e_port_name, w_port_name)
             self._wait_ports_not_in_pending_connections(
-                mapping_actions, connected_sub_port_names
+                mapping_actions, connected_sub_port_names, len(connected_sub_port_names)
             )
 
             port_table = system_actions.get_port_table()
@@ -407,7 +420,7 @@ class DriverCommands(DriverCommandsInterface):
             for e_port_name, w_port_name in connected_sub_port_names:
                 mapping_actions.disconnect(e_port_name, w_port_name)
             self._wait_ports_not_in_pending_connections(
-                mapping_actions, connected_sub_port_names
+                mapping_actions, connected_sub_port_names, len(connected_sub_port_names)
             )
 
             port_table = system_actions.get_port_table()
