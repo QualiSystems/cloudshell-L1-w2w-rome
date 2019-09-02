@@ -482,4 +482,9 @@ class DriverCommands(DriverCommandsInterface):
         :param duplex:
         :return:
         """
-        raise NotImplementedError
+        self._logger.debug(
+            'Command "set_speed_manual" was called with args: src_port - {}, '
+            'dst_port - {}, speed - {}, duplex - {}'.format(
+                src_port, dst_port, speed, duplex
+            )
+        )
