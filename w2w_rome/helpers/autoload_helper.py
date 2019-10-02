@@ -2,9 +2,21 @@ from cloudshell.layer_one.core.response.resource_info.entities.blade import Blad
 from cloudshell.layer_one.core.response.resource_info.entities.chassis import Chassis
 from cloudshell.layer_one.core.response.resource_info.entities.port import Port
 
+from w2w_rome.helpers.errors import BaseRomeException
+
 
 class AutoloadHelper(object):
-    def __init__(self, resource_address, board_table, port_table, matrix_letter, logger):
+    def __init__(
+            self, resource_address, board_table, port_table, matrix_letter, logger
+    ):
+        """Autoload helper.
+
+        :type resource_address: str
+        :type board_table: dict
+        :type port_table: w2w_rome.helpers.port_entity.PortTable
+        :type matrix_letter: str
+        :type logger: logging.Logger
+        """
         self.board_table = board_table
         self.port_table = port_table
         self.matrix_letter = matrix_letter
@@ -22,7 +34,9 @@ class AutoloadHelper(object):
         serial_number = self.board_table.get('serial_number')
         model_name = self.board_table.get('model_name')
         sw_version = self.board_table.get('sw_version')
-        chassis = Chassis(self._chassis_id, self.resource_address, 'Rome Chassis', serial_number)
+        chassis = Chassis(
+            self._chassis_id, self.resource_address, 'Rome Chassis', serial_number
+        )
         chassis.set_model_name(model_name)
         chassis.set_serial_number(serial_number)
         chassis.set_os_version(sw_version)
@@ -34,9 +48,9 @@ class AutoloadHelper(object):
         """
         :type blade_name: str
         """
-        blade_model = 'Matrix ' + blade_name.upper()
+        blade_model = 'Matrix ' + blade_name
         serial_number = 'NA'
-        resource_model = 'Rome Matrix {}'.format(blade_name.upper())
+        resource_model = 'Rome Matrix {}'.format(blade_name)
         blade = Blade(blade_name.upper(), resource_model, serial_number)
         blade.set_model_name(blade_model)
         blade.set_serial_number(serial_number)
@@ -44,29 +58,46 @@ class AutoloadHelper(object):
         return blade
 
     def build_ports_and_blades(self):
-        blades_dict = {}
+        blade = self._build_blade(self.matrix_letter)
         ports_dict = {}
-        for rome_port in self.port_table:
-            if self.matrix_letter and self.matrix_letter != rome_port.blade_letter:
+
+        zfill_n = max(
+            map(
+                len,
+                (rome_logical_port.port_id for rome_logical_port in self.port_table),
+            )
+        )
+
+        for logical_port in self.port_table:
+            if self.matrix_letter != logical_port.blade_letter:
                 continue
 
-            try:
-                blade = blades_dict[rome_port.blade_letter]
-            except KeyError:
-                blade = self._build_blade(rome_port.blade_letter)
-                blades_dict[rome_port.blade_letter] = blade
-
-            port = Port(rome_port.port_id.zfill(3), 'Generic L1 Port', 'NA')
+            str_port_id = logical_port.port_id.zfill(zfill_n)
+            port = Port(
+                str_port_id,
+                'Generic L1 Port',
+                'NA',
+            )
+            port.name = 'Port {}{}'.format(logical_port.blade_letter, str_port_id)
             port.set_model_name('Port Paired')
             port.set_parent_resource(blade)
-            ports_dict[rome_port.port_id] = port
+            ports_dict[logical_port.name] = port
 
-        for port_id, port in ports_dict.items():
-            rome_port = self.port_table[port_id]
-            if rome_port.connected_to_port_id:
-                other_port = ports_dict[rome_port.connected_to_port_id]
+        for port_name, port in ports_dict.items():
+            logical_port = self.port_table[port_name]
+            connected_to_port = self.port_table.get_connected_to_port(logical_port)
+            if connected_to_port:
+                other_port = ports_dict[connected_to_port.name]
                 other_port.add_mapping(port)
 
+    def _verify_matrix_letter(self):
+        if self.port_table.is_matrix_q and self.matrix_letter.upper() != 'Q':
+            raise BaseRomeException(
+                'This device has MPO ports. '
+                'You should specify MatrixQ in device address.'
+            )
+
     def build_structure(self):
+        self._verify_matrix_letter()
         self.build_ports_and_blades()
         return self.chassis

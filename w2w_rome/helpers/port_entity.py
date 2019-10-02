@@ -1,43 +1,59 @@
 import re
 
-from w2w_rome.helpers.errors import BaseRomeException
+from w2w_rome.helpers.errors import BaseRomeException, ConnectedToDifferentPortsError, \
+    ConnectionPortsError
 
 
 class SubPort(object):
+    """Sub port that keep fiber port for one direction."""
     PORT_PATTERN = re.compile(
         r'^(?P<direction>[EW])(?P<port_id>\d+)'
-        r'\[\w+\]\s+'
+        r'\[(?P<port_full_name>\w+?)\]\s+'
         r'(?P<admin_status>(locked|unlocked))\s+'
         r'(?P<oper_status>(enabled|disabled))\s+'
         r'(?P<port_status>((dis)?connected)|in process)\s+'
         r'\d+\s+'
         r'((?P<conn_to_direction>[EW])(?P<conn_to_port_id>\d+)'
         r'\[\w+\])?\s+'
-        r'(?P<logical_name>[AB]\d+)\s*$',
+        r'(?P<logical_name>[ABQ]\d+)\s*$',
         re.IGNORECASE,
     )
+    PORT_FULL_NAME_PATTERN = re.compile(r'\d+(?P<blade_letter>[AB])[EW]\d+')
 
-    def __init__(self, direction, port_id, locked, enabled, connected, connected_to_direction,
-                 connected_to_port_id, logical):
+    def __init__(self, direction, port_id, port_full_name, locked, enabled, connected,
+                 connected_to_direction, connected_to_port_id, logical):
         self.direction = direction
-        self.port_id = port_id
-        self.name = '{}{}'.format(direction, port_id)
+        self.sub_port_id = port_id
+        self.sub_port_full_name = port_full_name
+        self.blade_letter = logical[0].upper()
+        self.sub_port_name = '{}{}'.format(direction, port_id)  # E12
         self.locked = locked
         self.enabled = enabled
         self.connected = connected
         self.connected_to_direction = connected_to_direction
-        self.connected_to_port_id = connected_to_port_id
-        self.connected_to_port_name = '{}{}'.format(connected_to_direction, connected_to_port_id)
+        self.connected_to_sub_port_id = connected_to_port_id
+        self.connected_to_sub_port_name = '{}{}'.format(
+            connected_to_direction, connected_to_port_id
+        )
         self.logical = logical
+        self.port_name = '{}{}'.format(self.blade_letter, self.sub_port_id)  # A13, B130
 
     def __str__(self):
-        return '<SubPort "{0.direction}{0.port_id}">'.format(self)
+        return '<SubPort {}>'.format(self.sub_port_name)
 
     __repr__ = __str__
 
-    @property
-    def blade_letter(self):
-        return self.logical[0].upper()
+    def __eq__(self, other):
+        if isinstance(other, type(self)):
+            return self.sub_port_name == other.sub_port_name
+        return False
+
+    def __lt__(self, other):
+        if isinstance(other, type(self)):
+            if self.direction == other.direction:
+                return int(self.sub_port_id) < int(other.sub_port_id)
+            return self.direction < other.direction
+        raise NotImplementedError
 
     @classmethod
     def from_line(cls, line):
@@ -50,6 +66,7 @@ class SubPort(object):
         return cls(
             group_dict['direction'].upper(),
             group_dict['port_id'],
+            group_dict['port_full_name'],
             group_dict['admin_status'].lower() == 'locked',
             group_dict['oper_status'].lower() == 'enabled',
             group_dict['port_status'].lower() == 'connected',
@@ -58,15 +75,32 @@ class SubPort(object):
             group_dict['logical_name'],
         )
 
+    def verify_sub_port_is_not_locked_or_disabled(self):
+        """Check that Sub Ports are not locked or disabled.    """
+        if self.locked:
+            raise BaseRomeException('Sub Port {} is Locked'.format(self.sub_port_name))
+        if not self.enabled:
+            raise BaseRomeException(
+                'Sub Port {} is Disabled'.format(self.sub_port_name)
+            )
+
 
 class RomePort(object):
-    def __init__(self, port_id):
-        self.port_id = port_id
-        self.e_port = None  # type: SubPort
-        self.w_port = None  # type: SubPort
+    """Port keeps east and west ports.
+
+    :param port_name: A1 or B2
+    :type port_name: str
+    :type e_port: SubPort
+    :type w_port: SubPort
+    """
+    def __init__(self, port_name):
+        self.port_name = port_name
+        self.sub_port_id = port_name[1:]
+        self.e_port = None
+        self.w_port = None
 
     def __str__(self):
-        return '<RomePort "{}">'.format(self.port_id)
+        return '<RomePort {}>'.format(self.port_name)
 
     __repr__ = __str__
 
@@ -75,8 +109,12 @@ class RomePort(object):
         return self.e_port.blade_letter
 
     @property
-    def connected_to_port_id(self):
-        return self.e_port.connected_to_port_id
+    def connected_to_sub_port_id(self):
+        return self.e_port.connected_to_sub_port_id
+
+    @property
+    def connected_from_sub_port_id(self):
+        return self.w_port.connected_to_sub_port_id
 
     def add_sub_port(self, sub_port):
         attr_name = '{}_port'.format(sub_port.direction.lower())
@@ -86,50 +124,309 @@ class RomePort(object):
         setattr(self, attr_name, sub_port)
 
 
-class PortTable(object):
-    def __init__(self):
-        self.map_ports_num = {}
+class LogicalPort(object):
+    """Rome logical port.
 
-    def get_or_create(self, port_id):
-        try:
-            port_obj = self.map_ports_num[port_id]
-        except KeyError:
-            port_obj = RomePort(port_id)
-            self.map_ports_num[port_id] = port_obj
+    Can keeps a few Logical ports if it's a Q-port.
 
-        return port_obj
+    :type name: str
+    """
+    def __init__(self, name):
+        self.name = name
+        self.blade_letter = name[0].upper()
+        self.port_id = name[1:]
+        self._rome_ports_map = {}
+        self.is_q_port = self.blade_letter == "Q"
 
-    def get(self, port_id, default=None):
-        return self.map_ports_num.get(port_id, default)
+    @property
+    def rome_ports(self):
+        """:rtype: list[RomePort]"""
+        return self._rome_ports_map.values()
 
-    def __getitem__(self, port_id):
-        """Return Port with port id
-        :type port_id: str
+    @property
+    def e_sub_ports(self):
+        """Return E Sub ports.
+
+        :rtype: list[SubPort]
+        """
+        return [rome_port.e_port for rome_port in self.rome_ports]
+
+    @property
+    def w_sub_ports(self):
+        """Return W Sub ports.
+
+        :rtype: list[SubPort]
+        """
+        return [rome_port.w_port for rome_port in self.rome_ports]
+
+    def __str__(self):
+        return '<LogicalPort "{}">'.format(self.name)
+
+    __repr__ = __str__
+
+    def __eq__(self, other):
+        if isinstance(other, type(self)):
+            return self.name == other.name
+        return False
+
+    def get_or_create_rome_port(self, port_name):
+        """Get exiting Rome port or create new.
+
+        :type port_name: str
         :rtype: RomePort
         """
         try:
-            val = self.map_ports_num[port_id]
+            rome_port = self._rome_ports_map[port_name]
         except KeyError:
-            raise BaseRomeException('Ups we don\'t have port id "{}" in Ports table'.format(port_id))
+            rome_port = RomePort(port_name)
+            self._rome_ports_map[port_name] = rome_port
+
+        return rome_port
+
+    def add_sub_port(self, sub_port):
+        """Adding sub port.
+
+        :type sub_port: SubPort
+        """
+        rome_port = self.get_or_create_rome_port(sub_port.port_name)
+        rome_port.add_sub_port(sub_port)
+
+    @property
+    def connected_to_sub_port_ids(self):
+        return filter(
+            None,
+            (rome_port.connected_to_sub_port_id for rome_port in self.rome_ports),
+        )
+
+    @property
+    def connected_from_sub_port_ids(self):
+        return filter(
+            None,
+            (rome_port.connected_from_sub_port_id for rome_port in self.rome_ports),
+        )
+
+    def verify_connected_ports(self, connected_ports):
+        """Verify that the logical port is connected only for one port."""
+        if (len(connected_ports) != len(self.rome_ports)
+                or len(set(connected_ports)) != 1):
+            raise ConnectedToDifferentPortsError(
+                'Logical port {} connected to a few different logical ports: '
+                '{}'.format(
+                    self.name,
+                    ','.join(p.name for p in connected_ports)
+                )
+            )
+
+    def verify_e_ports_is_not_locked_or_disabled(self):
+        map(SubPort.verify_sub_port_is_not_locked_or_disabled, self.e_sub_ports)
+
+    def verify_w_ports_is_not_locked_or_disabled(self):
+        map(SubPort.verify_sub_port_is_not_locked_or_disabled, self.w_sub_ports)
+
+    def get_connected_sub_ports(self, dst_logic_port):
+        """Return mapping with connected sub ports.
+
+        :type dst_logic_port: LogicalPort
+        :rtype: set[tuple[SubPort, SubPort]]
+        """
+        return {
+            (e_port, w_port)
+            for e_port in self.e_sub_ports
+            for w_port in dst_logic_port.w_sub_ports
+            if e_port.connected_to_sub_port_name == w_port.sub_port_name
+        }
+
+
+class PortTable(object):
+    """Table with Rome ports.
+
+    :type _map_ports: dict[str, LogicalPort]
+    """
+    def __init__(self):
+        self._map_ports = {}
+        self._map_sub_port_id_to_ports = {}
+
+    @property
+    def logical_ports(self):
+        return self._map_ports.values()
+
+    @property
+    def is_matrix_q(self):
+        """Check that matrix is Q or not.
+
+        :rtype: bool
+        """
+        return self.logical_ports[0].is_q_port
+
+    @property
+    def map_sub_port_id_to_ports(self):
+        if not self._map_sub_port_id_to_ports:
+            self._map_sub_port_id_to_ports = {
+                rome_port.sub_port_id: logical_port
+                for logical_port in self._map_ports.values()
+                for rome_port in logical_port.rome_ports
+            }
+        return self._map_sub_port_id_to_ports
+
+    def get_or_create(self, logical_name):
+        try:
+            logical_port = self._map_ports[logical_name]
+        except KeyError:
+            logical_port = LogicalPort(logical_name)
+            self._map_ports[logical_name] = logical_port
+
+        return logical_port
+
+    def get(self, logical_name, default=None):
+        return self._map_ports.get(logical_name, default)
+
+    def __getitem__(self, logical_name):
+        """Return Rome Logical Port.
+
+        :type logical_name: str
+        :rtype: LogicalPort
+        """
+        try:
+            val = self._map_ports[logical_name]
+        except KeyError:
+            raise BaseRomeException(
+                'We don\'t have port "{}" in Ports table'.format(logical_name)
+            )
         return val
 
+    def get_by_sub_port_id(self, sub_port_id):
+        """Get Rome Logical Port by sub port id.
+
+        :type sub_port_id: str
+        :rtype: LogicalPort
+        """
+        if sub_port_id:
+            return self.map_sub_port_id_to_ports[sub_port_id]
+
     def __iter__(self):
-        return iter(self.map_ports_num.values())
+        return iter(self._map_ports.values())
 
+    def get_connected_to_port(self, logical_port):
+        """Return a port that connected to given.
 
-def verify_port_is_not_locked_or_disabled(sub_port):
-    """Check disabled or locked."""
-    if sub_port.locked:
-        raise BaseRomeException('Port {} is Locked'.format(sub_port.port_id))
-    if not sub_port.enabled:
-        raise BaseRomeException('Port {} is Disabled'.format(sub_port.port_id))
+        :type logical_port: LogicalPort
+        :rtype: LogicalPort
+        """
+        connected_to_ports = map(
+            self.get_by_sub_port_id, logical_port.connected_to_sub_port_ids
+        )
+        if connected_to_ports:
+            logical_port.verify_connected_ports(connected_to_ports)
+            return connected_to_ports[0]
 
+    def get_connected_from_port(self, logical_port):
+        """Return a port from which the logical port connected.
 
-def verify_ports_for_connection(e_port, w_port):
-    verify_port_is_not_locked_or_disabled(e_port)
-    verify_port_is_not_locked_or_disabled(w_port)
+        :type logical_port: LogicalPort
+        :rtype: LogicalPort
+        """
+        connected_from_ports = map(
+            self.get_by_sub_port_id, logical_port.connected_from_sub_port_ids
+        )
+        if connected_from_ports:
+            logical_port.verify_connected_ports(connected_from_ports)
+            return connected_from_ports[0]
 
-    if (e_port.connected_to_port_id and e_port.connected_to_port_id != w_port.port_id or
-            w_port.connected_to_port_id and w_port.connected_to_port_id != e_port.port_id):
-        raise BaseRomeException('Port {}, or port {} connected to a different port'.format(
-            e_port.port_id, w_port.port_id))
+    def is_connected(self, src_logic_port, dst_logic_port, bidi=False):
+        """Check that ports are connected.
+
+        :type src_logic_port: LogicalPort
+        :type dst_logic_port: LogicalPort
+        :type bidi: bool
+        :rtype: bool
+        """
+        src_to_dst = self.get_connected_to_port(src_logic_port) == dst_logic_port
+        dst_to_src = True
+        if bidi:
+            dst_to_src = self.get_connected_to_port(dst_logic_port) == src_logic_port
+        return src_to_dst and dst_to_src
+
+    def verify_ports_for_connection(self, src_logic_port, dst_logic_port, bidi=False):
+        """Verify that we can use ports for connection.
+
+        :type src_logic_port: LogicalPort
+        :type dst_logic_port: LogicalPort
+        :type bidi: bool
+        """
+        src_logic_port.verify_e_ports_is_not_locked_or_disabled()
+        dst_logic_port.verify_w_ports_is_not_locked_or_disabled()
+
+        src_connected_to = self.get_connected_to_port(src_logic_port)
+        dst_connected_from = self.get_connected_from_port(dst_logic_port)
+        if src_connected_to and src_connected_to != dst_logic_port:
+            raise ConnectionPortsError(
+                "Source port connected to another port - {}".format(src_connected_to)
+            )
+        if dst_connected_from and dst_connected_from != src_logic_port:
+            raise ConnectionPortsError(
+                "To destination port connected another port - {}".format(
+                    dst_connected_from
+                )
+            )
+
+        if bidi:
+            src_logic_port.verify_w_ports_is_not_locked_or_disabled()
+            dst_logic_port.verify_e_ports_is_not_locked_or_disabled()
+
+            src_connected_from = self.get_connected_from_port(src_logic_port)
+            dst_connected_to = self.get_connected_to_port(dst_logic_port)
+            if src_connected_from and src_connected_from != dst_logic_port:
+                raise ConnectionPortsError(
+                    "To source port connected another port - {}".format(
+                        src_connected_from
+                    )
+                )
+            if dst_connected_to and dst_connected_to != src_logic_port:
+                raise ConnectionPortsError(
+                    "Destination port connected to another port - {}".format(
+                        dst_connected_to
+                    )
+                )
+
+    def get_connected_port_pairs(self, port_names, bidi=False):
+        """Return pairs of logical ports that connected.
+
+        :type port_names: list[str]
+        :type bidi: bool
+        :rtype: set[tuple[LogicalPort]]
+        """
+        connected_ports = set()
+
+        for port_name in port_names:
+            logic_port = self[port_name]
+            connected_to = self.get_connected_to_port(logic_port)
+            if connected_to:
+                connected_ports.add((logic_port, connected_to))
+
+            if bidi:
+                connected_from = self.get_connected_from_port(logic_port)
+                if connected_from:
+                    connected_ports.add((connected_from, logic_port))
+
+        return connected_ports
+
+    @staticmethod
+    def get_connected_sub_ports_pairs(connected_ports, bidi=False):
+        """Return pairs of Sub ports that connected.
+
+        :type connected_ports: set[tuple[LogicalPort]]
+        :type bidi: bool
+        :rtype: set[tuple[SubPort]]
+        """
+        connected_sub_ports = set()
+
+        for src_logic_port, dst_logic_port in connected_ports:
+            connected_sub_ports.update(
+                src_logic_port.get_connected_sub_ports(dst_logic_port)
+            )
+            if bidi:
+                connected_sub_ports.update(
+                    dst_logic_port.get_connected_sub_ports(src_logic_port)
+                )
+
+        return connected_sub_ports

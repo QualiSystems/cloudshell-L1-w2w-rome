@@ -9,7 +9,8 @@ CONNECTION_OPERATION_REGEX = (
     r'(\d{1,2}-\d{1,2}-\d{2,4}\s\d{1,2}:\d{1,2}\s'  # date time
     r'('
     r'((dis)?connecting\.{3}\n?)|'
-    r'(connection operation \w+:\w+\[\w+\]<->\w+\[\w+\]\sop:\w+\n?)'
+    r'((connection operation \w+:\w+\[\w+\]<->\w+\[\w+\]\sop:\w+\n?)+|'
+    r'(connection .+ completed .+\n))*'
     r')'
     r')*'
 )

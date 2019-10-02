@@ -3,11 +3,14 @@
 
 # **Rome L1 Shell**
 
-Release date: 22/03/2019 
+[![Build status](https://travis-ci.org/QualiSystems/cloudshell-L1-w2w-rome.svg?branch=dev)](https://travis-ci.org/QualiSystems/cloudshell-L1-w2w-rome)
+[![codecov](https://codecov.io/gh/QualiSystems/cloudshell-L1-w2w-rome/branch/dev/graph/badge.svg)](https://codecov.io/gh/QualiSystems/cloudshell-L1-w2w-rome)
 
-Shell version: 3.0.0
+Release date: 02/10/2019
 
-Document version: 1.1
+Shell version: 4.0.0
+
+Document version: 1.2
 
 # In This Guide
 
@@ -58,6 +61,7 @@ The L1 switch families and models are listed in the following table:
 |L1 Switch|Rome Chassis|L1 Switch Chassis|
 |L1 Switch Blade|Rome Matrix A|Rome Module type A|
 |L1 Switch Blade|Rome Matrix B|Rome Module type B|
+|L1 Switch Blade|Rome Matrix Q|Rome Module with Q ports|
 |L1 Switch Port|Generic L1 Port|Generic L1 Port|
 
 #### **Rome Attributes**
