@@ -37,7 +37,7 @@ The Rome L1 shell provides you with the capability to communicate with network t
 
 The shell allows CloudShell users to interact with the device, for example, create and modify route mappings, get device information, and more.
 
-For more information on the **Rome robotic fibre switches**, see the official [**Wave-2-Wave**](http://www.wave-2-wave.com) product documentation.
+For more information on the **Rome robotic fiber switches**, see the official [**Wave-2-Wave**](http://www.wave-2-wave.com) product documentation.
 
 ### Standard version
 The Rome shell is based on the [**Layer 1 Switch Shell Standard**](https://github.com/QualiSystems/shell-L1-template).
@@ -143,7 +143,7 @@ This section describes how to import the L1 shell and configure and modify the s
 	
   5. Create an L1 resource.
       1. In **Resource Explorer**, right-click **Root** and select **New>Resource**.
-      2. Enter the **Name** and **Address**. You have to specify address as **\<IP\>:\<\[Matrix\]A/B/Q\>**, for example 192.168.1.12:MatrixA or 192.168.1.12:B. Matrix Q is used for the devices with MPO ports.
+      2. Enter the **Name** and **Address**. If **SUPPORT MULTIPLE BLADES** is set to False (by default), you will need to specify the address as **\<IP\>:\<\[Matrix\]A/B\>**, for example 192.168.1.12:MatrixA or 192.168.1.12:B
       3. Select the **L1 Switch** family.
       4. Ensure that the correct **Model** Rome Chassis and **Driver** ROME are selected.
       5. Click **OK**.
