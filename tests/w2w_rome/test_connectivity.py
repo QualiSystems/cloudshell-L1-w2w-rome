@@ -42,18 +42,17 @@ ROME[TECH]# '''.format(src_port, dst_port)
     MagicMock(return_value=''),
 )
 class RomeTestMapUni(BaseRomeTestCase):
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_map_uni_with_a_few_dst_ports(self, send_mock, recv_mock):
-        address = '192.168.122.10:B'
+    def test_map_uni_with_a_few_dst_ports(self):
+        host = '192.168.122.10'
+        address = '{}:B'.format(host)
         user = 'user'
         password = 'password'
         src_port = '{}/1/010'.format(address)
         dst_ports = ['{}/1/{}'.format(address, port_num) for port_num in (12, 14, 16)]
 
         emu = CliEmulator()
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
 
@@ -64,10 +63,9 @@ class RomeTestMapUni(BaseRomeTestCase):
 
         emu.check_calls()
 
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_map_uni_with_connected_ports(self, send_mock, recv_mock):
-        address = '192.168.122.10:A'
+    def test_map_uni_with_connected_ports(self):
+        host = '192.168.122.10'
+        address = '{}:A'.format(host)
         user = 'user'
         password = 'password'
         src_port = '{}/1/001'.format(address)
@@ -77,18 +75,17 @@ class RomeTestMapUni(BaseRomeTestCase):
             Command('', DEFAULT_PROMPT),
             Command('port show', PORT_SHOW_MATRIX_A),
         ])
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
         self.driver_commands.map_uni(src_port, dst_ports)
 
         emu.check_calls()
 
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_map_uni(self, send_mock, recv_mock):
-        address = '192.168.122.10:A'
+    def test_map_uni(self):
+        host = '192.168.122.10'
+        address = '{}:A'.format(host)
         user = 'user'
         password = 'password'
         src_port = '{}/1/003'.format(address)
@@ -125,18 +122,17 @@ ROME[TECH]# 08-05-2019 09:20 CONNECTING...
             Command('connection show pending', CONNECTION_PENDING_EMPTY),
             Command('port show', connected_port_show_a),
         ])
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
         self.driver_commands.map_uni(src_port, dst_ports)
 
         emu.check_calls()
 
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_map_uni_a_few_checks(self, send_mock, recv_mock):
-        address = '192.168.122.10:A'
+    def test_map_uni_a_few_checks(self):
+        host = '192.168.122.10'
+        address = '{}:A'.format(host)
         user = 'user'
         password = 'password'
         src_port = '{}/1/003'.format(address)
@@ -173,18 +169,17 @@ ROME[TECH]# 08-05-2019 09:20 CONNECTING...
             Command('connection show pending', CONNECTION_PENDING_EMPTY),
             Command('port show', connected_port_show_a),
         ])
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
         self.driver_commands.map_uni(src_port, dst_ports)
 
         emu.check_calls()
 
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_map_uni_failed(self, send_mock, recv_mock):
-        address = '192.168.122.10:A'
+    def test_map_uni_failed(self):
+        host = '192.168.122.10'
+        address = '{}:A'.format(host)
         user = 'user'
         password = 'password'
         src_port = '{}/1/006'.format(address)
@@ -212,8 +207,8 @@ ROME[TECH]#
             ]
         )
 
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
 
@@ -224,18 +219,17 @@ ROME[TECH]#
 
         emu.check_calls()
 
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_map_uni_for_matrix_q(self, send_mock, recv_mock):
-        address = '192.168.122.10:Q'
+    def test_map_uni_for_matrix_q(self):
+        host = '192.168.122.10'
+        address = '{}:Q'.format(host)
         user = 'user'
         password = 'password'
         src_port = '{}/1/03'.format(address)
         dst_ports = ['{}/1/04'.format(address)]
 
         emu = CliEmulator()
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
 
@@ -253,10 +247,9 @@ ROME[TECH]#
     MagicMock(return_value=''),
 )
 class RomeTestMapBidi(BaseRomeTestCase):
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_map_bidi_with_connected_ports(self, send_mock, recv_mock):
-        address = '192.168.122.10:B'
+    def test_map_bidi_with_connected_ports(self):
+        host = '192.168.122.10'
+        address = '{}:B'.format(host)
         user = 'user'
         password = 'password'
         src_port = '{}/1/249'.format(address)
@@ -266,18 +259,17 @@ class RomeTestMapBidi(BaseRomeTestCase):
             Command('', DEFAULT_PROMPT),
             Command('port show', PORT_SHOW_MATRIX_B),
         ])
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
         self.driver_commands.map_bidi(src_port, dst_port)
 
         emu.check_calls()
 
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_map_bidi_one_connection(self, send_mock, recv_mock):
-        address = '192.168.122.10:A'
+    def test_map_bidi_one_connection(self):
+        host = '192.168.122.10'
+        address = '{}:A'.format(host)
         user = 'user'
         password = 'password'
         src_port = '{}/1/001'.format(address)
@@ -315,18 +307,17 @@ ROME[TECH]# 08-06-2019 09:01 CONNECTING...
             Command('connection show pending', CONNECTION_PENDING_EMPTY),
             Command('port show', connected_port_show_a),
         ])
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
         self.driver_commands.map_bidi(src_port, dst_port)
 
         emu.check_calls()
 
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_map_bidi(self, send_mock, recv_mock):
-        address = '192.168.122.10:A'
+    def test_map_bidi(self):
+        host = '192.168.122.10'
+        address = '{}:A'.format(host)
         user = 'user'
         password = 'password'
         src_port = '{}/1/003'.format(address)
@@ -378,18 +369,17 @@ ROME[TECH]# 08-06-2019 09:01 CONNECTING...
             Command('connection show pending', CONNECTION_PENDING_EMPTY),
             Command('port show', connected_port_show_a),
         ])
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
         self.driver_commands.map_bidi(src_port, dst_port)
 
         emu.check_calls()
 
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_map_bidi_a_few_checks(self, send_mock, recv_mock):
-        address = '192.168.122.10:A'
+    def test_map_bidi_a_few_checks(self):
+        host = '192.168.122.10'
+        address = '{}:A'.format(host)
         user = 'user'
         password = 'password'
         src_port = '{}/1/003'.format(address)
@@ -446,8 +436,8 @@ ROME[TECH]# 08-06-2019 09:01 CONNECTING...
             Command('connection show pending', CONNECTION_PENDING_EMPTY),
             Command('port show', connected_port_show_a),
         ])
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
         self.driver_commands.map_bidi(src_port, dst_port)
@@ -461,10 +451,9 @@ ROME[TECH]# 08-06-2019 09:01 CONNECTING...
     MagicMock(return_value=''),
 )
 class RomeTestMapClear(BaseRomeTestCase):
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_map_clear_matrix_b(self, send_mock, recv_mock):
-        address = '192.168.122.10:B'
+    def test_map_clear_matrix_b(self):
+        host = '192.168.122.10'
+        address = '{}:B'.format(host)
         user = 'user'
         password = 'password'
         ports = ['{}/1/{}'.format(address, port_id) for port_id in (249, 218, 246)]
@@ -543,18 +532,17 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
             Command('connection show pending', CONNECTION_PENDING_EMPTY),
             Command('port show', disconnected_port_show_b),
         ])
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
         self.driver_commands.map_clear(ports)
 
         emu.check_calls()
 
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_map_clear_matrix_b_a_few_checks(self, send_mock, recv_mock):
-        address = '192.168.122.10:B'
+    def test_map_clear_matrix_b_a_few_checks(self):
+        host = '192.168.122.10'
+        address = '{}:B'.format(host)
         user = 'user'
         password = 'password'
         ports = ['{}/1/{}'.format(address, port_id) for port_id in (249, 218, 246)]
@@ -635,141 +623,140 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
             Command('connection show pending', CONNECTION_PENDING_EMPTY),
             Command('port show', disconnected_port_show_b),
         ])
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
         self.driver_commands.map_clear(ports)
 
         emu.check_calls()
 
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_map_clear_matrix_q(self, send_mock, recv_mock):
-            address = '192.168.122.10:Q'
-            user = 'user'
-            password = 'password'
-            ports = ['{}/1/1'.format(address)]
-            self.driver_commands._mapping_check_delay = 0.1
+    def test_map_clear_matrix_q(self):
+        host = '192.168.122.10'
+        address = '{}:Q'.format(host)
+        user = 'user'
+        password = 'password'
+        ports = ['{}/1/1'.format(address)]
+        self.driver_commands._mapping_check_delay = 0.1
 
-            disconnected_ports_show = re.sub(
-                r"E1\[.+E5\[",
-                """E1[1AE1]         Unlocked     Enabled     Connected     5                      Q1      
+        disconnected_ports_show = re.sub(
+            r"E1\[.+E5\[",
+            """E1[1AE1]         Unlocked     Enabled     Connected     5                      Q1      
 E2[1AE2]         Unlocked     Enabled     Connected     5                      Q1      
 E3[1AE3]         Unlocked     Enabled     Connected     3                      Q2      
 E4[1AE4]         Unlocked     Enabled     Connected     3                      Q2      
 E5[""",
-                PORT_SHOW_MATRIX_Q,
-                flags=re.DOTALL,
-            )
-            disconnected_ports_show = re.sub(
-                r"W1\[.+W5\[",
-                """W1[1AW1]         Unlocked     Enabled     Connected     5                      Q1      
+            PORT_SHOW_MATRIX_Q,
+            flags=re.DOTALL,
+        )
+        disconnected_ports_show = re.sub(
+            r"W1\[.+W5\[",
+            """W1[1AW1]         Unlocked     Enabled     Connected     5                      Q1      
 W2[1AW2]         Unlocked     Enabled     Connected     5                      Q1      
 W3[1AW3]         Unlocked     Enabled     Connected     3                      Q2      
 W4[1AW4]         Unlocked     Enabled     Connected     3                      Q2      
 W5[""",
-                disconnected_ports_show,
-                flags=re.DOTALL,
-            )
-            disconnected_ports_show = re.sub(
-                r"E129\[.+E133\[",
-                """E129[1BE1]       Unlocked     Enabled     Connected     5                      Q1      
+            disconnected_ports_show,
+            flags=re.DOTALL,
+        )
+        disconnected_ports_show = re.sub(
+            r"E129\[.+E133\[",
+            """E129[1BE1]       Unlocked     Enabled     Connected     5                      Q1      
 E130[1BE2]       Unlocked     Enabled     Connected     5                      Q1      
 E131[1BE3]       Unlocked     Enabled     Connected     3                      Q2      
 E132[1BE4]       Unlocked     Enabled     Connected     3                      Q2      
 E133[""",
-                disconnected_ports_show,
-                flags=re.DOTALL,
-            )
-            disconnected_ports_show = re.sub(
-                r"W129\[.+W133\[",
-                """W129[1BW1]       Unlocked     Enabled     Connected     5                      Q1      
+            disconnected_ports_show,
+            flags=re.DOTALL,
+        )
+        disconnected_ports_show = re.sub(
+            r"W129\[.+W133\[",
+            """W129[1BW1]       Unlocked     Enabled     Connected     5                      Q1      
 W130[1BW2]       Unlocked     Enabled     Connected     5                      Q1      
 W131[1BW3]       Unlocked     Enabled     Connected     3                      Q2      
 W132[1BW4]       Unlocked     Enabled     Connected     3                      Q2      
 W133[""",
-                disconnected_ports_show,
-                flags=re.DOTALL,
-            )
+            disconnected_ports_show,
+            flags=re.DOTALL,
+        )
 
-            emu = CliEmulator([
-                Command('', DEFAULT_PROMPT),
-                Command('port show', PORT_SHOW_MATRIX_Q),
-                Command(
-                    'connection disconnect E1 from W4',
-                    '''ROME[TECH]# connection disconnect E1 from W4
+        emu = CliEmulator([
+            Command('', DEFAULT_PROMPT),
+            Command('port show', PORT_SHOW_MATRIX_Q),
+            Command(
+                'connection disconnect E1 from W4',
+                '''ROME[TECH]# connection disconnect E1 from W4
 OK - request added to pending queue (E1-W4)
 ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E1[1AE1]<->W4[1AW4] OP:disconnect
 '''
-                ),
-                Command(
-                    'connection disconnect E2 from W3',
-                    '''ROME[TECH]# connection disconnect E2 from W3
+            ),
+            Command(
+                'connection disconnect E2 from W3',
+                '''ROME[TECH]# connection disconnect E2 from W3
 OK - request added to pending queue (E2-W3)
 ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E2[1AE2]<->W3[1AW3] OP:disconnect
 '''
-                ),
-                Command(
-                    'connection disconnect E3 from W2',
-                    '''ROME[TECH]# connection disconnect E3 from W2
+            ),
+            Command(
+                'connection disconnect E3 from W2',
+                '''ROME[TECH]# connection disconnect E3 from W2
 OK - request added to pending queue (E3-W2)
 ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E3[1AE3]<->W2[1AW2] OP:disconnect
 '''
-                ),
-                Command(
-                    'connection disconnect E4 from W1',
-                    '''ROME[TECH]# connection disconnect E4 from W1
+            ),
+            Command(
+                'connection disconnect E4 from W1',
+                '''ROME[TECH]# connection disconnect E4 from W1
 OK - request added to pending queue (E4-W1)
 ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E4[1AE4]<->W1[1AW1] OP:disconnect
 '''
-                ),
-                Command(
-                    'connection disconnect E129 from W132',
-                    '''ROME[TECH]# connection disconnect E129 from W132
+            ),
+            Command(
+                'connection disconnect E129 from W132',
+                '''ROME[TECH]# connection disconnect E129 from W132
 OK - request added to pending queue (E129-W132)
 ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E129[1AE129]<->W2[1AW132] OP:disconnect
 '''
-                ),
-                Command(
-                    'connection disconnect E130 from W131',
-                    '''ROME[TECH]# connection disconnect E130 from W131
+            ),
+            Command(
+                'connection disconnect E130 from W131',
+                '''ROME[TECH]# connection disconnect E130 from W131
 OK - request added to pending queue (E130-W131)
 ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E130[1AE130]<->W131[1AW131] OP:disconnect
 '''
-                ),
-                Command(
-                    'connection disconnect E131 from W130',
-                    '''ROME[TECH]# connection disconnect E131 from W130
+            ),
+            Command(
+                'connection disconnect E131 from W130',
+                '''ROME[TECH]# connection disconnect E131 from W130
 OK - request added to pending queue (E131-W130)
 ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E131[1AE131]<->W130[1AW130] OP:disconnect
 '''
-                ),
-                Command(
-                    'connection disconnect E132 from W129',
-                    '''ROME[TECH]# connection disconnect E132 from W129
+            ),
+            Command(
+                'connection disconnect E132 from W129',
+                '''ROME[TECH]# connection disconnect E132 from W129
 OK - request added to pending queue (E132-W129)
 ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E132[1AE132]<->W129[1AW129] OP:disconnect
 '''
-                ),
-                Command('connection show pending', CONNECTION_PENDING_EMPTY),
-                Command('port show', disconnected_ports_show),
-            ])
-            send_mock.side_effect = emu.send_line
-            recv_mock.side_effect = emu.receive_all
+            ),
+            Command('connection show pending', CONNECTION_PENDING_EMPTY),
+            Command('port show', disconnected_ports_show),
+        ])
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
-            self.driver_commands.login(address, user, password)
-            self.driver_commands.map_clear(ports)
+        self.driver_commands.login(address, user, password)
+        self.driver_commands.map_clear(ports)
 
-            emu.check_calls()
+        emu.check_calls()
 
 
 @patch('cloudshell.cli.session.ssh_session.paramiko', MagicMock())
@@ -778,10 +765,9 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
     MagicMock(return_value=''),
 )
 class RomeTestMapClearTo(BaseRomeTestCase):
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_map_clear_to_matrix_b(self, send_mock, recv_mock):
-        address = '192.168.122.10:B'
+    def test_map_clear_to_matrix_b(self):
+        host = '192.168.122.10'
+        address = '{}:B'.format(host)
         user = 'user'
         password = 'password'
         src_port = '{}/1/249'.format(address)
@@ -817,18 +803,17 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
             Command('connection show pending', CONNECTION_PENDING_EMPTY),
             Command('port show', disconnected_port_show_b),
         ])
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
         self.driver_commands.map_clear_to(src_port, dst_ports)
 
         emu.check_calls()
 
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_map_clear_to_matrix_b_a_few_checks(self, send_mock, recv_mock):
-        address = '192.168.122.10:B'
+    def test_map_clear_to_matrix_b_a_few_checks(self):
+        host = '192.168.122.10'
+        address = '{}:B'.format(host)
         user = 'user'
         password = 'password'
         src_port = '{}/1/249'.format(address)
@@ -867,18 +852,17 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
             Command('connection show pending', CONNECTION_PENDING_EMPTY),
             Command('port show', disconnected_port_show_b),
         ])
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
         self.driver_commands.map_clear_to(src_port, dst_ports)
 
         emu.check_calls()
 
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_map_clear_to_matrix_q(self, send_mock, recv_mock):
-        address = '192.168.122.10:Q'
+    def test_map_clear_to_matrix_q(self):
+        host = '192.168.122.10'
+        address = '{}:Q'.format(host)
         user = 'user'
         password = 'password'
         src_port = '{}/1/1'.format(address)
@@ -956,8 +940,8 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
             Command('connection show pending', CONNECTION_PENDING_EMPTY),
             Command('port show', disconnected_ports_show),
         ])
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
         self.driver_commands.map_clear_to(src_port, dst_ports)

@@ -16,23 +16,18 @@ from tests.w2w_rome.base import BaseRomeTestCase, CliEmulator, Command, DEFAULT_
     MagicMock(return_value=''),
 )
 class RomeTestAutoload(BaseRomeTestCase):
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_autoload_without_matrix_letter(self, send_mock, recv_mock):
-        address = '192.168.122.10'
+    def test_autoload_without_matrix_letter(self):
+        host = '192.168.122.10'
+        address = '{}'.format(host)
         with self.assertRaisesRegexp(
                 BaseRomeException,
                 r'Resource address should specify MatrixA, MatrixB or Q'
         ):
             self.driver_commands.get_resource_description(address)
 
-        send_mock.assert_not_called()
-        recv_mock.assert_not_called()
-
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_autoload_matrix_b(self, send_mock, recv_mock):
-        address = '192.168.122.10:B'
+    def test_autoload_matrix_b(self):
+        host = '192.168.122.10'
+        address = '{}:B'.format(host)
         user = 'user'
         password = 'password'
 
@@ -44,8 +39,8 @@ class RomeTestAutoload(BaseRomeTestCase):
             ),
             Command('show board', SHOW_BOARD),
         ])
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
         info = self.driver_commands.get_resource_description(address)
@@ -93,10 +88,9 @@ class RomeTestAutoload(BaseRomeTestCase):
 
         emu.check_calls()
 
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_autoload_matrix_a(self, send_mock, recv_mock):
-        address = '192.168.122.10:A'
+    def test_autoload_matrix_a(self):
+        host = '192.168.122.10'
+        address = '{}:A'.format(host)
         user = 'user'
         password = 'password'
 
@@ -108,8 +102,8 @@ class RomeTestAutoload(BaseRomeTestCase):
             ),
             Command('show board', SHOW_BOARD),
         ])
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
         info = self.driver_commands.get_resource_description(address)
@@ -153,10 +147,9 @@ class RomeTestAutoload(BaseRomeTestCase):
 
         emu.check_calls()
 
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_autoload_matrix_q(self, send_mock, recv_mock):
-        address = '192.168.122.10:Q'
+    def test_autoload_matrix_q(self):
+        host = '192.168.122.10'
+        address = '{}:Q'.format(host)
         user = 'user'
         password = 'password'
 
@@ -168,8 +161,8 @@ class RomeTestAutoload(BaseRomeTestCase):
             ),
             Command('show board', SHOW_BOARD),
         ])
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
         info = self.driver_commands.get_resource_description(address)
@@ -216,10 +209,9 @@ class RomeTestAutoload(BaseRomeTestCase):
 
         emu.check_calls()
 
-    @patch('cloudshell.cli.session.ssh_session.SSHSession._receive_all')
-    @patch('cloudshell.cli.session.ssh_session.SSHSession.send_line')
-    def test_autoload_matrix_q_choosed_another_matrix(self, send_mock, recv_mock):
-        address = '192.168.122.10:A'
+    def test_autoload_matrix_q_choosed_another_matrix(self):
+        host = '192.168.122.10'
+        address = '{}:A'.format(host)
         user = 'user'
         password = 'password'
 
@@ -231,8 +223,8 @@ class RomeTestAutoload(BaseRomeTestCase):
             ),
             Command('show board', SHOW_BOARD),
         ])
-        send_mock.side_effect = emu.send_line
-        recv_mock.side_effect = emu.receive_all
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
         with self.assertRaisesRegexp(BaseRomeException, r'You should specify MatrixQ'):
