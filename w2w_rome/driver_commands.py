@@ -16,12 +16,15 @@ from w2w_rome.helpers.errors import BaseRomeException, ConnectionPortsError, \
 
 
 class DriverCommands(DriverCommandsInterface):
-    """
-    Driver commands implementation
-    """
+    """Driver commands implementation."""
 
     ADDRESS_PATTERN = re.compile(
-        r'^(?P<address>.+):(matrix)?(?P<letter>[abq])(/.+)?$', re.IGNORECASE
+        (
+            r'^(?P<host>[^:]+?):'
+            r'((?P<second_host>[^:]+?):)?'
+            r'(matrix)?(?P<letter>(a|b|q))(/.+)?$'
+        ),
+        re.IGNORECASE,
     )
 
     def __init__(self, logger, runtime_config):
@@ -32,6 +35,7 @@ class DriverCommands(DriverCommandsInterface):
         self._logger = logger
         self._runtime_config = runtime_config
         self._cli_handler = RomeCliHandler(logger)
+        self._second_cli_handler = None
 
         self._mapping_timeout = runtime_config.read_key('MAPPING.TIMEOUT', 120)
         self._mapping_check_delay = runtime_config.read_key('MAPPING.CHECK_DELAY', 3)
@@ -39,29 +43,40 @@ class DriverCommands(DriverCommandsInterface):
 
         self.__ports_association_table = None
 
+    def _initialize_second_cli_handler(self):
+        if self._second_cli_handler is None:
+            self._second_cli_handler = RomeCliHandler(self._logger)
+            self._cli_handler._cli._session_pool._pool.maxsize = 2
+            self._second_cli_handler._cli._session_pool._pool.maxsize = 2
+
     def login(self, address, username, password):
-        """
-        Perform login operation on the device
-        :param address: resource address, "192.168.42.240"
+        """Perform login operation on the device.
+
+        :param address: resource address specified in CloudShell, "192.168.42.240:A"
         :param username: username to login on the device
         :param password: password
         :return: None
         :raises Exception: if command failed
-        Example:
-            # Define session attributes
-            self._cli_handler.define_session_attributes(address, username, password)
-
-            # Obtain cli session
-            with self._cli_handler.default_mode_service() as session:
-                # Executing simple command
-                device_info = session.send_command('show version')
-                self._logger.info(device_info)
         """
-        address, _ = self.split_address_and_letter(address)
-        self._cli_handler.define_session_attributes(address, username, password)
+        hosts, _ = self.split_addresses_and_letter(address)
+        first_host = hosts[0]
+
+        self._cli_handler.define_session_attributes(first_host, username, password)
         with self._cli_handler.default_mode_service() as session:
             system_actions = SystemActions(session, self._logger)
             self._logger.info('Connected to ' + system_actions.board_table().get('model_name'))
+
+        if len(hosts) == 2:
+            second_host = hosts[1]
+            self._initialize_second_cli_handler()
+            self._second_cli_handler.define_session_attributes(
+                second_host, username, password
+            )
+            with self._second_cli_handler.default_mode_service() as session:
+                system_actions = SystemActions(session, self._logger)
+                self._logger.info(
+                    'Connected to ' + system_actions.board_table().get('model_name')
+                )
 
     def get_state_id(self):
         """
@@ -96,7 +111,7 @@ class DriverCommands(DriverCommandsInterface):
         pass
 
     def convert_cs_port_to_port_name(self, cs_port):
-        _, matrix_letter = self.split_address_and_letter(cs_port)
+        _, matrix_letter = self.split_addresses_and_letter(cs_port)
         return '{}{}'.format(
             matrix_letter, cs_port.rsplit('/', 1)[-1].lstrip('0')
         )
@@ -200,8 +215,8 @@ class DriverCommands(DriverCommandsInterface):
             raise BaseRomeException(
                 'MapUni operation is not allowed for multiple Dst ports'
             )
-        _, letter = self.split_address_and_letter(src_port)
-        if letter == 'Q':
+        _, letter = self.split_addresses_and_letter(src_port)
+        if letter.startswith('Q'):
             raise NotSupportedError(
                 "MapUni for matrix Q doesn't supported"
             )
@@ -246,25 +261,37 @@ class DriverCommands(DriverCommandsInterface):
                     )
                 )
 
-    def split_address_and_letter(self, address):
-        """Extract resource address and matrix letter.
+    def split_addresses_and_letter(self, address):
+        """Extract resources addresses and matrix letter.
 
-        :type address:
-        :return: address and matrix letter (upper)
-        :rtype: tuple[str, str]
+        :param address: <host>:<MatrixA> or <host>:<host>:<Q>
+        :type address: str
+        :return: list of hosts and matrix letter (upper)
+        :rtype: tuple[tuple[str], str]
         """
         letter = None
         if not self.support_multiple_blades:
             try:
                 match = self.ADDRESS_PATTERN.search(address)
-                address = match.group('address')
+                first_host = match.group('host')
+                second_host = match.group('second_host')
                 letter = match.group('letter').upper()
             except AttributeError:
-                msg = ('Resource address should specify MatrixA, MatrixB or Q. '
-                       'Format [IP]:[Matrix Letter]')
+                msg = (
+                    'Incorrect address. Resource address should specify '
+                    'MatrixA, MatrixB or Q. '
+                    'Format <host>:[<second_host>:]<matrix_letter>'
+                )
                 self._logger.error(msg)
                 raise BaseRomeException(msg)
-        return address, letter
+
+            if second_host and letter != 'Q':
+                raise BaseRomeException('')
+
+            hosts = tuple(filter(None, (first_host, second_host)))
+        else:
+            hosts = (address, )
+        return hosts, letter
 
     def get_resource_description(self, address):
         """
@@ -300,14 +327,23 @@ class DriverCommands(DriverCommandsInterface):
 
             return ResourceDescriptionResponseInfo([chassis])
         """
-        host, letter = self.split_address_and_letter(address)
+        hosts, letter = self.split_addresses_and_letter(address)
+        first_host = hosts[0]
 
         with self._cli_handler.default_mode_service() as session:
             system_actions = SystemActions(session, self._logger)
             port_table = system_actions.get_port_table()
             board_table = system_actions.board_table()
+
+        if len(hosts) == 2:
+            with self._second_cli_handler.default_mode_service() as session:
+                system_actions = SystemActions(session, self._logger)
+                second_port_table = system_actions.get_port_table()
+
+                port_table = port_table + second_port_table
+
         autoload_helper = AutoloadHelper(
-            address, board_table, port_table, letter, self._logger
+            first_host, board_table, port_table, letter, self._logger
         )
         response_info = ResourceDescriptionResponseInfo(
             autoload_helper.build_structure()

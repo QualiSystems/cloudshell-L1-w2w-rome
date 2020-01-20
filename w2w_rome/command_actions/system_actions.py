@@ -28,7 +28,7 @@ class SystemActions(object):
             self._cli_service, command_template.PORT_SHOW).execute_command()
 
         for line in port_table_output.splitlines():
-            sub_port = SubPort.from_line(line)
+            sub_port = SubPort.from_line(line, self._cli_service.session.host)
             if sub_port:
                 rome_logical_port = port_table.get_or_create(sub_port.logical)
                 rome_logical_port.add_sub_port(sub_port)

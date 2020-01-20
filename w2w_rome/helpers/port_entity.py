@@ -1,4 +1,6 @@
+import itertools
 import re
+from copy import copy
 
 from w2w_rome.helpers.errors import BaseRomeException, ConnectedToDifferentPortsError, \
     ConnectionPortsError
@@ -15,17 +17,16 @@ class SubPort(object):
         r'\d+\s+'
         r'((?P<conn_to_direction>[EW])(?P<conn_to_port_id>\d+)'
         r'\[\w+\])?\s+'
-        r'(?P<logical_name>[ABQ]\d+)\s*$',
+        r'(?P<logical_name>[ABQP]\d+)\s*$',
         re.IGNORECASE,
     )
-    PORT_FULL_NAME_PATTERN = re.compile(r'\d+(?P<blade_letter>[AB])[EW]\d+')
 
     def __init__(self, direction, port_id, port_full_name, locked, enabled, connected,
-                 connected_to_direction, connected_to_port_id, logical):
+                 connected_to_direction, connected_to_port_id, logical, port_resource):
         self.direction = direction
         self.sub_port_id = port_id
         self.sub_port_full_name = port_full_name
-        self.blade_letter = logical[0].upper()
+        self.blade_letter = logical[0] if logical[0] != 'P' else 'Q'
         self.sub_port_name = '{}{}'.format(direction, port_id)  # E12
         self.locked = locked
         self.enabled = enabled
@@ -35,17 +36,21 @@ class SubPort(object):
         self.connected_to_sub_port_name = '{}{}'.format(
             connected_to_direction, connected_to_port_id
         )
-        self.logical = logical
-        self.port_name = '{}{}'.format(self.blade_letter, self.sub_port_id)  # A13, B130
+        self.logical = logical if logical[0] != 'P' else 'Q' + logical[1:]
+        self.port_name = '{}{}'.format(self.blade_letter, self.sub_port_id)  # A13, Q1
+        self.port_resource = port_resource
 
     def __str__(self):
-        return '<SubPort {}>'.format(self.sub_port_name)
+        return '<SubPort {0.port_resource}:{0.sub_port_name}>'.format(self)
 
     __repr__ = __str__
 
     def __eq__(self, other):
         if isinstance(other, type(self)):
-            return self.sub_port_name == other.sub_port_name
+            return (
+                    self.port_resource == other.port_resource
+                    and self.sub_port_name == other.sub_port_name
+            )
         return False
 
     def __lt__(self, other):
@@ -56,7 +61,7 @@ class SubPort(object):
         raise NotImplementedError
 
     @classmethod
-    def from_line(cls, line):
+    def from_line(cls, line, port_resource):
         match = cls.PORT_PATTERN.search(line)
 
         if match is None:
@@ -72,7 +77,8 @@ class SubPort(object):
             group_dict['port_status'].lower() == 'connected',
             group_dict.get('conn_to_direction', '').upper(),
             group_dict.get('conn_to_port_id'),
-            group_dict['logical_name'],
+            group_dict['logical_name'].upper(),
+            port_resource,
         )
 
     def verify_sub_port_is_not_locked_or_disabled(self):
@@ -93,14 +99,15 @@ class RomePort(object):
     :type e_port: SubPort
     :type w_port: SubPort
     """
-    def __init__(self, port_name):
+    def __init__(self, port_resource, port_name):
+        self.port_resource = port_resource
         self.port_name = port_name
         self.sub_port_id = port_name[1:]
         self.e_port = None
         self.w_port = None
 
     def __str__(self):
-        return '<RomePort {}>'.format(self.port_name)
+        return '<RomePort {0.port_resource}:{0.port_name}>'.format(self)
 
     __repr__ = __str__
 
@@ -117,6 +124,12 @@ class RomePort(object):
         return self.w_port.connected_to_sub_port_id
 
     def add_sub_port(self, sub_port):
+        if sub_port.port_resource != self.port_resource:
+            raise ValueError(
+                'Sub port ({}) located on a different resource from a '
+                'Rome port ({})'.format(sub_port, self)
+            )
+
         attr_name = '{}_port'.format(sub_port.direction.lower())
         if getattr(self, attr_name) is not None:
             raise BaseRomeException('{} port already set'.format(sub_port.direction))
@@ -135,7 +148,7 @@ class LogicalPort(object):
         self.name = name
         self.blade_letter = name[0].upper()
         self.port_id = name[1:]
-        self._rome_ports_map = {}
+        self._rome_ports_map = {}  # (<port_resource>, <port_name>): <rome_port>
         self.is_q_port = self.blade_letter == "Q"
 
     @property
@@ -169,17 +182,21 @@ class LogicalPort(object):
             return self.name == other.name
         return False
 
-    def get_or_create_rome_port(self, port_name):
+    def __iter__(self):
+        return iter(self.rome_ports)
+
+    def get_or_create_rome_port(self, port_resource, port_name):
         """Get exiting Rome port or create new.
 
+        :type port_resource: str
         :type port_name: str
         :rtype: RomePort
         """
         try:
-            rome_port = self._rome_ports_map[port_name]
+            rome_port = self._rome_ports_map[(port_resource, port_name)]
         except KeyError:
-            rome_port = RomePort(port_name)
-            self._rome_ports_map[port_name] = rome_port
+            rome_port = RomePort(port_resource, port_name)
+            self._rome_ports_map[(port_resource, port_name)] = rome_port
 
         return rome_port
 
@@ -188,7 +205,9 @@ class LogicalPort(object):
 
         :type sub_port: SubPort
         """
-        rome_port = self.get_or_create_rome_port(sub_port.port_name)
+        rome_port = self.get_or_create_rome_port(
+            sub_port.port_resource, sub_port.port_name
+        )
         rome_port.add_sub_port(sub_port)
 
     @property
@@ -267,6 +286,27 @@ class PortTable(object):
                 for rome_port in logical_port.rome_ports
             }
         return self._map_sub_port_id_to_ports
+
+    def __add__(self, other):
+        cls = type(self)
+        if not isinstance(other, cls):
+            raise ValueError('Cannot add {} to PortTable'.format(type(other)))
+
+        if set(self._map_ports.keys()) != set(other._map_ports.keys()):
+            raise ValueError('Port tables have different logical ports')
+
+        new_port_table = cls()
+        for port_name, first_logical_port in self._map_ports.items():
+            second_logical_port = other[port_name]
+            new_logical_port = new_port_table.get_or_create(port_name)
+
+            for rome_port in itertools.chain(first_logical_port, second_logical_port):
+                new_e_sub_port = copy(rome_port.e_port)
+                new_w_sub_port = copy(rome_port.w_port)
+                new_logical_port.add_sub_port(new_e_sub_port)
+                new_logical_port.add_sub_port(new_w_sub_port)
+
+        return new_port_table
 
     def get_or_create(self, logical_name):
         try:
