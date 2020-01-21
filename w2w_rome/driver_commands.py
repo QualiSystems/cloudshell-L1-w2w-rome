@@ -1,8 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import re
+import sys
 
 import time
+from contextlib import contextmanager
 
 from cloudshell.layer_one.core.driver_commands_interface import DriverCommandsInterface
 from cloudshell.layer_one.core.response.response_info import GetStateIdResponseInfo, AttributeValueResponseInfo, \
@@ -13,6 +15,7 @@ from w2w_rome.command_actions.system_actions import SystemActions
 from w2w_rome.helpers.autoload_helper import AutoloadHelper
 from w2w_rome.helpers.errors import BaseRomeException, ConnectionPortsError, \
     NotSupportedError
+from w2w_rome.helpers.port_entity import PortTable
 
 
 class DriverCommands(DriverCommandsInterface):
@@ -293,6 +296,35 @@ class DriverCommands(DriverCommandsInterface):
             hosts = (address, )
         return hosts, letter
 
+    @contextmanager
+    def _get_cli_services(self):
+        stacks = [self._cli_handler.default_mode_service()]
+        if self._second_cli_handler:
+            stacks.append(self._second_cli_handler.default_mode_service())
+
+        services = []
+        for stack in stacks:
+            services.append(stack.__enter__())
+
+        try:
+            yield services
+        except Exception:
+            for stack in stacks:
+                not_raise = stack.__exit__(*sys.exc_info())
+
+            if not_raise:
+                pass
+            else:
+                raise
+
+    def _get_port_table(self, cli_services):
+        port_tables = []
+        for cli_service in cli_services:
+            system_actions = SystemActions(cli_service, self._logger)
+            port_tables.append(system_actions.get_port_table())
+
+        return reduce(PortTable.__add__, port_tables)
+
     def get_resource_description(self, address):
         """
         Auto-load function to retrieve all information from the device
@@ -330,17 +362,11 @@ class DriverCommands(DriverCommandsInterface):
         hosts, letter = self.split_addresses_and_letter(address)
         first_host = hosts[0]
 
-        with self._cli_handler.default_mode_service() as session:
-            system_actions = SystemActions(session, self._logger)
-            port_table = system_actions.get_port_table()
+        with self._get_cli_services() as cli_services:
+            cli_service1 = cli_services[0]
+            system_actions = SystemActions(cli_service1, self._logger)
+            port_table = self._get_port_table(cli_services)
             board_table = system_actions.board_table()
-
-        if len(hosts) == 2:
-            with self._second_cli_handler.default_mode_service() as session:
-                system_actions = SystemActions(session, self._logger)
-                second_port_table = system_actions.get_port_table()
-
-                port_table = port_table + second_port_table
 
         autoload_helper = AutoloadHelper(
             first_host, board_table, port_table, letter, self._logger
