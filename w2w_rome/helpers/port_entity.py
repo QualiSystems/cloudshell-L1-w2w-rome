@@ -37,7 +37,7 @@ class SubPort(object):
         self.logical = logical if logical[0] != 'P' else 'Q' + logical[1:]
         self.port_name = '{}{}'.format(self.blade_letter, self.sub_port_id)  # A13, Q1
         self.port_resource = port_resource
-        self.original_logical_letter = logical[0]
+        self.original_logical_name = logical
 
     def __str__(self):
         return '<SubPort {0.port_resource}:{0.sub_port_name}>'.format(self)
@@ -205,6 +205,10 @@ class LogicalPort(object):
         :rtype: list[SubPort]
         """
         return [rome_port.w_port for rome_port in self.rome_ports]
+
+    @property
+    def original_logical_name(self):
+        return self.rome_ports[0].e_port.original_logical_name
 
     def __str__(self):
         return '<LogicalPort "{}">'.format(self.name)

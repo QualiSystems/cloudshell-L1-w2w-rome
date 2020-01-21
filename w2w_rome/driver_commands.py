@@ -119,6 +119,28 @@ class DriverCommands(DriverCommandsInterface):
             matrix_letter, cs_port.rsplit('/', 1)[-1].lstrip('0')
         )
 
+    def _bidi_connect_ports(self, src_logic_port, dst_logic_port, cli_services):
+        ports_names = [
+            src_logic_port.original_logical_name, dst_logic_port.original_logical_name
+        ]
+
+        for cli_service in cli_services:
+            mapping_actions = MappingActions(cli_service, self._logger)
+            mapping_actions.connect(*ports_names)
+            self._wait_ports_not_in_pending_connections(
+                mapping_actions,
+                [ports_names],
+                2 * len(src_logic_port.rome_ports),
+            )
+
+    def _disconnect_ports(self, src_logic_port, dst_logic_port, cli_services):
+        for cli_service in cli_services:
+            mapping_actions = MappingActions(cli_service, self._logger)
+            mapping_actions.disconnect(
+                src_logic_port.original_logical_name,
+                dst_logic_port.original_logical_name,
+            )
+
     def map_bidi(self, src_port, dst_port):
         """
         Create a bidirectional connection between source and destination ports
@@ -141,10 +163,8 @@ class DriverCommands(DriverCommandsInterface):
         src_port_name = self.convert_cs_port_to_port_name(src_port)
         dst_port_name = self.convert_cs_port_to_port_name(dst_port)
 
-        with self._cli_handler.default_mode_service() as cli_service:
-            system_actions = SystemActions(cli_service, self._logger)
-            mapping_actions = MappingActions(cli_service, self._logger)
-            port_table = system_actions.get_port_table()
+        with self._get_cli_services() as cli_services:
+            port_table = self._get_port_table(cli_services)
             src_logic_port = port_table[src_port_name]
             dst_logic_port = port_table[dst_port_name]
 
@@ -159,19 +179,14 @@ class DriverCommands(DriverCommandsInterface):
             port_table.verify_ports_for_connection(
                 src_logic_port, dst_logic_port, bidi=True
             )
-            mapping_actions.connect(src_logic_port.name, dst_logic_port.name)
-            self._wait_ports_not_in_pending_connections(
-                mapping_actions,
-                [(src_logic_port.name, dst_logic_port.name)],
-                2 * len(src_logic_port.rome_ports),
-            )
+            self._bidi_connect_ports(src_logic_port, dst_logic_port, cli_services)
 
-            port_table = system_actions.get_port_table()
+            port_table = self._get_port_table(cli_services)
             src_logic_port = port_table[src_port_name]
             dst_logic_port = port_table[dst_port_name]
 
             if not port_table.is_connected(src_logic_port, dst_logic_port, bidi=True):
-                mapping_actions.disconnect(src_logic_port.name, dst_logic_port.name)
+                self._disconnect_ports(src_logic_port, dst_logic_port, cli_services)
                 raise ConnectionPortsError(
                     'Cannot connect port {} to port {} during {}sec'.format(
                         src_logic_port.name, dst_logic_port.name, self._mapping_timeout
