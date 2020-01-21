@@ -3,7 +3,8 @@ import re
 from mock import patch, MagicMock
 
 from tests.w2w_rome.base import BaseRomeTestCase, CliEmulator, Command, \
-    DEFAULT_PROMPT, PORT_SHOW_MATRIX_A, PORT_SHOW_MATRIX_B, PORT_SHOW_MATRIX_Q
+    DEFAULT_PROMPT, PORT_SHOW_MATRIX_A, PORT_SHOW_MATRIX_B, PORT_SHOW_MATRIX_Q, \
+    PORT_SHOW_MATRIX_Q128_1, PORT_SHOW_MATRIX_Q128_2
 from w2w_rome.helpers.errors import BaseRomeException, ConnectionPortsError, \
     NotSupportedError
 from w2w_rome.helpers.port_entity import SubPort
@@ -463,6 +464,76 @@ ROME[TECH]# 08-06-2019 09:01 CONNECTING...
         self.driver_commands.map_bidi(src_port, dst_port)
 
         emu.check_calls()
+
+    def test_map_bidi_q128_ports(self):
+        first_host = '192.168.122.10'
+        second_host = '192.168.122.11'
+        address = '{}:{}:Q'.format(first_host, second_host)
+        user = 'user'
+        password = 'password'
+        src_port = '{}/1/003'.format(address)
+        dst_port = '{}/1/004'.format(address)
+        self.driver_commands._mapping_check_delay = 0.1
+
+        port_show_q1 = set_port_connected('E3', 'W4', PORT_SHOW_MATRIX_Q128_1)
+        port_show_q1 = set_port_connected('E131', 'W132', port_show_q1)
+        port_show_q1 = set_port_connected('E4', 'W3', port_show_q1)
+        port_show_q1 = set_port_connected('E132', 'W131', port_show_q1)
+
+        port_show_q2 = set_port_connected('E3', 'W4', PORT_SHOW_MATRIX_Q128_2)
+        port_show_q2 = set_port_connected('E131', 'W132', port_show_q2)
+        port_show_q2 = set_port_connected('E4', 'W3', port_show_q2)
+        port_show_q2 = set_port_connected('E132', 'W131', port_show_q2)
+        emu1 = CliEmulator([
+            Command('', DEFAULT_PROMPT),
+            Command('port show', PORT_SHOW_MATRIX_Q128_1),
+            Command(
+                'connection create P3 to P4',
+                '''ROME[TECH]# connection create P3 to P4
+OK - request added to pending queue (P3-P4)
+ROME[TECH]# 08-06-2019 09:01 CONNECTING...
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E3[1AE3]<->W4[1AW4] OP:connect
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E131[1BE131]<->W132[1BW132] OP:connect
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E4[1AE4]<->W3[1AW3] OP:connect
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E132[1BE132]<->W131[1BW131] OP:connect
+08-06-2019 09:01 Connection P3<->P4 completed successfully
+'''
+            ),
+            Command('connection show pending', CONNECTION_PENDING_EMPTY),
+            Command('port show', port_show_q1),
+        ])
+        emu2 = CliEmulator([
+            Command('', DEFAULT_PROMPT),
+            Command('port show', PORT_SHOW_MATRIX_Q128_2),
+            Command(
+                'connection create P3 to P4',
+                '''ROME[TECH]# connection create P3 to P4
+OK - request added to pending queue (P3-P4)
+ROME[TECH]# 08-06-2019 09:01 CONNECTING...
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E3[1AE3]<->W4[1AW4] OP:connect
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E131[1BE131]<->W132[1BW132] OP:connect
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E4[1AE4]<->W3[1AW3] OP:connect
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E132[1BE132]<->W131[1BW131] OP:connect
+08-06-2019 09:01 Connection P3<->P4 completed successfully
+'''
+            ),
+            Command('connection show pending', CONNECTION_PENDING_EMPTY),
+            Command('port show', port_show_q2),
+        ])
+        self.send_line_func_map.update(
+            {first_host: emu1.send_line, second_host: emu2.send_line}
+        )
+        self.receive_all_func_map.update(
+            {first_host: emu1.receive_all, second_host: emu2.receive_all}
+        )
+
+        with self.patch_sessions():
+            self.driver_commands.login(address, user, password)
+
+        self.driver_commands.map_bidi(src_port, dst_port)
+
+        emu1.check_calls()
+        emu2.check_calls()
 
 
 @patch('cloudshell.cli.session.ssh_session.paramiko', MagicMock())
