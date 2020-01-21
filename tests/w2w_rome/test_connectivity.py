@@ -417,6 +417,53 @@ ROME[TECH]# 08-06-2019 09:01 CONNECTING...
 
         emu.check_calls()
 
+    def test_map_bidi_q_ports(self):
+        host = '192.168.122.10'
+        address = '{}:Q'.format(host)
+        user = 'user'
+        password = 'password'
+        src_port = '{}/1/003'.format(address)
+        dst_port = '{}/1/004'.format(address)
+        self.driver_commands._mapping_check_delay = 0.1
+
+        connected_port_show = set_port_connected('E5', 'W8', PORT_SHOW_MATRIX_Q)
+        connected_port_show = set_port_connected('E6', 'W7', connected_port_show)
+        connected_port_show = set_port_connected('E133', 'W136', connected_port_show)
+        connected_port_show = set_port_connected('E134', 'W135', connected_port_show)
+        connected_port_show = set_port_connected('E7', 'W6', connected_port_show)
+        connected_port_show = set_port_connected('E8', 'W5', connected_port_show)
+        connected_port_show = set_port_connected('E135', 'W134', connected_port_show)
+        connected_port_show = set_port_connected('E136', 'W133', connected_port_show)
+        emu = CliEmulator([
+            Command('', DEFAULT_PROMPT),
+            Command('port show', PORT_SHOW_MATRIX_Q),
+            Command(
+                'connection create Q3 to Q4',
+                '''ROME[TECH]# connection create Q3 to Q4
+OK - request added to pending queue (Q3-Q4)
+ROME[TECH]# 08-06-2019 09:01 CONNECTING...
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E5[1AE5]<->W8[1AW8] OP:connect
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E6[1AE5]<->W7[1AW7] OP:connect
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E133[1BE133]<->W136[1BW136] OP:connect
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E134[1BE134]<->W135[1BW135] OP:connect
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E7[1AE7]<->W6[1AW6] OP:connect
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E8[1AE8]<->W5[1AW5] OP:connect
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E135[1AB135]<->W134[1BW134] OP:connect
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E136[1AB136]<->W133[1BW133] OP:connect
+08-06-2019 09:01 Connection Q3<->Q4 completed successfully
+'''
+            ),
+            Command('connection show pending', CONNECTION_PENDING_EMPTY),
+            Command('port show', connected_port_show),
+        ])
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
+
+        self.driver_commands.login(address, user, password)
+        self.driver_commands.map_bidi(src_port, dst_port)
+
+        emu.check_calls()
+
 
 @patch('cloudshell.cli.session.ssh_session.paramiko', MagicMock())
 @patch(
