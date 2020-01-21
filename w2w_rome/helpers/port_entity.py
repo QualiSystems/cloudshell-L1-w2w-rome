@@ -1,4 +1,5 @@
 import itertools
+import random
 import re
 from copy import copy
 
@@ -33,17 +34,46 @@ class SubPort(object):
         self.connected = connected
         self.connected_to_direction = connected_to_direction
         self.connected_to_sub_port_id = connected_to_port_id
-        self.connected_to_sub_port_name = '{}{}'.format(
-            connected_to_direction, connected_to_port_id
-        )
         self.logical = logical if logical[0] != 'P' else 'Q' + logical[1:]
         self.port_name = '{}{}'.format(self.blade_letter, self.sub_port_id)  # A13, Q1
         self.port_resource = port_resource
+        self.original_logical_letter = logical[0]
 
     def __str__(self):
         return '<SubPort {0.port_resource}:{0.sub_port_name}>'.format(self)
 
     __repr__ = __str__
+
+    def table_view(self):
+        delimiter = ''
+        port_width = 17 - 2 - len(self.sub_port_name) - len(self.sub_port_full_name)
+        admin_status = 'Locked' if self.locked else 'Unlocked'
+        admin_status_width = 13
+        oper_status = 'Enabled' if self.enabled else 'Disabled'
+        oper_status_width = 12
+        port_status = 'Connected' if self.connected else 'Disconnected'
+        port_status_width = 14
+        counter = random.randrange(0, 99)
+        counter_width = 8
+        connected_to = '{0}[{1}{0}]'.format(
+            self.connected_to_sub_port_name, self.sub_port_full_name[:2]
+        ) if self.connected_to_sub_port_name else ''
+        connected_to_width = 15
+        logical_width = 8
+        return (
+            '{port_direction}[{port_full_name}]{delimiter: <{port_width}}'
+            '{admin_status: <{admin_status_width}}'
+            '{oper_status: <{oper_status_width}}'
+            '{port_status: <{port_status_width}}'
+            '{counter: <{counter_width}}'
+            '{connected_to: <{connected_to_width}}'
+            '{logical: <{logical_width}}'.format(
+                port_direction=self.sub_port_name,
+                port_full_name=self.sub_port_full_name,
+                logical=self.logical,
+                **locals()
+            )
+        )
 
     def __eq__(self, other):
         if isinstance(other, type(self)):
@@ -59,6 +89,10 @@ class SubPort(object):
                 return int(self.sub_port_id) < int(other.sub_port_id)
             return self.direction < other.direction
         raise NotImplementedError
+
+    @property
+    def connected_to_sub_port_name(self):
+        return '{}{}'.format(self.connected_to_direction, self.connected_to_sub_port_id)
 
     @classmethod
     def from_line(cls, line, port_resource):

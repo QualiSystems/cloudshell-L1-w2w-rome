@@ -6,7 +6,7 @@ from tests.w2w_rome.base import BaseRomeTestCase, CliEmulator, Command, \
     DEFAULT_PROMPT, PORT_SHOW_MATRIX_A, PORT_SHOW_MATRIX_B, PORT_SHOW_MATRIX_Q
 from w2w_rome.helpers.errors import BaseRomeException, ConnectionPortsError, \
     NotSupportedError
-
+from w2w_rome.helpers.port_entity import SubPort
 
 CONNECTION_PENDING_EMPTY = '''ROME[TECH]# connection show pending
 Connection execution status: enabled
@@ -34,6 +34,75 @@ Request Port1     Port2     Command            Source  User
 ======= ========= ========= ================== ======= ===================
 
 ROME[TECH]# '''.format(src_port, dst_port)
+
+
+def set_port_connected(sub_port_name, connected_to_sub_port_name, port_show_output):
+    sub_port_match = re.search(
+        r'^{}\[.+$'.format(sub_port_name), port_show_output, re.MULTILINE
+    )
+    connected_sub_port_match = re.search(
+        r'^{}\[.+$'.format(connected_to_sub_port_name), port_show_output, re.MULTILINE
+    )
+
+    if sub_port_match is None:
+        raise ValueError("Didn't find the sub port {}".format(sub_port_name))
+    if connected_sub_port_match is None:
+        raise ValueError(
+            "Didn't find the sub port {}".format(connected_to_sub_port_name)
+        )
+
+    sub_port = SubPort.from_line(sub_port_match.group(), '')
+    connected_sub_port = SubPort.from_line(connected_sub_port_match.group(), '')
+
+    sub_port.connected = True
+    sub_port.connected_to_direction = connected_sub_port.direction
+    sub_port.connected_to_sub_port_id = connected_sub_port.sub_port_id
+
+    connected_sub_port.connected = True
+    connected_sub_port.connected_to_direction = sub_port.direction
+    connected_sub_port.connected_to_sub_port_id = sub_port.sub_port_id
+
+    port_show_output = port_show_output.replace(
+        sub_port_match.group(), sub_port.table_view()
+    )
+    port_show_output = port_show_output.replace(
+        connected_sub_port_match.group(), connected_sub_port.table_view()
+    )
+    return port_show_output
+
+
+def set_port_disconnected(sub_port_name, port_show_output):
+    sub_port_match = re.search(
+        r'^{}\[.+$'.format(sub_port_name), port_show_output, re.MULTILINE
+    )
+
+    if sub_port_match is None:
+        raise ValueError("Didn't find the sub port {}".format(sub_port_name))
+
+    sub_port = SubPort.from_line(sub_port_match.group(), '')
+
+    connected_sub_port_match = re.search(
+        r'^{}\[.+$'.format(sub_port.connected_to_sub_port_name),
+        port_show_output,
+        re.MULTILINE,
+    )
+    if connected_sub_port_match is not None:
+        connected_sub_port = SubPort.from_line(connected_sub_port_match.group(), '')
+        connected_sub_port.connected = False
+        connected_sub_port.connected_to_direction = ''
+        connected_sub_port.connected_to_sub_port_id = ''
+        port_show_output = port_show_output.replace(
+            connected_sub_port_match.group(), connected_sub_port.table_view()
+        )
+
+    sub_port.connected = False
+    sub_port.connected_to_direction = ''
+    sub_port.connected_to_sub_port_id = ''
+    port_show_output = port_show_output.replace(
+        sub_port_match.group(), sub_port.table_view()
+    )
+
+    return port_show_output
 
 
 @patch('cloudshell.cli.session.ssh_session.paramiko', MagicMock())
@@ -92,21 +161,7 @@ class RomeTestMapUni(BaseRomeTestCase):
         dst_ports = ['{}/1/004'.format(address)]
         self.driver_commands._mapping_check_delay = 0.1
 
-        connected_port_show_a = re.sub(
-            r"^E3\[.+A3.*$",
-            "E3[1AE3]         Unlocked     Enabled     Disconnected  0"
-            "       W4[1AW4]       A3",
-            PORT_SHOW_MATRIX_A,
-            flags=re.MULTILINE,
-        )
-        connected_port_show_a = re.sub(
-            r"W4\[.+A4.*$",
-            "W4[1AW4]         Unlocked     Enabled     Disconnected  0"
-            "       E3[1AE3]       A4",
-            connected_port_show_a,
-            flags=re.MULTILINE,
-        )
-
+        connected_port_show_a = set_port_connected('E3', 'W4', PORT_SHOW_MATRIX_A)
         emu = CliEmulator([
             Command('', DEFAULT_PROMPT),
             Command('port show', PORT_SHOW_MATRIX_A),
@@ -140,21 +195,7 @@ ROME[TECH]# 08-05-2019 09:20 CONNECTING...
 
         self.driver_commands._mapping_check_delay = 0.1
 
-        connected_port_show_a = re.sub(
-            r"^E3\[.+A3.*$",
-            "E3[1AE3]         Unlocked     Enabled     Disconnected  0"
-            "       W4[1AW4]       A3",
-            PORT_SHOW_MATRIX_A,
-            flags=re.MULTILINE,
-        )
-        connected_port_show_a = re.sub(
-            r"W4\[.+A4.*$",
-            "W4[1AW4]         Unlocked     Enabled     Disconnected  0"
-            "       E3[1AE3]       A4",
-            connected_port_show_a,
-            flags=re.MULTILINE,
-        )
-
+        connected_port_show_a = set_port_connected('E3', 'W4', PORT_SHOW_MATRIX_A)
         emu = CliEmulator([
             Command('', DEFAULT_PROMPT),
             Command('port show', PORT_SHOW_MATRIX_A),
@@ -276,21 +317,7 @@ class RomeTestMapBidi(BaseRomeTestCase):
         dst_port = '{}/1/002'.format(address)
         self.driver_commands._mapping_check_delay = 0.1
 
-        connected_port_show_a = re.sub(
-            r"^E2\[.+A2.*$",
-            "E2[1AE2]         Unlocked     Enabled     Disconnected  0"
-            "       W1[1AW1]       A2",
-            PORT_SHOW_MATRIX_A,
-            flags=re.MULTILINE,
-        )
-        connected_port_show_a = re.sub(
-            r"W1\[.+A1.*$",
-            "W1[1AW1]         Unlocked     Enabled     Disconnected  0"
-            "       E2[1AE2]       A1",
-            connected_port_show_a,
-            flags=re.MULTILINE,
-        )
-
+        connected_port_show_a = set_port_connected('E2', 'W1', PORT_SHOW_MATRIX_A)
         emu = CliEmulator([
             Command('', DEFAULT_PROMPT),
             Command('port show', PORT_SHOW_MATRIX_A),
@@ -324,35 +351,8 @@ ROME[TECH]# 08-06-2019 09:01 CONNECTING...
         dst_port = '{}/1/004'.format(address)
         self.driver_commands._mapping_check_delay = 0.1
 
-        connected_port_show_a = re.sub(
-            r"^E3\[.+A3.*$",
-            "E3[1AE3]         Unlocked     Enabled     Disconnected  0"
-            "       W4[1AW4]       A3",
-            PORT_SHOW_MATRIX_A,
-            flags=re.MULTILINE,
-        )
-        connected_port_show_a = re.sub(
-            r"^E4\[.+A4.*$",
-            "E4[1AE4]         Unlocked     Enabled     Disconnected  0"
-            "       W3[1AW3]       A4",
-            connected_port_show_a,
-            flags=re.MULTILINE,
-        )
-        connected_port_show_a = re.sub(
-            r"W3\[.+A3.*$",
-            "W3[1AW3]         Unlocked     Enabled     Disconnected  0"
-            "       E4[1AE4]       A3",
-            connected_port_show_a,
-            flags=re.MULTILINE,
-        )
-        connected_port_show_a = re.sub(
-            r"W4\[.+A4.*$",
-            "W4[1AW4]         Unlocked     Enabled     Disconnected  0"
-            "       E3[1AE3]       A4",
-            connected_port_show_a,
-            flags=re.MULTILINE,
-        )
-
+        connected_port_show_a = set_port_connected('E3', 'W4', PORT_SHOW_MATRIX_A)
+        connected_port_show_a = set_port_connected('E4', 'W3', connected_port_show_a)
         emu = CliEmulator([
             Command('', DEFAULT_PROMPT),
             Command('port show', PORT_SHOW_MATRIX_A),
@@ -387,35 +387,8 @@ ROME[TECH]# 08-06-2019 09:01 CONNECTING...
 
         self.driver_commands._mapping_check_delay = 0.1
 
-        connected_port_show_a = re.sub(
-            r"^E3\[.+A3.*$",
-            "E3[1AE3]         Unlocked     Enabled     Disconnected  0"
-            "       W4[1AW4]       A3",
-            PORT_SHOW_MATRIX_A,
-            flags=re.MULTILINE,
-        )
-        connected_port_show_a = re.sub(
-            r"^E4\[.+A4.*$",
-            "E4[1AE4]         Unlocked     Enabled     Disconnected  0"
-            "       W3[1AW3]       A4",
-            connected_port_show_a,
-            flags=re.MULTILINE,
-        )
-        connected_port_show_a = re.sub(
-            r"W3\[.+A3.*$",
-            "W3[1AW3]         Unlocked     Enabled     Disconnected  0"
-            "       E4[1AE4]       A3",
-            connected_port_show_a,
-            flags=re.MULTILINE,
-        )
-        connected_port_show_a = re.sub(
-            r"W4\[.+A4.*$",
-            "W4[1AW4]         Unlocked     Enabled     Disconnected  0"
-            "       E3[1AE3]       A4",
-            connected_port_show_a,
-            flags=re.MULTILINE,
-        )
-
+        connected_port_show_a = set_port_connected('E3', 'W4', PORT_SHOW_MATRIX_A)
+        connected_port_show_a = set_port_connected('E4', 'W3', connected_port_show_a)
         emu = CliEmulator([
             Command('', DEFAULT_PROMPT),
             Command('port show', PORT_SHOW_MATRIX_A),
@@ -459,49 +432,13 @@ class RomeTestMapClear(BaseRomeTestCase):
         ports = ['{}/1/{}'.format(address, port_id) for port_id in (249, 218, 246)]
         self.driver_commands._mapping_check_delay = 0.1
 
-        disconnected_port_show_b = re.sub(
-            r"^E246\[.+B246.+$",
-            "E246[1BE118]     Unlocked     Enabled     Disconnected  0"
-            "                      B246",
-            PORT_SHOW_MATRIX_B,
-            flags=re.MULTILINE,
+        disconnected_port_show_b = set_port_disconnected('E246', PORT_SHOW_MATRIX_B)
+        disconnected_port_show_b = set_port_disconnected(
+            'E249', disconnected_port_show_b
         )
-        disconnected_port_show_b = re.sub(
-            r"^E249\[.+B249.+$",
-            "E249[1BE121]     Unlocked     Enabled     Connected     13"
-            "                     B249",
-            disconnected_port_show_b,
-            flags=re.MULTILINE,
+        disconnected_port_show_b = set_port_disconnected(
+            'E253', disconnected_port_show_b
         )
-        disconnected_port_show_b = re.sub(
-            r"^E253\[.+B253.+$",
-            "E253[1BE125]     Unlocked     Enabled     Connected     13"
-            "                     B253",
-            disconnected_port_show_b,
-            flags=re.MULTILINE,
-        )
-        disconnected_port_show_b = re.sub(
-            r"^W247\[.+B247.+$",
-            "W247[1BW119]     Unlocked     Enabled     Disconnected  0"
-            "                      B247",
-            disconnected_port_show_b,
-            flags=re.MULTILINE,
-        )
-        disconnected_port_show_b = re.sub(
-            r"^W249\[.+B249.+$",
-            "W249[1BW121]     Unlocked     Enabled     Connected     13"
-            "                     B249",
-            disconnected_port_show_b,
-            flags=re.MULTILINE,
-        )
-        disconnected_port_show_b = re.sub(
-            r"^E253\[.+B253.+$",
-            "W253[1BW125]     Unlocked     Enabled     Connected     13"
-            "                     B253",
-            disconnected_port_show_b,
-            flags=re.MULTILINE,
-        )
-
         emu = CliEmulator([
             Command('', DEFAULT_PROMPT),
             Command('port show', PORT_SHOW_MATRIX_B),
@@ -548,49 +485,13 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
         ports = ['{}/1/{}'.format(address, port_id) for port_id in (249, 218, 246)]
         self.driver_commands._mapping_check_delay = 0.1
 
-        disconnected_port_show_b = re.sub(
-            r"^E246\[.+B246.+$",
-            "E246[1BE118]     Unlocked     Enabled     Disconnected  0"
-            "                      B246",
-            PORT_SHOW_MATRIX_B,
-            flags=re.MULTILINE,
+        disconnected_port_show_b = set_port_disconnected('E246', PORT_SHOW_MATRIX_B)
+        disconnected_port_show_b = set_port_disconnected(
+            'E249', disconnected_port_show_b
         )
-        disconnected_port_show_b = re.sub(
-            r"^E249\[.+B249.+$",
-            "E249[1BE121]     Unlocked     Enabled     Connected     13"
-            "                     B249",
-            disconnected_port_show_b,
-            flags=re.MULTILINE,
+        disconnected_port_show_b = set_port_disconnected(
+            'E253', disconnected_port_show_b
         )
-        disconnected_port_show_b = re.sub(
-            r"^E253\[.+B253.+$",
-            "E253[1BE125]     Unlocked     Enabled     Connected     13"
-            "                     B253",
-            disconnected_port_show_b,
-            flags=re.MULTILINE,
-        )
-        disconnected_port_show_b = re.sub(
-            r"^W247\[.+B247.+$",
-            "W247[1BW119]     Unlocked     Enabled     Disconnected  0"
-            "                      B247",
-            disconnected_port_show_b,
-            flags=re.MULTILINE,
-        )
-        disconnected_port_show_b = re.sub(
-            r"^W249\[.+B249.+$",
-            "W249[1BW121]     Unlocked     Enabled     Connected     13"
-            "                     B249",
-            disconnected_port_show_b,
-            flags=re.MULTILINE,
-        )
-        disconnected_port_show_b = re.sub(
-            r"^E253\[.+B253.+$",
-            "W253[1BW125]     Unlocked     Enabled     Connected     13"
-            "                     B253",
-            disconnected_port_show_b,
-            flags=re.MULTILINE,
-        )
-
         emu = CliEmulator([
             Command('', DEFAULT_PROMPT),
             Command('port show', PORT_SHOW_MATRIX_B),
@@ -639,47 +540,14 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
         ports = ['{}/1/1'.format(address)]
         self.driver_commands._mapping_check_delay = 0.1
 
-        disconnected_ports_show = re.sub(
-            r"E1\[.+E5\[",
-            """E1[1AE1]         Unlocked     Enabled     Connected     5                      Q1      
-E2[1AE2]         Unlocked     Enabled     Connected     5                      Q1      
-E3[1AE3]         Unlocked     Enabled     Connected     3                      Q2      
-E4[1AE4]         Unlocked     Enabled     Connected     3                      Q2      
-E5[""",
-            PORT_SHOW_MATRIX_Q,
-            flags=re.DOTALL,
-        )
-        disconnected_ports_show = re.sub(
-            r"W1\[.+W5\[",
-            """W1[1AW1]         Unlocked     Enabled     Connected     5                      Q1      
-W2[1AW2]         Unlocked     Enabled     Connected     5                      Q1      
-W3[1AW3]         Unlocked     Enabled     Connected     3                      Q2      
-W4[1AW4]         Unlocked     Enabled     Connected     3                      Q2      
-W5[""",
-            disconnected_ports_show,
-            flags=re.DOTALL,
-        )
-        disconnected_ports_show = re.sub(
-            r"E129\[.+E133\[",
-            """E129[1BE1]       Unlocked     Enabled     Connected     5                      Q1      
-E130[1BE2]       Unlocked     Enabled     Connected     5                      Q1      
-E131[1BE3]       Unlocked     Enabled     Connected     3                      Q2      
-E132[1BE4]       Unlocked     Enabled     Connected     3                      Q2      
-E133[""",
-            disconnected_ports_show,
-            flags=re.DOTALL,
-        )
-        disconnected_ports_show = re.sub(
-            r"W129\[.+W133\[",
-            """W129[1BW1]       Unlocked     Enabled     Connected     5                      Q1      
-W130[1BW2]       Unlocked     Enabled     Connected     5                      Q1      
-W131[1BW3]       Unlocked     Enabled     Connected     3                      Q2      
-W132[1BW4]       Unlocked     Enabled     Connected     3                      Q2      
-W133[""",
-            disconnected_ports_show,
-            flags=re.DOTALL,
-        )
-
+        disconnected_ports_show = set_port_disconnected('E1', PORT_SHOW_MATRIX_Q)
+        disconnected_ports_show = set_port_disconnected('E2', disconnected_ports_show)
+        disconnected_ports_show = set_port_disconnected('E3', disconnected_ports_show)
+        disconnected_ports_show = set_port_disconnected('E4', disconnected_ports_show)
+        disconnected_ports_show = set_port_disconnected('E129', disconnected_ports_show)
+        disconnected_ports_show = set_port_disconnected('E130', disconnected_ports_show)
+        disconnected_ports_show = set_port_disconnected('E131', disconnected_ports_show)
+        disconnected_ports_show = set_port_disconnected('E132', disconnected_ports_show)
         emu = CliEmulator([
             Command('', DEFAULT_PROMPT),
             Command('port show', PORT_SHOW_MATRIX_Q),
@@ -774,21 +642,10 @@ class RomeTestMapClearTo(BaseRomeTestCase):
         dst_ports = ['{}/1/253'.format(address)]
         self.driver_commands._mapping_check_delay = 0.1
 
-        disconnected_port_show_b = re.sub(
-            r"^E249\[.+B249.+$",
-            "E249[1BE121]     Unlocked     Enabled     Connected     13"
-            "                     B249",
-            PORT_SHOW_MATRIX_B,
-            flags=re.MULTILINE,
+        disconnected_port_show_b = set_port_disconnected('E249', PORT_SHOW_MATRIX_B)
+        disconnected_port_show_b = set_port_disconnected(
+            'W249', disconnected_port_show_b
         )
-        disconnected_port_show_b = re.sub(
-            r"^W249\[.+B249.+$",
-            "W249[1BW121]     Unlocked     Enabled     Connected     13"
-            "                     B249",
-            disconnected_port_show_b,
-            flags=re.MULTILINE,
-        )
-
         emu = CliEmulator([
             Command('', DEFAULT_PROMPT),
             Command('port show', PORT_SHOW_MATRIX_B),
@@ -821,21 +678,7 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 
         self.driver_commands._mapping_check_delay = 0.1
 
-        disconnected_port_show_b = re.sub(
-            r"^E249\[.+B249.+$",
-            "E249[1BE121]     Unlocked     Enabled     Connected     13"
-            "                     B249",
-            PORT_SHOW_MATRIX_B,
-            flags=re.MULTILINE,
-        )
-        disconnected_port_show_b = re.sub(
-            r"^W249\[.+B249.+$",
-            "W249[1BW121]     Unlocked     Enabled     Connected     13"
-            "                     B249",
-            disconnected_port_show_b,
-            flags=re.MULTILINE,
-        )
-
+        disconnected_port_show_b = set_port_disconnected('E249', PORT_SHOW_MATRIX_B)
         emu = CliEmulator([
             Command('', DEFAULT_PROMPT),
             Command('port show', PORT_SHOW_MATRIX_B),
@@ -869,39 +712,10 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
         dst_ports = ['{}/1/2'.format(address)]
         self.driver_commands._mapping_check_delay = 0.1
 
-        disconnected_ports_show = re.sub(
-            r"(?<=\n)E1\[.+?E3\[",
-            """E1[1AE1]         Unlocked     Enabled     Connected     5                      Q1      
-E2[1AE2]         Unlocked     Enabled     Connected     5                      Q1      
-E3[""",
-            PORT_SHOW_MATRIX_Q,
-            flags=re.DOTALL,
-        )
-        disconnected_ports_show = re.sub(
-            r"(?<=\n)W1\[.+?W3\[",
-            """W1[1AW1]         Unlocked     Enabled     Connected     5                      Q1      
-W2[1AW2]         Unlocked     Enabled     Connected     5                      Q1      
-W3[""",
-            disconnected_ports_show,
-            flags=re.DOTALL,
-        )
-        disconnected_ports_show = re.sub(
-            r"(?<=\n)E129\[.+?E131\[",
-            """E129[1BE1]       Unlocked     Enabled     Connected     5                      Q1      
-E130[1BE2]       Unlocked     Enabled     Connected     5                      Q1      
-E131[""",
-            disconnected_ports_show,
-            flags=re.DOTALL,
-        )
-        disconnected_ports_show = re.sub(
-            r"(?<=\n)W129\[.+?W131\[",
-            """W129[1BW1]       Unlocked     Enabled     Connected     5                      Q1      
-W130[1BW2]       Unlocked     Enabled     Connected     5                      Q1      
-W131[""",
-            disconnected_ports_show,
-            flags=re.DOTALL,
-        )
-
+        disconnected_ports_show = set_port_disconnected('E1', PORT_SHOW_MATRIX_Q)
+        disconnected_ports_show = set_port_disconnected('E2', disconnected_ports_show)
+        disconnected_ports_show = set_port_disconnected('E129', disconnected_ports_show)
+        disconnected_ports_show = set_port_disconnected('E130', disconnected_ports_show)
         emu = CliEmulator([
             Command('', DEFAULT_PROMPT),
             Command('port show', PORT_SHOW_MATRIX_Q),
