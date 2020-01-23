@@ -4,6 +4,7 @@ import re
 import sys
 
 import time
+from collections import defaultdict
 from contextlib import contextmanager
 
 from cloudshell.layer_one.core.driver_commands_interface import DriverCommandsInterface
@@ -393,6 +394,29 @@ class DriverCommands(DriverCommandsInterface):
         )
         return response_info
 
+    def _disconnect_sub_ports(self, sub_ports_pairs, cli_services):
+        mapping_actions_map = {
+            cli_service.session.host: MappingActions(cli_service, self._logger)
+            for cli_service in cli_services
+        }
+        sub_ports_pairs_host_map = defaultdict(list)
+        for e_port, w_port in sub_ports_pairs:
+            sub_ports_pairs_host_map[e_port.port_resource].append((e_port, w_port))
+
+        for host, sub_ports_pairs in sub_ports_pairs_host_map.items():
+            sub_ports_pairs_names = [
+                (e_port.sub_port_name, w_port.sub_port_name)
+                for e_port, w_port in sorted(sub_ports_pairs)
+            ]
+            mapping_action = mapping_actions_map[host]
+
+            for e_port_name, w_port_name in sub_ports_pairs_names:
+                mapping_action.disconnect(e_port_name, w_port_name)
+
+            self._wait_ports_not_in_pending_connections(
+                mapping_action, sub_ports_pairs_names, len(sub_ports_pairs_names)
+            )
+
     def map_clear(self, ports):
         """
         Remove simplex/multi-cast/duplex connection ending on the destination port
@@ -409,25 +433,15 @@ class DriverCommands(DriverCommandsInterface):
         self._logger.info('MapClear, Ports: {}'.format(', '.join(ports)))
         port_names = map(self.convert_cs_port_to_port_name, ports)
 
-        with self._cli_handler.default_mode_service() as cli_service:
-            system_actions = SystemActions(cli_service, self._logger)
-            mapping_actions = MappingActions(cli_service, self._logger)
-            port_table = system_actions.get_port_table()
+        with self._get_cli_services() as cli_services:
+            port_table = self._get_port_table(cli_services)
             connected_ports = port_table.get_connected_port_pairs(port_names, bidi=True)
             connected_sub_ports = port_table.get_connected_sub_ports_pairs(
                 connected_ports, bidi=True
             )
-            connected_sub_port_names = [
-                (e_port.sub_port_name, w_port.sub_port_name)
-                for e_port, w_port in sorted(connected_sub_ports)
-            ]
-            for e_port_name, w_port_name in connected_sub_port_names:
-                mapping_actions.disconnect(e_port_name, w_port_name)
-            self._wait_ports_not_in_pending_connections(
-                mapping_actions, connected_sub_port_names, len(connected_sub_port_names)
-            )
+            self._disconnect_sub_ports(connected_sub_ports, cli_services)
 
-            port_table = system_actions.get_port_table()
+            port_table = self._get_port_table(cli_services)
             connected_ports = port_table.get_connected_port_pairs(
                 port_names, bidi=True
             )

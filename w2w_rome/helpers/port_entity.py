@@ -281,7 +281,7 @@ class LogicalPort(object):
         map(SubPort.verify_sub_port_is_not_locked_or_disabled, self.w_sub_ports)
 
     def get_connected_sub_ports(self, dst_logic_port):
-        """Return mapping with connected sub ports.
+        """Return set with connected sub ports.
 
         :type dst_logic_port: LogicalPort
         :rtype: set[tuple[SubPort, SubPort]]
@@ -290,7 +290,10 @@ class LogicalPort(object):
             (e_port, w_port)
             for e_port in self.e_sub_ports
             for w_port in dst_logic_port.w_sub_ports
-            if e_port.connected_to_sub_port_name == w_port.sub_port_name
+            if (
+                    e_port.connected_to_sub_port_name == w_port.sub_port_name
+                    and e_port.port_resource == w_port.port_resource
+            )
         }
 
 
