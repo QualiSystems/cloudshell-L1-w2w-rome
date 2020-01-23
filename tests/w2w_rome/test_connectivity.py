@@ -989,3 +989,78 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
         self.driver_commands.map_clear_to(src_port, dst_ports)
 
         emu.check_calls()
+
+    def test_map_clear_to_matrix_q_128(self):
+        first_host = '192.168.122.10'
+        second_host = '192.168.122.11'
+        address = '{}:{}:Q'.format(first_host, second_host)
+        user = 'user'
+        password = 'password'
+        src_port = '{}/1/1'.format(address)
+        dst_ports = ['{}/1/2'.format(address)]
+        self.driver_commands._mapping_check_delay = 0.1
+
+        ports_show_1 = set_port_disconnected('E1', PORT_SHOW_MATRIX_Q128_1)
+        ports_show_1 = set_port_disconnected('E129', ports_show_1)
+
+        ports_show_2 = set_port_disconnected('E1', PORT_SHOW_MATRIX_Q128_2)
+        ports_show_2 = set_port_disconnected('E129', ports_show_2)
+
+        emu1 = CliEmulator([
+            Command('', DEFAULT_PROMPT),
+            Command('port show', PORT_SHOW_MATRIX_Q128_1),
+            Command(
+                'connection disconnect E1 from W2',
+                '''ROME[TECH]# connection disconnect E1 from W2
+OK - request added to pending queue (E1-W2)
+ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
+08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E1[1AE1]<->W2[1AW2] OP:disconnect
+''',
+            ),
+            Command(
+                'connection disconnect E129 from W130',
+                '''ROME[TECH]# connection disconnect E129 from W130
+OK - request added to pending queue (E129-W130)
+ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
+08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E129[1BE129]<->W130[1BW130] OP:disconnect
+''',
+            ),
+            Command('connection show pending', CONNECTION_PENDING_EMPTY),
+            Command('port show', ports_show_1),
+        ])
+        emu2 = CliEmulator([
+            Command('', DEFAULT_PROMPT),
+            Command('port show', PORT_SHOW_MATRIX_Q128_2),
+            Command(
+                'connection disconnect E1 from W2',
+                '''ROME[TECH]# connection disconnect E1 from W2
+OK - request added to pending queue (E1-W2)
+ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
+08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E1[1AE1]<->W2[1AW2] OP:disconnect
+''',
+            ),
+            Command(
+                'connection disconnect E129 from W130',
+                '''ROME[TECH]# connection disconnect E129 from W130
+OK - request added to pending queue (E129-W130)
+ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
+08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E129[1BE129]<->W130[1BW130] OP:disconnect
+''',
+            ),
+            Command('connection show pending', CONNECTION_PENDING_EMPTY),
+            Command('port show', ports_show_2),
+        ])
+
+        self.send_line_func_map.update(
+            {first_host: emu1.send_line, second_host: emu2.send_line}
+        )
+        self.receive_all_func_map.update(
+            {first_host: emu1.receive_all, second_host: emu2.receive_all}
+        )
+
+        with self.patch_sessions():
+            self.driver_commands.login(address, user, password)
+
+        self.driver_commands.map_clear_to(src_port, dst_ports)
+
+        emu1.check_calls()
