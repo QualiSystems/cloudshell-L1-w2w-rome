@@ -484,11 +484,8 @@ class DriverCommands(DriverCommandsInterface):
         src_port_name = self.convert_cs_port_to_port_name(src_port)
         dst_port_name = self.convert_cs_port_to_port_name(dst_ports[0])
 
-        with self._cli_handler.default_mode_service() as cli_service:
-            system_actions = SystemActions(cli_service, self._logger)
-            mapping_actions = MappingActions(cli_service, self._logger)
-            port_table = system_actions.get_port_table()
-
+        with self._get_cli_services() as cli_services:
+            port_table = self._get_port_table(cli_services)
             connected_ports = port_table.get_connected_port_pairs([src_port_name])
 
             if not connected_ports:
@@ -506,17 +503,9 @@ class DriverCommands(DriverCommandsInterface):
             connected_sub_ports = port_table.get_connected_sub_ports_pairs(
                 connected_ports
             )
-            connected_sub_port_names = [
-                (e_port.sub_port_name, w_port.sub_port_name)
-                for e_port, w_port in sorted(connected_sub_ports)
-            ]
-            for e_port_name, w_port_name in connected_sub_port_names:
-                mapping_actions.disconnect(e_port_name, w_port_name)
-            self._wait_ports_not_in_pending_connections(
-                mapping_actions, connected_sub_port_names, len(connected_sub_port_names)
-            )
+            self._disconnect_sub_ports(connected_sub_ports, cli_services)
 
-            port_table = system_actions.get_port_table()
+            port_table = self._get_port_table(cli_services)
             connected_ports = port_table.get_connected_port_pairs([src_port_name])
             if connected_ports:
                 raise BaseRomeException(
