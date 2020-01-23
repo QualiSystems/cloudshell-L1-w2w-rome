@@ -326,14 +326,13 @@ class DriverCommands(DriverCommandsInterface):
 
         try:
             yield services
-        except Exception:
+        finally:
+            exc_info = sys.exc_info()
             for stack in stacks:
-                not_raise = stack.__exit__(*sys.exc_info())
+                not_raise = stack.__exit__(*exc_info)
 
-            if not_raise:
-                pass
-            else:
-                raise
+            if not not_raise and exc_info[0]:
+                raise exc_info
 
     def _get_port_table(self, cli_services):
         port_tables = []
