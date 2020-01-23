@@ -133,7 +133,7 @@ class DriverCommands(DriverCommandsInterface):
                 2 * len(src_logic_port.rome_ports),
             )
 
-    def _disconnect_ports(self, src_logic_port, dst_logic_port, cli_services):
+    def _disconnect_logical_ports(self, src_logic_port, dst_logic_port, cli_services):
         for cli_service in cli_services:
             mapping_actions = MappingActions(cli_service, self._logger)
             mapping_actions.disconnect(
@@ -186,7 +186,9 @@ class DriverCommands(DriverCommandsInterface):
             dst_logic_port = port_table[dst_port_name]
 
             if not port_table.is_connected(src_logic_port, dst_logic_port, bidi=True):
-                self._disconnect_ports(src_logic_port, dst_logic_port, cli_services)
+                self._disconnect_logical_ports(
+                    src_logic_port, dst_logic_port, cli_services
+                )
                 raise ConnectionPortsError(
                     'Cannot connect port {} to port {} during {}sec'.format(
                         src_logic_port.name, dst_logic_port.name, self._mapping_timeout
