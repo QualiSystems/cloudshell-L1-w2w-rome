@@ -376,8 +376,7 @@ class DriverCommands(DriverCommandsInterface):
 
             return ResourceDescriptionResponseInfo([chassis])
         """
-        hosts, letter = self.split_addresses_and_letter(address)
-        first_host = hosts[0]
+        _, letter = self.split_addresses_and_letter(address)
 
         with self._get_cli_services() as cli_services:
             cli_service1 = cli_services[0]
