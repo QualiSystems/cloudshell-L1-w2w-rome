@@ -386,7 +386,7 @@ class DriverCommands(DriverCommandsInterface):
             board_table = system_actions.board_table()
 
         autoload_helper = AutoloadHelper(
-            first_host, board_table, port_table, letter, self._logger
+            address, board_table, port_table, letter, self._logger
         )
         response_info = ResourceDescriptionResponseInfo(
             autoload_helper.build_structure()
