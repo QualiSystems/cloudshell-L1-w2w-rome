@@ -66,21 +66,19 @@ class DriverCommands(DriverCommandsInterface):
         first_host = hosts[0]
 
         self._cli_handler.define_session_attributes(first_host, username, password)
-        with self._cli_handler.default_mode_service() as session:
-            system_actions = SystemActions(session, self._logger)
-            self._logger.info('Connected to ' + system_actions.board_table().get('model_name'))
-
         if len(hosts) == 2:
             second_host = hosts[1]
             self._initialize_second_cli_handler()
             self._second_cli_handler.define_session_attributes(
                 second_host, username, password
             )
-            with self._second_cli_handler.default_mode_service() as session:
-                system_actions = SystemActions(session, self._logger)
-                self._logger.info(
-                    'Connected to ' + system_actions.board_table().get('model_name')
-                )
+
+        with self._get_cli_services_lst() as cli_services_lst:
+            system_actions = SystemActions(cli_services_lst, self._logger)
+            board_tables_map = system_actions.get_board_tables_map()
+            for cli_service, board_table in board_tables_map.items():
+                model_name = board_table['model_name']
+                self._logger.info('Connected to {}'.format(model_name))
 
     def get_state_id(self):
         """
@@ -144,7 +142,8 @@ class DriverCommands(DriverCommandsInterface):
                 self._mapping_timeout,
                 self._mapping_check_delay,
             )
-            port_table = self._get_port_table(cli_services_lst)
+            system_actions = SystemActions(cli_services_lst, self._logger)
+            port_table = system_actions.get_port_table()
             src_logic_port = port_table[src_port_name]
             dst_logic_port = port_table[dst_port_name]
 
@@ -161,7 +160,7 @@ class DriverCommands(DriverCommandsInterface):
             )
             mapping_actions.connect(src_logic_port, dst_logic_port, bidi=True)
 
-            port_table = self._get_port_table(cli_services_lst)
+            port_table = system_actions.get_port_table()
             src_logic_port = port_table[src_port_name]
             dst_logic_port = port_table[dst_port_name]
 
@@ -202,10 +201,10 @@ class DriverCommands(DriverCommandsInterface):
         src_port_name = self.convert_cs_port_to_port_name(src_port)
         dst_port_name = self.convert_cs_port_to_port_name(dst_ports[0])
 
-        with self._cli_handler.default_mode_service() as cli_service:
-            system_actions = SystemActions(cli_service, self._logger)
+        with self._get_cli_services_lst() as cli_services_lst:
+            system_actions = SystemActions(cli_services_lst, self._logger)
             mapping_actions = MappingActions(
-                [cli_service],
+                cli_services_lst,
                 self._logger,
                 self._mapping_timeout,
                 self._mapping_check_delay,
@@ -288,58 +287,25 @@ class DriverCommands(DriverCommandsInterface):
             if not not_raise and exc_info[0]:
                 raise exc_info[1]
 
-    def _get_port_table(self, cli_services):
-        port_tables = []
-        for cli_service in cli_services:
-            system_actions = SystemActions(cli_service, self._logger)
-            port_tables.append(system_actions.get_port_table())
-
-        return reduce(PortTable.__add__, port_tables)
-
     def get_resource_description(self, address):
-        """
-        Auto-load function to retrieve all information from the device
-        :param address: resource address, '192.168.42.240' if Shell run without support multiple
-            blades address should be IP:[Matrix]A|B, '192.168.42.240:MatrixB'
+        """Auto-load function to retrieve all information from the device.
+
+        :param address: resource address, '192.168.42.240' if Shell run without support
+            multiple blades address should be IP:[Matrix]A|B, '192.168.42.240:MatrixB'
         :type address: str
         :return: resource description
         :rtype: cloudshell.layer_one.core.response.response_info.ResourceDescriptionResponseInfo
         :raises cloudshell.layer_one.core.layer_one_driver_exception.LayerOneDriverException: Layer one exception.
-
-        Example:
-
-            from cloudshell.layer_one.core.response.resource_info.entities.chassis import Chassis
-            from cloudshell.layer_one.core.response.resource_info.entities.blade import Blade
-            from cloudshell.layer_one.core.response.resource_info.entities.port import Port
-
-            chassis_resource_id = chassis_info.get_id()
-            chassis_address = chassis_info.get_address()
-            chassis_model_name = "Fiberzone Afm Chassis"
-            chassis_serial_number = chassis_info.get_serial_number()
-            chassis = Chassis(resource_id, address, model_name, serial_number)
-
-            blade_resource_id = blade_info.get_id()
-            blade_model_name = 'Generic L1 Module'
-            blade_serial_number = blade_info.get_serial_number()
-            blade.set_parent_resource(chassis)
-
-            port_id = port_info.get_id()
-            port_serial_number = port_info.get_serial_number()
-            port = Port(port_id, 'Generic L1 Port', port_serial_number)
-            port.set_parent_resource(blade)
-
-            return ResourceDescriptionResponseInfo([chassis])
         """
         _, letter = self.split_addresses_and_letter(address)
 
-        with self._get_cli_services_lst() as cli_services_list:
-            cli_service1 = cli_services_list[0]
-            system_actions = SystemActions(cli_service1, self._logger)
-            port_table = self._get_port_table(cli_services_list)
-            board_table = system_actions.board_table()
+        with self._get_cli_services_lst() as cli_services_lst:
+            system_actions = SystemActions(cli_services_lst, self._logger)
+            port_table = system_actions.get_port_table()
+            board_tables_map = system_actions.get_board_tables_map()
 
         autoload_helper = AutoloadHelper(
-            address, board_table, port_table, letter, self._logger
+            address, board_tables_map.values()[0], port_table, letter, self._logger
         )
         response_info = ResourceDescriptionResponseInfo(
             autoload_helper.build_structure()
@@ -364,11 +330,12 @@ class DriverCommands(DriverCommandsInterface):
                 self._mapping_timeout,
                 self._mapping_check_delay,
             )
-            port_table = self._get_port_table(cli_services_lst)
+            system_actions = SystemActions(cli_services_lst, self._logger)
+            port_table = system_actions.get_port_table()
             connected_ports = port_table.get_connected_port_pairs(port_names, bidi=True)
             mapping_actions.disconnect(connected_ports)
 
-            port_table = self._get_port_table(cli_services_lst)
+            port_table = system_actions.get_port_table()
             connected_ports = port_table.get_connected_port_pairs(port_names, bidi=True)
             if connected_ports:
                 connected_port_names = [
@@ -416,7 +383,8 @@ class DriverCommands(DriverCommandsInterface):
                 self._mapping_timeout,
                 self._mapping_check_delay,
             )
-            port_table = self._get_port_table(cli_services_lst)
+            system_actions = SystemActions(cli_services_lst, self._logger)
+            port_table = system_actions.get_port_table()
             connected_ports = port_table.get_connected_port_pairs([src_port_name])
 
             if not connected_ports:
@@ -432,7 +400,7 @@ class DriverCommands(DriverCommandsInterface):
                 )
             mapping_actions.disconnect(connected_ports)
 
-            port_table = self._get_port_table(cli_services_lst)
+            port_table = system_actions.get_port_table()
             connected_ports = port_table.get_connected_port_pairs([src_port_name])
             if connected_ports:
                 raise BaseRomeException(
@@ -442,31 +410,29 @@ class DriverCommands(DriverCommandsInterface):
                 )
 
     def get_attribute_value(self, cs_address, attribute_name):
-        """
-        Retrieve attribute value from the device
-        :param cs_address: address, '192.168.42.240/1/21'
+        """Retrieve attribute value from the device.
+
+        :param cs_address: address, '192.168.42.240:A/A/21'
         :type cs_address: str
         :param attribute_name: attribute name, "Port Speed"
         :type attribute_name: str
         :return: attribute value
         :rtype: cloudshell.layer_one.core.response.response_info.AttributeValueResponseInfo
         :raises Exception: if command failed
-
-        Example:
-            with self._cli_handler.config_mode_service() as session:
-                command = AttributeCommandFactory.get_attribute_command(cs_address, attribute_name)
-                value = session.send_command(command)
-                return AttributeValueResponseInfo(value)
         """
         serial_number = 'Serial Number'
         if len(cs_address.split('/')) == 1 and attribute_name == serial_number:
-            with self._cli_handler.default_mode_service() as session:
-                autoload_actions = SystemActions(session, self._logger)
-                board_table = autoload_actions.board_table()
-            return AttributeValueResponseInfo(board_table.get('serial_number'))
+            with self._get_cli_services_lst() as cli_services_lst:
+                system_actions = SystemActions(cli_services_lst, self._logger)
+                board_tables_map = system_actions.get_board_tables_map()
+            return AttributeValueResponseInfo(
+                board_tables_map.values()[0].get('serial_number')
+            )
         else:
-            raise Exception(self.__class__.__name__,
-                            'Attribute {0} for {1} is not available'.format(attribute_name, cs_address))
+            msg = 'Attribute {} for {} is not available'.format(
+                attribute_name, cs_address
+            )
+            raise BaseRomeException(msg)
 
     def set_attribute_value(self, cs_address, attribute_name, attribute_value):
         """
