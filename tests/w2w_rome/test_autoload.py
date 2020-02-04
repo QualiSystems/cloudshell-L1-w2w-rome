@@ -277,7 +277,8 @@ class RomeTestAutoload(BaseRomeTestCase):
                 Command(
                     'port show',
                     PORT_SHOW_MATRIX_Q128_2,
-                )
+                ),
+                Command('show board', SHOW_BOARD),
             ]
         )
 
