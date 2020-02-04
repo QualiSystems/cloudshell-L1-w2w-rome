@@ -255,7 +255,7 @@ ROME[TECH]#
         self.driver_commands.login(address, user, password)
 
         with self.assertRaisesRegexp(
-                ConnectionPortsError, 'Cannot connect port E6 to port W4'
+                ConnectionPortsError, 'Cannot connect port A6 to port A4'
         ):
             self.driver_commands.map_uni(src_port, dst_ports)
 
@@ -678,30 +678,6 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 '''
             ),
             Command(
-                'connection disconnect E2 from W3',
-                '''ROME[TECH]# connection disconnect E2 from W3
-OK - request added to pending queue (E2-W3)
-ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
-08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E2[1AE2]<->W3[1AW3] OP:disconnect
-'''
-            ),
-            Command(
-                'connection disconnect E3 from W2',
-                '''ROME[TECH]# connection disconnect E3 from W2
-OK - request added to pending queue (E3-W2)
-ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
-08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E3[1AE3]<->W2[1AW2] OP:disconnect
-'''
-            ),
-            Command(
-                'connection disconnect E4 from W1',
-                '''ROME[TECH]# connection disconnect E4 from W1
-OK - request added to pending queue (E4-W1)
-ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
-08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E4[1AE4]<->W1[1AW1] OP:disconnect
-'''
-            ),
-            Command(
                 'connection disconnect E129 from W132',
                 '''ROME[TECH]# connection disconnect E129 from W132
 OK - request added to pending queue (E129-W132)
@@ -731,6 +707,30 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 OK - request added to pending queue (E132-W129)
 ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E132[1AE132]<->W129[1AW129] OP:disconnect
+'''
+            ),
+            Command(
+                'connection disconnect E2 from W3',
+                '''ROME[TECH]# connection disconnect E2 from W3
+OK - request added to pending queue (E2-W3)
+ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
+08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E2[1AE2]<->W3[1AW3] OP:disconnect
+'''
+            ),
+            Command(
+                'connection disconnect E3 from W2',
+                '''ROME[TECH]# connection disconnect E3 from W2
+OK - request added to pending queue (E3-W2)
+ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
+08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E3[1AE3]<->W2[1AW2] OP:disconnect
+'''
+            ),
+            Command(
+                'connection disconnect E4 from W1',
+                '''ROME[TECH]# connection disconnect E4 from W1
+OK - request added to pending queue (E4-W1)
+ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
+08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E4[1AE4]<->W1[1AW1] OP:disconnect
 '''
             ),
             Command('connection show pending', CONNECTION_PENDING_EMPTY),
@@ -774,14 +774,6 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 ''',
             ),
             Command(
-                'connection disconnect E2 from W1',
-                '''ROME[TECH]# connection disconnect E2 from W1
-OK - request added to pending queue (E2-W1)
-ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
-08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E2[1AE2]<->W1[1AW1] OP:disconnect
-''',
-            ),
-            Command(
                 'connection disconnect E129 from W130',
                 '''ROME[TECH]# connection disconnect E129 from W130
 OK - request added to pending queue (E129-W130)
@@ -796,6 +788,14 @@ OK - request added to pending queue (E130-W129)
 ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E130[1BE130]<->W129[1BW129] OP:disconnect
 '''
+            ),
+            Command(
+                'connection disconnect E2 from W1',
+                '''ROME[TECH]# connection disconnect E2 from W1
+OK - request added to pending queue (E2-W1)
+ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
+08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E2[1AE2]<->W1[1AW1] OP:disconnect
+''',
             ),
             Command('connection show pending', CONNECTION_PENDING_EMPTY),
             Command('port show', ports_show_1),
@@ -812,14 +812,6 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 ''',
             ),
             Command(
-                'connection disconnect E2 from W1',
-                '''ROME[TECH]# connection disconnect E2 from W1
-OK - request added to pending queue (E2-W1)
-ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
-08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E2[1AE2]<->W1[1AW1] OP:disconnect
-''',
-            ),
-            Command(
                 'connection disconnect E129 from W130',
                 '''ROME[TECH]# connection disconnect E129 from W130
 OK - request added to pending queue (E129-W130)
@@ -834,6 +826,14 @@ OK - request added to pending queue (E130-W129)
 ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E130[1BE130]<->W129[1BW129] OP:disconnect
 '''
+            ),
+            Command(
+                'connection disconnect E2 from W1',
+                '''ROME[TECH]# connection disconnect E2 from W1
+OK - request added to pending queue (E2-W1)
+ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
+08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E2[1AE2]<->W1[1AW1] OP:disconnect
+''',
             ),
             Command('connection show pending', CONNECTION_PENDING_EMPTY),
             Command('port show', ports_show_2),
@@ -956,14 +956,6 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 '''
             ),
             Command(
-                'connection disconnect E2 from W3',
-                '''ROME[TECH]# connection disconnect E2 from W3
-OK - request added to pending queue (E2-W3)
-ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
-08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E2[1AE2]<->W3[1AW3] OP:disconnect
-'''
-            ),
-            Command(
                 'connection disconnect E129 from W132',
                 '''ROME[TECH]# connection disconnect E129 from W132
 OK - request added to pending queue (E129-W132)
@@ -977,6 +969,14 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 OK - request added to pending queue (E130-W131)
 ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E130[1AE130]<->W131[1AW131] OP:disconnect
+'''
+            ),
+            Command(
+                'connection disconnect E2 from W3',
+                '''ROME[TECH]# connection disconnect E2 from W3
+OK - request added to pending queue (E2-W3)
+ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
+08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E2[1AE2]<->W3[1AW3] OP:disconnect
 '''
             ),
             Command('connection show pending', CONNECTION_PENDING_EMPTY),
