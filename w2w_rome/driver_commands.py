@@ -14,7 +14,10 @@ from w2w_rome.command_actions.mapping_actions import MappingActions
 from w2w_rome.command_actions.system_actions import SystemActions
 from w2w_rome.helpers.autoload_helper import AutoloadHelper
 from w2w_rome.helpers.errors import (
-    BaseRomeException, ConnectionPortsError, NotSupportedError
+    BaseRomeException,
+    ConnectionPortsError,
+    NotSupportedError,
+    ConnectedToDifferentPortsError,
 )
 
 
@@ -159,8 +162,17 @@ class DriverCommands(DriverCommandsInterface):
             src_logic_port = port_table[src_port_name]
             dst_logic_port = port_table[dst_port_name]
 
-            if not port_table.is_connected(src_logic_port, dst_logic_port, bidi=True):
-                mapping_actions.disconnect(src_logic_port, dst_logic_port, bidi=True)
+            try:
+                is_connected = port_table.is_connected(
+                    src_logic_port, dst_logic_port, bidi=True
+                )
+            except ConnectedToDifferentPortsError:
+                is_connected = False
+
+            if not is_connected:
+                mapping_actions.disconnect(
+                    {(src_logic_port, dst_logic_port)}, bidi=True
+                )
                 raise ConnectionPortsError(
                     'Cannot connect port {} to port {} during {}sec'.format(
                         src_logic_port.original_logical_name,

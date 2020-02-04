@@ -70,7 +70,7 @@ class SubPort(object):
             '{logical: <{logical_width}}'.format(
                 port_direction=self.sub_port_name,
                 port_full_name=self.sub_port_full_name,
-                logical=self.logical,
+                logical=self.original_logical_name,
                 **locals()
             )
         )
