@@ -3,20 +3,19 @@
 import re
 import sys
 
-import time
-from collections import defaultdict
 from contextlib import contextmanager
 
 from cloudshell.layer_one.core.driver_commands_interface import DriverCommandsInterface
-from cloudshell.layer_one.core.response.response_info import GetStateIdResponseInfo, AttributeValueResponseInfo, \
-    ResourceDescriptionResponseInfo
+from cloudshell.layer_one.core.response.response_info import (
+    GetStateIdResponseInfo, AttributeValueResponseInfo, ResourceDescriptionResponseInfo
+)
 from w2w_rome.cli.rome_cli_handler import RomeCliHandler
 from w2w_rome.command_actions.mapping_actions import MappingActions
 from w2w_rome.command_actions.system_actions import SystemActions
 from w2w_rome.helpers.autoload_helper import AutoloadHelper
-from w2w_rome.helpers.errors import BaseRomeException, ConnectionPortsError, \
-    NotSupportedError
-from w2w_rome.helpers.port_entity import PortTable
+from w2w_rome.helpers.errors import (
+    BaseRomeException, ConnectionPortsError, NotSupportedError
+)
 
 
 class DriverCommands(DriverCommandsInterface):
@@ -26,7 +25,7 @@ class DriverCommands(DriverCommandsInterface):
         (
             r'^(?P<host>[^:]+?):'
             r'((?P<second_host>[^:]+?):)?'
-            r'(matrix)?(?P<letter>(a|b|q))(/.+)?$'
+            r'(matrix)?(?P<letter>([abq]))(/.+)?$'
         ),
         re.IGNORECASE,
     )
@@ -43,7 +42,9 @@ class DriverCommands(DriverCommandsInterface):
 
         self._mapping_timeout = runtime_config.read_key('MAPPING.TIMEOUT', 120)
         self._mapping_check_delay = runtime_config.read_key('MAPPING.CHECK_DELAY', 3)
-        self.support_multiple_blades = runtime_config.read_key('SUPPORT_MULTIPLE_BLADES', False)
+        self.support_multiple_blades = runtime_config.read_key(
+            'SUPPORT_MULTIPLE_BLADES', False
+        )
 
         self.__ports_association_table = None
 
@@ -62,7 +63,7 @@ class DriverCommands(DriverCommandsInterface):
         :return: None
         :raises Exception: if command failed
         """
-        hosts, _ = self.split_addresses_and_letter(address)
+        hosts, _ = self._split_addresses_and_letter(address)
         first_host = hosts[0]
 
         self._cli_handler.define_session_attributes(first_host, username, password)
@@ -97,23 +98,18 @@ class DriverCommands(DriverCommandsInterface):
         return GetStateIdResponseInfo('-1')
 
     def set_state_id(self, state_id):
-        """
-        Set synchronization state id to the device, called after Autoload or SyncFomDevice commands
+        """Set synchronization state id to the device.
+
+        Called after Autoload or SyncFomDevice commands
         :param state_id: synchronization ID
         :type state_id: str
         :return: None
         :raises Exception: if command failed
-
-        Example:
-            # Obtain cli session
-            with self._cli_handler.config_mode_service() as session:
-                # Execute command
-                session.send_command('set chassis name {}'.format(state_id))
         """
         pass
 
-    def convert_cs_port_to_port_name(self, cs_port):
-        _, matrix_letter = self.split_addresses_and_letter(cs_port)
+    def _convert_cs_port_to_port_name(self, cs_port):
+        _, matrix_letter = self._split_addresses_and_letter(cs_port)
         return '{}{}'.format(
             matrix_letter, cs_port.rsplit('/', 1)[-1].lstrip('0')
         )
@@ -131,9 +127,8 @@ class DriverCommands(DriverCommandsInterface):
         self._logger.info(
             'MapBidi, SrcPort: {0}, DstPort: {1}'.format(src_port, dst_port)
         )
-
-        src_port_name = self.convert_cs_port_to_port_name(src_port)
-        dst_port_name = self.convert_cs_port_to_port_name(dst_port)
+        src_port_name = self._convert_cs_port_to_port_name(src_port)
+        dst_port_name = self._convert_cs_port_to_port_name(dst_port)
 
         with self._get_cli_services_lst() as cli_services_lst:
             mapping_actions = MappingActions(
@@ -189,7 +184,7 @@ class DriverCommands(DriverCommandsInterface):
             raise BaseRomeException(
                 'MapUni operation is not allowed for multiple Dst ports'
             )
-        _, letter = self.split_addresses_and_letter(src_port)
+        _, letter = self._split_addresses_and_letter(src_port)
         if letter.startswith('Q'):
             raise NotSupportedError(
                 "MapUni for matrix Q doesn't supported"
@@ -198,8 +193,8 @@ class DriverCommands(DriverCommandsInterface):
             src_port, dst_ports[0])
         )
 
-        src_port_name = self.convert_cs_port_to_port_name(src_port)
-        dst_port_name = self.convert_cs_port_to_port_name(dst_ports[0])
+        src_port_name = self._convert_cs_port_to_port_name(src_port)
+        dst_port_name = self._convert_cs_port_to_port_name(dst_ports[0])
 
         with self._get_cli_services_lst() as cli_services_lst:
             system_actions = SystemActions(cli_services_lst, self._logger)
@@ -235,7 +230,7 @@ class DriverCommands(DriverCommandsInterface):
                     )
                 )
 
-    def split_addresses_and_letter(self, address):
+    def _split_addresses_and_letter(self, address):
         """Extract resources addresses and matrix letter.
 
         :param address: <host>:<MatrixA> or <host>:<host>:<Q>
@@ -280,6 +275,7 @@ class DriverCommands(DriverCommandsInterface):
         try:
             yield services
         finally:
+            not_raise = False
             exc_info = sys.exc_info()
             for stack in stacks:
                 not_raise = stack.__exit__(*exc_info)
@@ -297,7 +293,7 @@ class DriverCommands(DriverCommandsInterface):
         :rtype: cloudshell.layer_one.core.response.response_info.ResourceDescriptionResponseInfo
         :raises cloudshell.layer_one.core.layer_one_driver_exception.LayerOneDriverException: Layer one exception.
         """
-        _, letter = self.split_addresses_and_letter(address)
+        _, letter = self._split_addresses_and_letter(address)
 
         with self._get_cli_services_lst() as cli_services_lst:
             system_actions = SystemActions(cli_services_lst, self._logger)
@@ -321,7 +317,7 @@ class DriverCommands(DriverCommandsInterface):
         :raises Exception: if command failed
         """
         self._logger.info('MapClear, Ports: {}'.format(', '.join(ports)))
-        port_names = map(self.convert_cs_port_to_port_name, ports)
+        port_names = map(self._convert_cs_port_to_port_name, ports)
 
         with self._get_cli_services_lst() as cli_services_lst:
             mapping_actions = MappingActions(
@@ -348,21 +344,15 @@ class DriverCommands(DriverCommandsInterface):
                 )
 
     def map_clear_to(self, src_port, dst_ports):
-        """
-        Remove simplex/multi-cast/duplex connection ending on the destination port
-        :param src_port: src port address, '192.168.42.240/1/21'
+        """Remove simplex/multi-cast/duplex connection ending on the destination port.
+
+        :param src_port: src port address, '192.168.42.240:A/A/21'
         :type src_port: str
-        :param dst_ports: list of dst ports addresses, ['192.168.42.240/1/21', '192.168.42.240/1/22']
+        :param dst_ports: list of dst ports addresses,
+            ['192.168.42.240:A/A/21', '192.168.42.240:A/A/22']
         :type dst_ports: list
         :return: None
         :raises Exception: if command failed
-
-        Example:
-            with self._cli_handler.config_mode_service() as session:
-                _src_port = convert_port(src_port)
-                for port in dst_ports:
-                    _dst_port = convert_port(port)
-                    session.send_command('map clear-to {0} {1}'.format(_src_port, _dst_port))
         """
         if len(dst_ports) != 1:
             raise BaseRomeException(
@@ -373,8 +363,8 @@ class DriverCommands(DriverCommandsInterface):
             'MapClearTo, SrcPort: {0}, DstPort: {1}'.format(src_port, dst_ports[0])
         )
 
-        src_port_name = self.convert_cs_port_to_port_name(src_port)
-        dst_port_name = self.convert_cs_port_to_port_name(dst_ports[0])
+        src_port_name = self._convert_cs_port_to_port_name(src_port)
+        dst_port_name = self._convert_cs_port_to_port_name(dst_ports[0])
 
         with self._get_cli_services_lst() as cli_services_lst:
             mapping_actions = MappingActions(
@@ -435,9 +425,9 @@ class DriverCommands(DriverCommandsInterface):
             raise BaseRomeException(msg)
 
     def set_attribute_value(self, cs_address, attribute_name, attribute_value):
-        """
-        Set attribute value to the device
-        :param cs_address: address, '192.168.42.240/1/21'
+        """Set attribute value to the device.
+
+        :param cs_address: address, '192.168.42.240:A/A/21'
         :type cs_address: str
         :param attribute_name: attribute name, "Port Speed"
         :type attribute_name: str
@@ -446,17 +436,13 @@ class DriverCommands(DriverCommandsInterface):
         :return: attribute value
         :rtype: cloudshell.layer_one.core.response.response_info.AttributeValueResponseInfo
         :raises Exception: if command failed
-
-        Example:
-            with self._cli_handler.config_mode_service() as session:
-                command = AttributeCommandFactory.set_attribute_command(cs_address, attribute_name, attribute_value)
-                session.send_command(command)
-                return AttributeValueResponseInfo(attribute_value)
         """
         if attribute_name == 'Serial Number':
             return
         else:
-            raise Exception(self.__class__.__name__, 'SetAttribute {} is not supported'.format(attribute_name))
+            raise BaseRomeException(
+                'SetAttribute {} is not supported'.format(attribute_name)
+            )
 
     def map_tap(self, src_port, dst_ports):
         return self.map_uni(src_port, dst_ports)

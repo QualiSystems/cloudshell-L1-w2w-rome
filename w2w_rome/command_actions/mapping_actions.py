@@ -160,7 +160,7 @@ class MappingActions(object):
     def disconnect(self, connected_logic_ports, bidi=False):
         """Disconnect logical ports.
 
-        :type connected_logic_ports: list[tuple[w2w_rome.helpers.port_entity.LogicalPort]]
+        :type connected_logic_ports: set[tuple[w2w_rome.helpers.port_entity.LogicalPort]]
         :type bidi: bool
         """
         if bidi:
