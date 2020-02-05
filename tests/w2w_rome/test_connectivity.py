@@ -378,6 +378,52 @@ ROME[TECH]# 08-06-2019 09:01 CONNECTING...
 
         emu.check_calls()
 
+    def test_map_bidi_failed(self):
+        host = '192.168.122.10'
+        address = '{}:A'.format(host)
+        user = 'user'
+        password = 'password'
+        src_port = '{}/1/003'.format(address)
+        dst_port = '{}/1/004'.format(address)
+        self.driver_commands._mapping_check_delay = 0.1
+
+        connected_port_show_a = set_port_connected('E3', 'W4', PORT_SHOW_MATRIX_A)
+        emu = CliEmulator([
+            Command('', DEFAULT_PROMPT),
+            Command('port show', PORT_SHOW_MATRIX_A),
+            Command(
+                'connection create A3 to A4',
+                '''ROME[TECH]# connection create A3 to A4
+OK - request added to pending queue (A3-A4)
+ROME[TECH]# 08-06-2019 09:01 CONNECTING...
+08-06-2019 09:01 CONNECTION OPERATION SUCCEEDED:E3[1AE3]<->W4[1AW4] OP:connect
+08-06-2019 09:01 CONNECTION OPERATION FAILED:E4[1AE2]<->W3[1AW3] OP:connect
+'''
+            ),
+            Command('connection show pending', CONNECTION_PENDING_EMPTY),
+            Command('port show', connected_port_show_a),
+            Command(
+                'connection disconnect A3 from A4',
+                '''ROME[TECH]# connection disconnect A3 from A4
+OK - request added to pending queue (A3-A4)
+ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
+08-05-2019 12:19 CONNECTION OPERATION SUCCEEDED:E3[1AE3]<->W4[1AW4] OP:disconnect
+'''
+            ),
+            Command('connection show pending', CONNECTION_PENDING_EMPTY),
+        ])
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
+
+        self.driver_commands.login(address, user, password)
+
+        with self.assertRaisesRegexp(
+                ConnectionPortsError, 'Cannot connect port A3 to port A4'
+        ):
+            self.driver_commands.map_bidi(src_port, dst_port)
+
+        emu.check_calls()
+
     def test_map_bidi_a_few_checks(self):
         host = '192.168.122.10'
         address = '{}:A'.format(host)
