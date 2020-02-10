@@ -588,6 +588,18 @@ W28[1AW28]       Unlocked     Enabled     Disconnected  2                      P
 W29[1AW29]       Unlocked     Enabled     Disconnected  2                      P29     
 '''
             ),
+            (
+                '''W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
+W27[1AW27] 
+02-09-2020 12:04 CONNECTION OPERATION SUCCEEDED:E38[1AE38]<->W36[1AW36] OP:connect
+      Unlocked     Enabled     Disconnected  4                      P27     
+W28[1AW28]       Unlocked     Enabled     Disconnected  6                      P28     
+''',
+                '''W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
+W27[1AW27]       Unlocked     Enabled     Disconnected  4                      P27     
+W28[1AW28]       Unlocked     Enabled     Disconnected  6                      P28     
+'''
+            ),
         ]
 
         for raw_str, fixed_str in str_to_check:

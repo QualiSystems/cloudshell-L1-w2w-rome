@@ -10,8 +10,12 @@ class RomeTemplateExecutor(CommandTemplateExecutor):
     def remove_logs_from_output(output):
         date_pattern = r'\d+-\d+-\d+\s\d+:\d+'
         pattern = re.compile(
-            r'\n{}\sconnection\s\w+<->\w+\scompleted\s\w+ *\n+'.format(date_pattern),
-            flags=re.IGNORECASE
+            r'\n{}\s'
+            r'('
+            r'(connection \w+<->\w+\scompleted\s\w+ *)'
+            r'|(connection operation [\w()]+:[\w\[\]]+<->[\w\[\]]+ OP:\w+ *)'
+            r')\n+'.format(date_pattern),
+            flags=re.IGNORECASE,
         )
         return pattern.sub('', output)
 
