@@ -306,6 +306,23 @@ class PortTable(object):
         self._map_ports = {}
         self._map_sub_port_id_to_ports = {}
 
+    @classmethod
+    def from_output(cls, port_table_output, host):
+        """Create Port table from CLI port show output.
+
+        :type port_table_output: str
+        :type host: str
+        :rtype: PortTable
+        """
+        port_table = cls()
+        for line in port_table_output.splitlines():
+            sub_port = SubPort.from_line(line, host)
+            if sub_port:
+                rome_logical_port = port_table.get_or_create(sub_port.logical)
+                rome_logical_port.add_sub_port(sub_port)
+
+        return port_table
+
     @property
     def logical_ports(self):
         return self._map_ports.values()

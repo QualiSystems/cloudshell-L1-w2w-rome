@@ -1,8 +1,10 @@
 import re
 
 import w2w_rome.command_templates.system as command_template
-from cloudshell.cli.command_template.command_template_executor import CommandTemplateExecutor
-from w2w_rome.helpers.port_entity import PortTable, SubPort
+from w2w_rome.cli.template_executor import (
+    RomeTemplateExecutor as CommandTemplateExecutor
+)
+from w2w_rome.helpers.port_entity import PortTable
 from w2w_rome.helpers.run_in_threads import run_in_threads
 
 
@@ -21,19 +23,10 @@ class SystemActions(object):
 
     @staticmethod
     def _get_port_table(cli_service):
-        port_table = PortTable()
-
         port_table_output = CommandTemplateExecutor(
             cli_service, command_template.PORT_SHOW
         ).execute_command()
-
-        for line in port_table_output.splitlines():
-            sub_port = SubPort.from_line(line, cli_service.session.host)
-            if sub_port:
-                rome_logical_port = port_table.get_or_create(sub_port.logical)
-                rome_logical_port.add_sub_port(sub_port)
-
-        return port_table
+        return PortTable.from_output(port_table_output, cli_service.session.host)
 
     def get_port_table(self):
         """Get port table from hosts and concatenating it.
