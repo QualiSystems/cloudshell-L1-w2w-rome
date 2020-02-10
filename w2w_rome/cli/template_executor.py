@@ -13,7 +13,7 @@ class RomeTemplateExecutor(CommandTemplateExecutor):
             r'\n{}\s'
             r'('
             r'(connection \w+<->\w+\scompleted\s\w+ *)'
-            r'|(connection operation [\w()]+:[\w\[\]]+<->[\w\[\]]+ OP:\w+ *)'
+            r'|(connection operation [\w( )]+:[\w\[\]]+<->[\w\[\]]+ OP:\w+ *)'
             r')\n+'.format(date_pattern),
             flags=re.IGNORECASE,
         )

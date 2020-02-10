@@ -600,6 +600,32 @@ W27[1AW27]       Unlocked     Enabled     Disconnected  4                      P
 W28[1AW28]       Unlocked     Enabled     Disconnected  6                      P28     
 '''
             ),
+            (
+                '''W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
+W27[1AW27] 
+02-08-2020 10:46 CONNECTION OPERATION SKIPPED(already done):E1[1AE1]<->W2[1AW2] OP:connect
+
+      Unlocked     Enabled     Disconnected  4                      P27     
+W28[1AW28]       Unlocked     Enabled     Disconnected  6                      P28     
+''',
+                '''W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
+W27[1AW27]       Unlocked     Enabled     Disconnected  4                      P27     
+W28[1AW28]       Unlocked     Enabled     Disconnected  6                      P28     
+'''
+            ),
+            (
+                '''W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
+W27[1AW27] 
+02-08-2020 10:48 CONNECTION OPERATION SKIPPED(already done):E6[1AE6]<->W5[1AW5] OP:disconnect
+
+      Unlocked     Enabled     Disconnected  4                      P27     
+W28[1AW28]       Unlocked     Enabled     Disconnected  6                      P28     
+''',
+                '''W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
+W27[1AW27]       Unlocked     Enabled     Disconnected  4                      P27     
+W28[1AW28]       Unlocked     Enabled     Disconnected  6                      P28     
+'''
+            ),
         ]
 
         for raw_str, fixed_str in str_to_check:
