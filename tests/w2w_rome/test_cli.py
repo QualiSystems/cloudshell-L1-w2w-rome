@@ -554,3 +554,43 @@ class TestLogInOutput(BaseRomeTestCase):
             for rome_port in logic_port.rome_ports:
                 self.assertIsNotNone(rome_port.e_port)
                 self.assertIsNotNone(rome_port.w_port)
+
+    def test_remove_logs(self):
+        str_to_check = [
+            (
+                '''W87[1AW87]       Unlocked     Enabled     Disconnected  0                      P87
+W88[1AW88]       Unlocked     Enabled     Disconnected  0                      P88
+W89[1AW89]       Unlocked     Enabled     Disconnected  2    
+02-05-2020 13:05 Connection P1<->P2 completed successfully
+                  P89
+W90[1AW90]       Unlocked     Enabled     Disconnected  2                      P90
+W91[1AW91]       Unlocked     Enabled     Disconnected  0                      P91
+''',
+                '''W87[1AW87]       Unlocked     Enabled     Disconnected  0                      P87
+W88[1AW88]       Unlocked     Enabled     Disconnected  0                      P88
+W89[1AW89]       Unlocked     Enabled     Disconnected  2                      P89
+W90[1AW90]       Unlocked     Enabled     Disconnected  2                      P90
+W91[1AW91]       Unlocked     Enabled     Disconnected  0                      P91
+''',
+            ),
+            (
+                '''W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
+W27[1AW27] 
+02-09-2020 10:43 Connection P119<->P24 completed successfully
+
+      Unlocked     Enabled     Disconnected  4                      P27     
+W28[1AW28]       Unlocked     Enabled     Disconnected  2                      P28     
+W29[1AW29]       Unlocked     Enabled     Disconnected  2                      P29     
+''',
+                '''W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
+W27[1AW27]       Unlocked     Enabled     Disconnected  4                      P27     
+W28[1AW28]       Unlocked     Enabled     Disconnected  2                      P28     
+W29[1AW29]       Unlocked     Enabled     Disconnected  2                      P29     
+'''
+            ),
+        ]
+
+        for raw_str, fixed_str in str_to_check:
+            self.assertEqual(
+                fixed_str, RomeTemplateExecutor.remove_logs_from_output(raw_str)
+            )
