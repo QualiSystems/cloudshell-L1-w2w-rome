@@ -1,6 +1,7 @@
 from mock import patch, MagicMock
 
 from tests.w2w_rome.base import BaseRomeTestCase
+from w2w_rome.cli.template_executor import RomeTemplateExecutor
 from w2w_rome.helpers.port_entity import PortTable
 
 PORT_SHOW_WITH_LOG = '''ROME[TECH]# port show
@@ -544,7 +545,8 @@ ROME[TECH]# '''
 class TestLogInOutput(BaseRomeTestCase):
     def test_log_in_port_show_output(self):
         host = '192.168.1.2'
-        port_table = PortTable.from_output(PORT_SHOW_WITH_LOG, host)
+        output = RomeTemplateExecutor.remove_logs_from_output(PORT_SHOW_WITH_LOG)
+        port_table = PortTable.from_output(output, host)
 
         self.assertEqual(128, len(port_table.logical_ports))
         for logic_port in port_table.logical_ports:

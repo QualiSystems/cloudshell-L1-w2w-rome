@@ -1,8 +1,10 @@
 import re
 
 import w2w_rome.command_templates.system as command_template
-from cloudshell.cli.command_template.command_template_executor import CommandTemplateExecutor
-from w2w_rome.helpers.port_entity import PortTable, SubPort
+from w2w_rome.cli.template_executor import (
+    RomeTemplateExecutor as CommandTemplateExecutor
+)
+from w2w_rome.helpers.port_entity import PortTable
 from w2w_rome.helpers.run_in_threads import run_in_threads
 
 
