@@ -156,17 +156,18 @@ class DriverCommands(DriverCommandsInterface):
             port_table.verify_ports_for_connection(
                 src_logic_port, dst_logic_port, bidi=True
             )
-            mapping_actions.connect(src_logic_port, dst_logic_port, bidi=True)
-
-            port_table = system_actions.get_port_table()
-            src_logic_port = port_table[src_port_name]
-            dst_logic_port = port_table[dst_port_name]
 
             try:
+                mapping_actions.connect(src_logic_port, dst_logic_port, bidi=True)
+
+                port_table = system_actions.get_port_table()
+                src_logic_port = port_table[src_port_name]
+                dst_logic_port = port_table[dst_port_name]
+
                 is_connected = port_table.is_connected(
                     src_logic_port, dst_logic_port, bidi=True
                 )
-            except ConnectedToDifferentPortsError:
+            except Exception:
                 is_connected = False
 
             if not is_connected:
