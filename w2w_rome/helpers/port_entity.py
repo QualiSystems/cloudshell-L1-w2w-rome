@@ -267,10 +267,9 @@ class LogicalPort(object):
         if (len(connected_ports) != len(self.rome_ports)
                 or len(set(connected_ports)) != 1):
             raise ConnectedToDifferentPortsError(
-                'Logical port {} connected to a few different logical ports: '
-                '{}'.format(
+                "Port {} was already partially mapped to another port. Please update "
+                "the L1 resource using Resource Manage's Sync From option".format(
                     self.name,
-                    ','.join(p.name for p in connected_ports)
                 )
             )
 
