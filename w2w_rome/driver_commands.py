@@ -17,7 +17,6 @@ from w2w_rome.helpers.errors import (
     BaseRomeException,
     ConnectionPortsError,
     NotSupportedError,
-    ConnectedToDifferentPortsError,
 )
 
 
