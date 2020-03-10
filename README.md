@@ -6,11 +6,11 @@
 [![Build status](https://travis-ci.org/QualiSystems/cloudshell-L1-w2w-rome.svg?branch=dev)](https://travis-ci.org/QualiSystems/cloudshell-L1-w2w-rome)
 [![codecov](https://codecov.io/gh/QualiSystems/cloudshell-L1-w2w-rome/branch/dev/graph/badge.svg)](https://codecov.io/gh/QualiSystems/cloudshell-L1-w2w-rome)
 
-Release date: 02/10/2019
+Release date: 10/03/2020
 
-Shell version: 4.0.0
+Shell version: 4.1.4
 
-Document version: 1.2
+Document version: 1.3
 
 # In This Guide
 
@@ -143,7 +143,7 @@ This section describes how to import the L1 shell and configure and modify the s
 	
   5. Create an L1 resource.
       1. In **Resource Explorer**, right-click **Root** and select **New>Resource**.
-      2. Enter the **Name** and **Address**. If **SUPPORT MULTIPLE BLADES** is set to False (by default), you will need to specify the address as **\<IP\>:\<\[Matrix\]A/B\>**, for example 192.168.1.12:MatrixA or 192.168.1.12:B
+      2. Enter the **Name** and **Address**. If **SUPPORT MULTIPLE BLADES** is set to False (by default), you will need to specify the address as **\<IP\>:\<\[Matrix\]A/B/Q\>**, for example 192.168.1.12:MatrixA, 192.168.1.12:Q (for Q64) or 192.168.1.12:192.168.1.13:Q (for Q128) 
       3. Select the **L1 Switch** family.
       4. Ensure that the correct **Model** Rome Chassis and **Driver** ROME are selected.
       5. Click **OK**.
