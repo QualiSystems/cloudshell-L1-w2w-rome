@@ -11,6 +11,7 @@ class AutoloadHelper(object):
     ):
         """Autoload helper.
 
+        :param resource_address: the address that we got from CS without changes!
         :type resource_address: str
         :type board_table: dict
         :type port_table: w2w_rome.helpers.port_entity.PortTable

@@ -15,4 +15,4 @@ script:
     - nosetests --with-coverage --cover-package=w2w_rome tests
 
 after_success:
-    - coveralls
+    - codecov
