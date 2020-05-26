@@ -251,6 +251,11 @@ class DriverCommands(DriverCommandsInterface):
         :rtype: tuple[tuple[str], str]
         """
         letter = None
+        err_msg = (
+            'Incorrect address. Resource address should specify MatrixA, MatrixB and '
+            'MatrixQ. Format <host>:[<second_host>:]<matrix_letter>. '
+            'Second host is used in Q128 devices.'
+        )
         if not self.support_multiple_blades:
             try:
                 match = self.ADDRESS_PATTERN.search(address)
@@ -258,16 +263,10 @@ class DriverCommands(DriverCommandsInterface):
                 second_host = match.group('second_host')
                 letter = match.group('letter').upper()
             except AttributeError:
-                msg = (
-                    'Incorrect address. Resource address should specify '
-                    'MatrixA, MatrixB or Q. '
-                    'Format <host>:[<second_host>:]<matrix_letter>'
-                )
-                self._logger.error(msg)
-                raise BaseRomeException(msg)
-
+                self._logger.error(err_msg)
+                raise BaseRomeException(err_msg)
             if second_host and letter != 'Q':
-                raise BaseRomeException('')
+                raise BaseRomeException(err_msg)
 
             hosts = tuple(filter(None, (first_host, second_host)))
         else:
