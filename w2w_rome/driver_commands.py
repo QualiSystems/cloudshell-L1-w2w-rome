@@ -29,7 +29,7 @@ class DriverCommands(DriverCommandsInterface):
         (
             r"^(?P<host>[^:]+?):"
             r"((?P<second_host>[^:]+?):)?"
-            r"(matrix)?(?P<letter>([abq]))(/.+)?$"
+            r"(matrix)?(?P<letter>(a|b|q|xy))(/.+)?$"
         ),
         re.IGNORECASE,
     )
@@ -110,7 +110,13 @@ class DriverCommands(DriverCommandsInterface):
 
     def _convert_cs_port_to_port_name(self, cs_port):
         _, matrix_letter = self._split_addresses_and_letter(cs_port)
-        return "{}{}".format(matrix_letter, cs_port.rsplit("/", 1)[-1].lstrip("0"))
+        port_num = cs_port.rsplit("/", 1)[-1].lstrip("0")
+        if matrix_letter == "XY":
+            blade_letter = cs_port.split("/")[1]
+            port_name = "{}{}".format(blade_letter, port_num)
+        else:
+            port_name = "{}{}".format(matrix_letter, port_num)
+        return port_name
 
     def map_bidi(self, src_port, dst_port):
         """Create a bidirectional connection between source and destination ports.
@@ -246,8 +252,8 @@ class DriverCommands(DriverCommandsInterface):
         """
         letter = None
         err_msg = (
-            "Incorrect address. Resource address should specify MatrixA, MatrixB and "
-            "MatrixQ. Format <host>:[<second_host>:]<matrix_letter>. "
+            "Incorrect address. Resource address should specify MatrixA, MatrixB, "
+            "MatrixQ or MatrixXY. Format <host>:[<second_host>:]<matrix_letter>. "
             "Second host is used in Q128 devices."
         )
         if not self.support_multiple_blades:
