@@ -62,6 +62,12 @@
   <Rules xsi:type="Prohibit" SourceBladeModel="Rome Matrix B">
     <TargetModels>Rome Matrix A</TargetModels>
   </Rules>
+  <Rules xsi:type="Prohibit" SourceBladeModel="Rome Matrix X">
+    <TargetModels>Rome Matrix X</TargetModels>
+  </Rules>
+  <Rules xsi:type="Prohibit" SourceBladeModel="Rome Matrix Y">
+    <TargetModels>Rome Matrix Y</TargetModels>
+  </Rules>
   <Rules xsi:type="Restriction" SourceBladeModel="EMPMC-18T1E1">
     <TargetModels>EMPMC-18T1E1</TargetModels>
   </Rules>

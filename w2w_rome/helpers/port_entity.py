@@ -3,6 +3,7 @@ import random
 import re
 from copy import copy
 
+from w2w_rome.helpers.cached_property import cached_property
 from w2w_rome.helpers.errors import (
     BaseRomeException,
     ConnectedToDifferentPortsError,
@@ -22,7 +23,7 @@ class SubPort(object):
         r"\d+\s+"
         r"((?P<conn_to_direction>[EW])(?P<conn_to_port_id>\d+)"
         r"\[\w+\])?\s+"
-        r"(?P<logical_name>[ABQP]\d+)\s*$",
+        r"(?P<logical_name>[ABQPXY]\d+)\s*$",
         re.IGNORECASE,
     )
 
@@ -50,7 +51,13 @@ class SubPort(object):
         self.connected_to_direction = connected_to_direction
         self.connected_to_sub_port_id = connected_to_port_id
         self.logical = logical if logical[0] != "P" else "Q" + logical[1:]
-        self.port_name = "{}{}".format(self.blade_letter, self.sub_port_id)  # A13, Q1
+        if self.blade_letter in "XY":
+            # XY ports have sub ports from different blades and different port id for
+            # the same logical port name, e.g. X1 - E129B, W1A; Y4 - E4A, W132B
+            self.port_name = logical
+        else:
+            # A13, Q1
+            self.port_name = "{}{}".format(self.blade_letter, self.sub_port_id)
         self.port_resource = port_resource
         self.original_logical_name = logical
 
@@ -170,12 +177,12 @@ class RomePort(object):
         return self.e_port.blade_letter
 
     @property
-    def connected_to_sub_port_id(self):
-        return self.e_port.connected_to_sub_port_id
+    def connected_to_sub_port_name(self):
+        return self.e_port.connected_to_sub_port_name
 
     @property
-    def connected_from_sub_port_id(self):
-        return self.w_port.connected_to_sub_port_id
+    def connected_from_sub_port_name(self):
+        return self.w_port.connected_to_sub_port_name
 
     def add_sub_port(self, sub_port):
         if sub_port.port_resource != self.port_resource:
@@ -272,16 +279,17 @@ class LogicalPort(object):
         rome_port.add_sub_port(sub_port)
 
     @property
-    def connected_to_sub_port_ids(self):
+    def connected_to_sub_port_names(self):
         return filter(
-            None, (rome_port.connected_to_sub_port_id for rome_port in self.rome_ports),
+            None,
+            (rome_port.connected_to_sub_port_name for rome_port in self.rome_ports),
         )
 
     @property
-    def connected_from_sub_port_ids(self):
+    def connected_from_sub_port_names(self):
         return filter(
             None,
-            (rome_port.connected_from_sub_port_id for rome_port in self.rome_ports),
+            (rome_port.connected_from_sub_port_name for rome_port in self.rome_ports),
         )
 
     def verify_connected_ports(self, connected_ports):
@@ -328,7 +336,6 @@ class PortTable(object):
 
     def __init__(self):
         self._map_ports = {}
-        self._map_sub_port_id_to_ports = {}
 
     @classmethod
     def from_output(cls, port_table_output, host):
@@ -344,7 +351,7 @@ class PortTable(object):
             if sub_port:
                 rome_logical_port = port_table.get_or_create(sub_port.logical)
                 rome_logical_port.add_sub_port(sub_port)
-
+        port_table.validate(port_table_output)
         return port_table
 
     @property
@@ -359,15 +366,13 @@ class PortTable(object):
         """
         return self.logical_ports[0].is_q_port
 
-    @property
-    def map_sub_port_id_to_ports(self):
-        if not self._map_sub_port_id_to_ports:
-            self._map_sub_port_id_to_ports = {
-                rome_port.sub_port_id: logical_port
-                for logical_port in self._map_ports.values()
-                for rome_port in logical_port.rome_ports
-            }
-        return self._map_sub_port_id_to_ports
+    @cached_property
+    def map_sub_port_name_to_ports(self):
+        dict_ = {}
+        for lp in self.logical_ports:
+            for rp in lp.rome_ports:
+                dict_.update({rp.e_port.sub_port_name: lp, rp.w_port.sub_port_name: lp})
+        return dict_
 
     def __add__(self, other):
         cls = type(self)
@@ -389,6 +394,22 @@ class PortTable(object):
                 new_logical_port.add_sub_port(new_w_sub_port)
 
         return new_port_table
+
+    def validate(self, output):
+        blade_name = self.logical_ports[0].blade_letter
+        msg = "The Port Table isn't loaded correctly. Loaded {} ports".format(
+            len(self.logical_ports)
+        )
+        if blade_name in tuple("ABXY") and len(self.logical_ports) != 256:
+            raise BaseRomeException(msg)
+        elif blade_name == "Q" and len(self.logical_ports) not in (64, 128):
+            raise BaseRomeException(msg)
+
+        msg = "Not all sub ports are loaded. Output is:\n{}".format(output)
+        for lp in self.logical_ports:
+            for rp in lp.rome_ports:
+                if rp.e_port is None or rp.w_port is None:
+                    raise BaseRomeException(msg)
 
     def get_or_create(self, logical_name):
         try:
@@ -416,14 +437,13 @@ class PortTable(object):
             )
         return val
 
-    def get_by_sub_port_id(self, sub_port_id):
-        """Get Rome Logical Port by sub port id.
+    def get_by_sub_port_name(self, sub_port_name):
+        """Get Rome Logical Port by sub port name.
 
-        :type sub_port_id: str
+        :type sub_port_name: str
         :rtype: LogicalPort
         """
-        if sub_port_id:
-            return self.map_sub_port_id_to_ports[sub_port_id]
+        return self.map_sub_port_name_to_ports[sub_port_name]
 
     def __iter__(self):
         return iter(self._map_ports.values())
@@ -435,7 +455,7 @@ class PortTable(object):
         :rtype: LogicalPort
         """
         connected_to_ports = map(
-            self.get_by_sub_port_id, logical_port.connected_to_sub_port_ids
+            self.get_by_sub_port_name, logical_port.connected_to_sub_port_names
         )
         if connected_to_ports:
             logical_port.verify_connected_ports(connected_to_ports)
@@ -448,7 +468,7 @@ class PortTable(object):
         :rtype: LogicalPort
         """
         connected_from_ports = map(
-            self.get_by_sub_port_id, logical_port.connected_from_sub_port_ids
+            self.get_by_sub_port_name, logical_port.connected_from_sub_port_names
         )
         if connected_from_ports:
             logical_port.verify_connected_ports(connected_from_ports)
@@ -531,24 +551,3 @@ class PortTable(object):
                     connected_ports.add((connected_from, logic_port))
 
         return connected_ports
-
-    @staticmethod
-    def get_connected_sub_ports_pairs(connected_ports, bidi=False):
-        """Return pairs of Sub ports that connected.
-
-        :type connected_ports: set[tuple[LogicalPort]]
-        :type bidi: bool
-        :rtype: set[tuple[SubPort]]
-        """
-        connected_sub_ports = set()
-
-        for src_logic_port, dst_logic_port in connected_ports:
-            connected_sub_ports.update(
-                src_logic_port.get_connected_sub_ports(dst_logic_port)
-            )
-            if bidi:
-                connected_sub_ports.update(
-                    dst_logic_port.get_connected_sub_ports(src_logic_port)
-                )
-
-        return connected_sub_ports
