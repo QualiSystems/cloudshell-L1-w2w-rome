@@ -5,6 +5,7 @@ jobs:
     - env: TOXENV=py27
       after_success: codecov
     - env: TOXENV=pre-commit
+      python: 3.7
     - stage: Create GitHub release
       before_deploy:
         - export AUTHOR_EMAIL="$(git log -1 $TRAVIS_COMMIT --pretty="%cE")"
