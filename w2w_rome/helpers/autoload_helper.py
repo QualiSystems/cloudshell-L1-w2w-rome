@@ -45,41 +45,37 @@ class AutoloadHelper(object):
         self._chassis = chassis
         return chassis
 
-    def _build_blade(self, blade_name):
-        """Build blade.
+    def _build_blades(self, blade_name):
+        """Build blades.
 
         :type blade_name: str
+        :rtype: list[Blade]
         """
-        blade_model = "Matrix " + blade_name
-        serial_number = "NA"
-        resource_model = "Rome Matrix {}".format(blade_name)
-        blade = Blade(blade_name.upper(), resource_model, serial_number)
-        blade.set_model_name(blade_model)
-        blade.set_serial_number(serial_number)
-        blade.set_parent_resource(self.chassis)
-        return blade
+        for name in tuple(blade_name):  # ('A',) or ('Q',) or ('X', 'Y')
+            blade_model = "Matrix " + name
+            serial_number = "NA"
+            resource_model = "Rome Matrix {}".format(name)
+            blade = Blade(name.upper(), resource_model, serial_number)
+            blade.set_model_name(blade_model)
+            blade.set_serial_number(serial_number)
+            blade.set_parent_resource(self.chassis)
+            yield blade
 
     def build_ports_and_blades(self):
-        blade = self._build_blade(self.matrix_letter)
         ports_dict = {}
+        zfill_n = max((len(rlp.port_id) for rlp in self.port_table))
 
-        zfill_n = max(
-            map(
-                len,
-                (rome_logical_port.port_id for rome_logical_port in self.port_table),
-            )
-        )
+        for blade in self._build_blades(self.matrix_letter):
+            for logical_port in self.port_table:
+                if blade.name[-1] != logical_port.blade_letter:
+                    continue
 
-        for logical_port in self.port_table:
-            if self.matrix_letter != logical_port.blade_letter:
-                continue
-
-            str_port_id = logical_port.port_id.zfill(zfill_n)
-            port = Port(str_port_id, "Generic L1 Port", "NA",)
-            port.name = "Port {}{}".format(logical_port.blade_letter, str_port_id)
-            port.set_model_name("Port Paired")
-            port.set_parent_resource(blade)
-            ports_dict[logical_port.name] = port
+                str_port_id = logical_port.port_id.zfill(zfill_n)
+                port = Port(str_port_id, "Generic L1 Port", "NA")
+                port.name = "Port {}{}".format(logical_port.blade_letter, str_port_id)
+                port.set_model_name("Port Paired")
+                port.set_parent_resource(blade)
+                ports_dict[logical_port.name] = port
 
         for port_name, port in ports_dict.items():
             logical_port = self.port_table[port_name]

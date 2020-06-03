@@ -219,6 +219,36 @@
                     </ParentModels>
                     <Drivers/>
                 </ResourceModel>
+                <ResourceModel Name="Rome Matrix Y" Description="" SupportsConcurrentCommands="false">
+                    <AttachedAttributes>
+                        <AttachedAttribute Name="Model Name" IsOverridable="true" IsLocal="true">
+                            <AllowedValues/>
+                        </AttachedAttribute>
+                        <AttachedAttribute Name="Serial Number" IsOverridable="true" IsLocal="true">
+                            <AllowedValues/>
+                        </AttachedAttribute>
+                    </AttachedAttributes>
+                    <AttributeValues/>
+                    <ParentModels>
+                        <ParentModelName>Rome Chassis</ParentModelName>
+                    </ParentModels>
+                    <Drivers/>
+                </ResourceModel>
+                <ResourceModel Name="Rome Matrix X" Description="" SupportsConcurrentCommands="false">
+                    <AttachedAttributes>
+                        <AttachedAttribute Name="Model Name" IsOverridable="true" IsLocal="true">
+                            <AllowedValues/>
+                        </AttachedAttribute>
+                        <AttachedAttribute Name="Serial Number" IsOverridable="true" IsLocal="true">
+                            <AllowedValues/>
+                        </AttachedAttribute>
+                    </AttachedAttributes>
+                    <AttributeValues/>
+                    <ParentModels>
+                        <ParentModelName>Rome Chassis</ParentModelName>
+                    </ParentModels>
+                    <Drivers/>
+                </ResourceModel>
             </Models>
         </ResourceFamily>
         <ResourceFamily Name="L1 Switch Port" IsMappableContainer="false" IsMappable="true"
@@ -274,6 +304,8 @@
                         <ParentModelName>Rome Matrix A</ParentModelName>
                         <ParentModelName>Rome Matrix B</ParentModelName>
                         <ParentModelName>Rome Matrix Q</ParentModelName>
+                        <ParentModelName>Rome Matrix X</ParentModelName>
+                        <ParentModelName>Rome Matrix Y</ParentModelName>
                     </ParentModels>
                     <Drivers/>
                 </ResourceModel>
