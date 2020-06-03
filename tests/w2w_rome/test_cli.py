@@ -1,10 +1,11 @@
-from mock import patch, MagicMock
+from mock import MagicMock, patch
 
-from tests.w2w_rome.base import BaseRomeTestCase
 from w2w_rome.cli.template_executor import RomeTemplateExecutor
 from w2w_rome.helpers.port_entity import PortTable
 
-PORT_SHOW_WITH_LOG = '''ROME[TECH]# port show
+from tests.w2w_rome.base import BaseRomeTestCase
+
+PORT_SHOW_WITH_LOG = """ROME[TECH]# port show
 
 Port             Admin Status Oper Status Port Status   Counter ConnectedTo    Logical
 ================ ============ =========== ============= ======= ============== ========
@@ -534,17 +535,17 @@ W256[1BW128]     Unlocked     Enabled     Connected     3       E140[1BE12]    P
 1BW130           Unlocked     Enabled     Disconnected  0                              
 1BW131           Unlocked     Enabled     Disconnected  0                              
 1BW132           Unlocked     Enabled     Disconnected  0                              
-ROME[TECH]# '''
+ROME[TECH]# """  # noqa: W291
 
 
-@patch('cloudshell.cli.session.ssh_session.paramiko', MagicMock())
+@patch("cloudshell.cli.session.ssh_session.paramiko", MagicMock())
 @patch(
-    'cloudshell.cli.session.ssh_session.SSHSession._clear_buffer',
-    MagicMock(return_value=''),
+    "cloudshell.cli.session.ssh_session.SSHSession._clear_buffer",
+    MagicMock(return_value=""),
 )
 class TestLogInOutput(BaseRomeTestCase):
     def test_log_in_port_show_output(self):
-        host = '192.168.1.2'
+        host = "192.168.1.2"
         output = RomeTemplateExecutor.remove_logs_from_output(PORT_SHOW_WITH_LOG)
         port_table = PortTable.from_output(output, host)
 
@@ -558,73 +559,73 @@ class TestLogInOutput(BaseRomeTestCase):
     def test_remove_logs(self):
         str_to_check = [
             (
-                '''W87[1AW87]       Unlocked     Enabled     Disconnected  0                      P87
+                """W87[1AW87]       Unlocked     Enabled     Disconnected  0                      P87
 W88[1AW88]       Unlocked     Enabled     Disconnected  0                      P88
 W89[1AW89]       Unlocked     Enabled     Disconnected  2    
 02-05-2020 13:05 Connection P1<->P2 completed successfully
                   P89
 W90[1AW90]       Unlocked     Enabled     Disconnected  2                      P90
 W91[1AW91]       Unlocked     Enabled     Disconnected  0                      P91
-''',
-                '''W87[1AW87]       Unlocked     Enabled     Disconnected  0                      P87
+""",  # noqa: W291
+                """W87[1AW87]       Unlocked     Enabled     Disconnected  0                      P87
 W88[1AW88]       Unlocked     Enabled     Disconnected  0                      P88
 W89[1AW89]       Unlocked     Enabled     Disconnected  2                      P89
 W90[1AW90]       Unlocked     Enabled     Disconnected  2                      P90
 W91[1AW91]       Unlocked     Enabled     Disconnected  0                      P91
-''',
+""",  # noqa: W291
             ),
             (
-                '''W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
+                """W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
 W27[1AW27] 
 02-09-2020 10:43 Connection P119<->P24 completed successfully
 
       Unlocked     Enabled     Disconnected  4                      P27     
 W28[1AW28]       Unlocked     Enabled     Disconnected  2                      P28     
 W29[1AW29]       Unlocked     Enabled     Disconnected  2                      P29     
-''',
-                '''W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
+""",  # noqa: W291
+                """W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
 W27[1AW27]       Unlocked     Enabled     Disconnected  4                      P27     
 W28[1AW28]       Unlocked     Enabled     Disconnected  2                      P28     
 W29[1AW29]       Unlocked     Enabled     Disconnected  2                      P29     
-'''
+""",  # noqa: W291
             ),
             (
-                '''W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
+                """W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
 W27[1AW27] 
 02-09-2020 12:04 CONNECTION OPERATION SUCCEEDED:E38[1AE38]<->W36[1AW36] OP:connect
       Unlocked     Enabled     Disconnected  4                      P27     
 W28[1AW28]       Unlocked     Enabled     Disconnected  6                      P28     
-''',
-                '''W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
+""",  # noqa: W291
+                """W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
 W27[1AW27]       Unlocked     Enabled     Disconnected  4                      P27     
 W28[1AW28]       Unlocked     Enabled     Disconnected  6                      P28     
-'''
+""",  # noqa: W291
             ),
             (
-                '''W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
+                """W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
 W27[1AW27] 
 02-08-2020 10:46 CONNECTION OPERATION SKIPPED(already done):E1[1AE1]<->W2[1AW2] OP:connect
 
       Unlocked     Enabled     Disconnected  4                      P27     
 W28[1AW28]       Unlocked     Enabled     Disconnected  6                      P28     
-''',
-                '''W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
+""",  # noqa: W291, E501
+                """W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
 W27[1AW27]       Unlocked     Enabled     Disconnected  4                      P27     
 W28[1AW28]       Unlocked     Enabled     Disconnected  6                      P28     
-'''
+""",  # noqa: W291
             ),
             (
-                '''W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
+                """W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
 W27[1AW27] 
 02-08-2020 10:48 CONNECTION OPERATION SKIPPED(already done):E6[1AE6]<->W5[1AW5] OP:disconnect
 
       Unlocked     Enabled     Disconnected  4                      P27     
 W28[1AW28]       Unlocked     Enabled     Disconnected  6                      P28     
-''',
-                '''W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
+""",  # noqa: W291, E501
+                """W26[1AW26]       Unlocked     Enabled     Disconnected  4                      P26     
 W27[1AW27]       Unlocked     Enabled     Disconnected  4                      P27     
 W28[1AW28]       Unlocked     Enabled     Disconnected  6                      P28     
-'''
+""",  # noqa: W291
             ),
         ]
 

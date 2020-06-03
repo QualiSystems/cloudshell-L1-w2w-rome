@@ -1,18 +1,44 @@
 language: python
-python:
-    - "2.7"
+python: 2.7
+jobs:
+  include:
+    - env: TOXENV=py27
+      after_success: codecov
+    - env: TOXENV=pre-commit
+    - stage: Create GitHub release
+      before_deploy:
+        - export AUTHOR_EMAIL="$(git log -1 $TRAVIS_COMMIT --pretty="%cE")"
+        - export AUTHOR_NAME="$(git log -1 $TRAVIS_COMMIT --pretty="%aN")"
+        - export GIT_TAG="$(cat version.txt | tr -d ' \t\n\r')"
+        - git config --local user.name $AUTHOR_NAME
+        - git config --local user.email $AUTHOR_EMAIL
+        - git tag $GIT_TAG
+      deploy:
+        provider: releases
+        draft: true
+        api_key:
+          secure: "A9Y4TGeSdlyIzwXVIdraBw/Q8gzSQNYmaPPZyt2VkoaLokIFnMa9gAAaBUtMrqMsCkQ7lwpXGJCrPmXsIfwO8huCcJSjR1a+O2pX+7g6rl5sF5L5Gt38R9iu8nr24LUIotcy0HL+SK/0zs/DsRCPCKPJqvAPUi0MEnGe/TJcdlbaCnK+++aDTn84EqqwqGkd/oFXttjg655rPfzfkLdd8/uWea62Fx7+KQJz+NXzKYatOSur57xv3dfZ4pr2P1gRHo18gkViP98Bw10qDbN5mowDgCLC7QzqBHTRv6p/TmKrARMbs6hvsaX3ZqeA0Vzltlxz+cHETdUGRraSRv4rYLpxCMeOylhOMydnYSRcbiCdNVRnczbrroiRww06iFvXLirk1t+kwxY1r0sg78bDvxdUSpHkBuAL9BkMoYyq+Gf2nWMimozqiCZhWmSioKI6tiFq/bpGWBJqSH1gcKPWTxc0VO1YZXxXioilMxtUqG0tCOTTilYGL4iCgaLHVDDdILdKfwGCVnt+OZdBheuHdKKru6Jn77y19HNA7Zs3qjBM3p04NdCte1yWum91omfAIcSMJPzcntkvim9uk89+tAs1FNp1Qj7ltWHpIGzf7BNn1LMLgQJJLc+SBDAtJskh4DDdN/b673zCZsLCXJBuOlWaEQp8lGmLJF0nBnZtT1g="
+        name: Wave2Wave Rome L1 Shell v4.1.4 v$GIT_TAG
+        target_commitish: master
+        on:
+          branch: master
+    - stage: Check version
+      language: bash
+      install:
+        - git clone https://github.com/$TRAVIS_REPO_SLUG.git $TRAVIS_REPO_SLUG
+        - cd $TRAVIS_REPO_SLUG
+        - git checkout -qf $TRAVIS_PULL_REQUEST_BRANCH
+      script: "! git diff --exit-code --quiet origin/master version.txt"
 
 install:
-    - 'if [ ${TRAVIS_BRANCH} \!= "master" ] && [ -f dev_requirements.txt ]; then
-        pip install --extra-index-url https://testpypi.python.org/pypi -r dev_requirements.txt;
-      else
-        pip install -r requirements.txt;
-      fi'
-    - pip install -r test_requirements.txt
-    - pip install coveralls
+  - pip install tox
+  - pip install codecov
 
-script:
-    - nosetests --with-coverage --cover-package=w2w_rome tests
+script: tox
 
-after_success:
-    - codecov
+stages:
+  - name: Check version
+    if: branch = master AND type = pull_request
+  - name: Test
+  - name: Create GitHub release
+    if: branch = master AND type != pull_request

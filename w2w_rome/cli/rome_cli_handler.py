@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from cloudshell.cli.command_mode_helper import CommandModeHelper
+
 from w2w_rome.cli.l1_cli_handler import L1CliHandler
 from w2w_rome.cli.rome_command_modes import DefaultCommandMode
 
@@ -15,9 +16,8 @@ class RomeCliHandler(L1CliHandler):
         return self.modes[DefaultCommandMode]
 
     def default_mode_service(self):
-        """
-        Default mode session
-        :return:
+        """Default mode session.
+
         :rtype: cloudshell.cli.cli_service.CliService
         """
         return self.get_cli_service(self._default_mode)

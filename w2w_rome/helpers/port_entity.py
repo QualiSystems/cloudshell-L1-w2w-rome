@@ -3,71 +3,90 @@ import random
 import re
 from copy import copy
 
-from w2w_rome.helpers.errors import BaseRomeException, ConnectedToDifferentPortsError, \
-    ConnectionPortsError
+from w2w_rome.helpers.errors import (
+    BaseRomeException,
+    ConnectedToDifferentPortsError,
+    ConnectionPortsError,
+)
 
 
 class SubPort(object):
     """Sub port that keep fiber port for one direction."""
+
     PORT_PATTERN = re.compile(
-        r'^(?P<direction>[EW])(?P<port_id>\d+)'
-        r'\[(?P<port_full_name>\w+?)\]\s+'
-        r'(?P<admin_status>(locked|unlocked))\s+'
-        r'(?P<oper_status>(enabled|disabled))\s+'
-        r'(?P<port_status>((dis)?connected)|in process)\s+'
-        r'\d+\s+'
-        r'((?P<conn_to_direction>[EW])(?P<conn_to_port_id>\d+)'
-        r'\[\w+\])?\s+'
-        r'(?P<logical_name>[ABQP]\d+)\s*$',
+        r"^(?P<direction>[EW])(?P<port_id>\d+)"
+        r"\[(?P<port_full_name>\w+?)\]\s+"
+        r"(?P<admin_status>(locked|unlocked))\s+"
+        r"(?P<oper_status>(enabled|disabled))\s+"
+        r"(?P<port_status>((dis)?connected)|in process)\s+"
+        r"\d+\s+"
+        r"((?P<conn_to_direction>[EW])(?P<conn_to_port_id>\d+)"
+        r"\[\w+\])?\s+"
+        r"(?P<logical_name>[ABQP]\d+)\s*$",
         re.IGNORECASE,
     )
 
-    def __init__(self, direction, port_id, port_full_name, locked, enabled, connected,
-                 connected_to_direction, connected_to_port_id, logical, port_resource):
+    def __init__(
+        self,
+        direction,
+        port_id,
+        port_full_name,
+        locked,
+        enabled,
+        connected,
+        connected_to_direction,
+        connected_to_port_id,
+        logical,
+        port_resource,
+    ):
         self.direction = direction
         self.sub_port_id = port_id
         self.sub_port_full_name = port_full_name
-        self.blade_letter = logical[0] if logical[0] != 'P' else 'Q'
-        self.sub_port_name = '{}{}'.format(direction, port_id)  # E12
+        self.blade_letter = logical[0] if logical[0] != "P" else "Q"
+        self.sub_port_name = "{}{}".format(direction, port_id)  # E12
         self.locked = locked
         self.enabled = enabled
         self.connected = connected
         self.connected_to_direction = connected_to_direction
         self.connected_to_sub_port_id = connected_to_port_id
-        self.logical = logical if logical[0] != 'P' else 'Q' + logical[1:]
-        self.port_name = '{}{}'.format(self.blade_letter, self.sub_port_id)  # A13, Q1
+        self.logical = logical if logical[0] != "P" else "Q" + logical[1:]
+        self.port_name = "{}{}".format(self.blade_letter, self.sub_port_id)  # A13, Q1
         self.port_resource = port_resource
         self.original_logical_name = logical
 
     def __str__(self):
-        return '<SubPort {0.port_resource}:{0.sub_port_name}>'.format(self)
+        return "<SubPort {0.port_resource}:{0.sub_port_name}>".format(self)
 
     __repr__ = __str__
 
     def table_view(self):
-        delimiter = ''
+        delimiter = ""
         port_width = 17 - 2 - len(self.sub_port_name) - len(self.sub_port_full_name)
-        admin_status = 'Locked' if self.locked else 'Unlocked'
+        admin_status = "Locked" if self.locked else "Unlocked"
         admin_status_width = 13
-        oper_status = 'Enabled' if self.enabled else 'Disabled'
+        oper_status = "Enabled" if self.enabled else "Disabled"
         oper_status_width = 12
-        port_status = 'Connected' if self.connected else 'Disconnected'
+        port_status = "Connected" if self.connected else "Disconnected"
         port_status_width = 14
         counter = random.randrange(0, 99)
         counter_width = 8
-        connected_to = '{0}[{1}{0}]'.format(
-            self.connected_to_sub_port_name, self.sub_port_full_name[:2]
-        ) if self.connected_to_sub_port_name else ''
+        connected_to = (
+            "{0}[{1}{0}]".format(
+                self.connected_to_sub_port_name, self.sub_port_full_name[:2]
+            )
+            if self.connected_to_sub_port_name
+            else ""
+        )
         connected_to_width = 15
         logical_width = 8
         return (
-            '{port_direction}[{port_full_name}]{delimiter: <{port_width}}'
-            '{admin_status: <{admin_status_width}}'
-            '{oper_status: <{oper_status_width}}'
-            '{port_status: <{port_status_width}}'
-            '{counter: <{counter_width}}'
-            '{connected_to: <{connected_to_width}}'
-            '{logical: <{logical_width}}'.format(
+            "{port_direction}[{port_full_name}]{delimiter: <{port_width}}"
+            "{admin_status: <{admin_status_width}}"
+            "{oper_status: <{oper_status_width}}"
+            "{port_status: <{port_status_width}}"
+            "{counter: <{counter_width}}"
+            "{connected_to: <{connected_to_width}}"
+            "{logical: <{logical_width}}".format(
                 port_direction=self.sub_port_name,
                 port_full_name=self.sub_port_full_name,
                 logical=self.original_logical_name,
@@ -78,8 +97,8 @@ class SubPort(object):
     def __eq__(self, other):
         if isinstance(other, type(self)):
             return (
-                    self.port_resource == other.port_resource
-                    and self.sub_port_name == other.sub_port_name
+                self.port_resource == other.port_resource
+                and self.sub_port_name == other.sub_port_name
             )
         return False
 
@@ -92,7 +111,7 @@ class SubPort(object):
 
     @property
     def connected_to_sub_port_name(self):
-        return '{}{}'.format(self.connected_to_direction, self.connected_to_sub_port_id)
+        return "{}{}".format(self.connected_to_direction, self.connected_to_sub_port_id)
 
     @classmethod
     def from_line(cls, line, port_resource):
@@ -101,27 +120,27 @@ class SubPort(object):
         if match is None:
             return
 
-        group_dict = match.groupdict('')
+        group_dict = match.groupdict("")
         return cls(
-            group_dict['direction'].upper(),
-            group_dict['port_id'],
-            group_dict['port_full_name'],
-            group_dict['admin_status'].lower() == 'locked',
-            group_dict['oper_status'].lower() == 'enabled',
-            group_dict['port_status'].lower() == 'connected',
-            group_dict.get('conn_to_direction', '').upper(),
-            group_dict.get('conn_to_port_id'),
-            group_dict['logical_name'].upper(),
+            group_dict["direction"].upper(),
+            group_dict["port_id"],
+            group_dict["port_full_name"],
+            group_dict["admin_status"].lower() == "locked",
+            group_dict["oper_status"].lower() == "enabled",
+            group_dict["port_status"].lower() == "connected",
+            group_dict.get("conn_to_direction", "").upper(),
+            group_dict.get("conn_to_port_id"),
+            group_dict["logical_name"].upper(),
             port_resource,
         )
 
     def verify_sub_port_is_not_locked_or_disabled(self):
-        """Check that Sub Ports are not locked or disabled.    """
+        """Check that Sub Ports are not locked or disabled."""
         if self.locked:
-            raise BaseRomeException('Sub Port {} is Locked'.format(self.sub_port_name))
+            raise BaseRomeException("Sub Port {} is Locked".format(self.sub_port_name))
         if not self.enabled:
             raise BaseRomeException(
-                'Sub Port {} is Disabled'.format(self.sub_port_name)
+                "Sub Port {} is Disabled".format(self.sub_port_name)
             )
 
 
@@ -133,6 +152,7 @@ class RomePort(object):
     :type e_port: SubPort
     :type w_port: SubPort
     """
+
     def __init__(self, port_resource, port_name):
         self.port_resource = port_resource
         self.port_name = port_name
@@ -141,7 +161,7 @@ class RomePort(object):
         self.w_port = None
 
     def __str__(self):
-        return '<RomePort {0.port_resource}:{0.port_name}>'.format(self)
+        return "<RomePort {0.port_resource}:{0.port_name}>".format(self)
 
     __repr__ = __str__
 
@@ -160,13 +180,13 @@ class RomePort(object):
     def add_sub_port(self, sub_port):
         if sub_port.port_resource != self.port_resource:
             raise ValueError(
-                'Sub port ({}) located on a different resource from a '
-                'Rome port ({})'.format(sub_port, self)
+                "Sub port ({}) located on a different resource from a "
+                "Rome port ({})".format(sub_port, self)
             )
 
-        attr_name = '{}_port'.format(sub_port.direction.lower())
+        attr_name = "{}_port".format(sub_port.direction.lower())
         if getattr(self, attr_name) is not None:
-            raise BaseRomeException('{} port already set'.format(sub_port.direction))
+            raise BaseRomeException("{} port already set".format(sub_port.direction))
 
         setattr(self, attr_name, sub_port)
 
@@ -175,9 +195,9 @@ class LogicalPort(object):
     """Rome logical port.
 
     Can keeps a few Logical ports if it's a Q-port.
-
     :type name: str
     """
+
     def __init__(self, name):
         self.name = name
         self.blade_letter = name[0].upper()
@@ -187,7 +207,10 @@ class LogicalPort(object):
 
     @property
     def rome_ports(self):
-        """:rtype: list[RomePort]"""
+        """Rome ports.
+
+        :rtype: list[RomePort]
+        """
         return self._rome_ports_map.values()
 
     @property
@@ -251,8 +274,7 @@ class LogicalPort(object):
     @property
     def connected_to_sub_port_ids(self):
         return filter(
-            None,
-            (rome_port.connected_to_sub_port_id for rome_port in self.rome_ports),
+            None, (rome_port.connected_to_sub_port_id for rome_port in self.rome_ports),
         )
 
     @property
@@ -264,8 +286,10 @@ class LogicalPort(object):
 
     def verify_connected_ports(self, connected_ports):
         """Verify that the logical port is connected only for one port."""
-        if (len(connected_ports) != len(self.rome_ports)
-                or len(set(connected_ports)) != 1):
+        if (
+            len(connected_ports) != len(self.rome_ports)
+            or len(set(connected_ports)) != 1
+        ):
             raise ConnectedToDifferentPortsError(
                 "Port {} was already partially mapped to another port. Please update "
                 "the L1 resource using Resource Manage's Sync From option".format(
@@ -290,8 +314,8 @@ class LogicalPort(object):
             for e_port in self.e_sub_ports
             for w_port in dst_logic_port.w_sub_ports
             if (
-                    e_port.connected_to_sub_port_name == w_port.sub_port_name
-                    and e_port.port_resource == w_port.port_resource
+                e_port.connected_to_sub_port_name == w_port.sub_port_name
+                and e_port.port_resource == w_port.port_resource
             )
         }
 
@@ -301,6 +325,7 @@ class PortTable(object):
 
     :type _map_ports: dict[str, LogicalPort]
     """
+
     def __init__(self):
         self._map_ports = {}
         self._map_sub_port_id_to_ports = {}
@@ -347,10 +372,10 @@ class PortTable(object):
     def __add__(self, other):
         cls = type(self)
         if not isinstance(other, cls):
-            raise ValueError('Cannot add {} to PortTable'.format(type(other)))
+            raise ValueError("Cannot add {} to PortTable".format(type(other)))
 
         if set(self._map_ports.keys()) != set(other._map_ports.keys()):
-            raise ValueError('Port tables have different logical ports')
+            raise ValueError("Port tables have different logical ports")
 
         new_port_table = cls()
         for port_name, first_logical_port in self._map_ports.items():

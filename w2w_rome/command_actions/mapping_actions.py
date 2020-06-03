@@ -4,7 +4,7 @@ from collections import defaultdict
 
 import w2w_rome.command_templates.mapping as command_template
 from w2w_rome.cli.template_executor import (
-    RomeTemplateExecutor as CommandTemplateExecutor
+    RomeTemplateExecutor as CommandTemplateExecutor,
 )
 from w2w_rome.helpers.errors import BaseRomeException, NotSupportedError
 from w2w_rome.helpers.run_in_threads import run_in_threads
@@ -16,27 +16,26 @@ def reset_connection_pending(session, logger):
     :type session: cloudshell.cli.session.expect_session.ExpectSession
     :type logger: logging.Logger
     """
-    session.hardware_expect('homing run', r'(?i)RECOVERY FINISHED SUCCESSFULLY', logger)
+    session.hardware_expect("homing run", r"(?i)RECOVERY FINISHED SUCCESSFULLY", logger)
     session.hardware_expect(
-        'connection set command-execution enable',
-        r'connection execution is enabled',
+        "connection set command-execution enable",
+        r"connection execution is enabled",
         logger,
     )
     raise BaseRomeException(
-        'Multiple Cross Connect Severe Failure. Problem with a connection. '
-        'Reset connection pending.'
+        "Multiple Cross Connect Severe Failure. Problem with a connection. "
+        "Reset connection pending."
     )
 
 
 class MappingActions(object):
-    """Mapping actions."""
-
     CONNECTION_PENDING_RESET_MAP = {
-        '(?i)Multiple Cross Connect Severe Failure': reset_connection_pending,
+        "(?i)Multiple Cross Connect Severe Failure": reset_connection_pending,
     }
 
     def __init__(self, cli_services, logger, mapping_timeout, mapping_check_delay):
-        """
+        """Mapping actions.
+
         :param cli_services: default mode cli_services
         :type cli_services: list[cloudshell.cli.cli_service_impl.CliServiceImpl]
         :type logger: logging.Logger
@@ -55,7 +54,7 @@ class MappingActions(object):
             if re.search(key, cli_service.session.full_buffer):
                 action(cli_service.session, self._logger)
 
-        cli_service.session.full_buffer = ''
+        cli_service.session.full_buffer = ""
 
     def _connect(self, cli_service, src_port_name, dst_port_name):
         """Connect ports by name.
@@ -73,7 +72,7 @@ class MappingActions(object):
         ).execute_command(src_port=src_port_name, dst_port=dst_port_name)
 
     def _connect_and_wait(
-            self, cli_service, src_port_name, dst_port_name, num_ports_to_connect
+        self, cli_service, src_port_name, dst_port_name, num_ports_to_connect
     ):
         """Connect multiple ports.
 
@@ -135,13 +134,11 @@ class MappingActions(object):
         :rtype: str
         """
         return CommandTemplateExecutor(
-            cli_service,
-            command_template.DISCONNECT,
-            self.CONNECTION_PENDING_RESET_MAP,
+            cli_service, command_template.DISCONNECT, self.CONNECTION_PENDING_RESET_MAP,
         ).execute_command(src_port=src_port, dst_port=dst_port)
 
     def _disconnect_and_wait(
-            self, cli_service, connected_port_names, num_ports_to_disconnect
+        self, cli_service, connected_port_names, num_ports_to_disconnect
     ):
         """Disconnect connected port names and wait they are not in pending.
 
@@ -159,7 +156,7 @@ class MappingActions(object):
     def disconnect(self, connected_logic_ports, bidi=False):
         """Disconnect logical ports.
 
-        :type connected_logic_ports: set[tuple[w2w_rome.helpers.port_entity.LogicalPort]]
+        :type connected_logic_ports: set[tuple[w2w_rome.helpers.port_entity.LogicalPort]]  # noqa
         :type bidi: bool
         """
         if bidi:
@@ -180,7 +177,7 @@ class MappingActions(object):
             host_connected_ports_map = defaultdict(list)
             for src_logic_port, dst_logic_port in connected_logic_ports:
                 for e_port, w_port in src_logic_port.get_connected_sub_ports(
-                        dst_logic_port
+                    dst_logic_port
                 ):
                     cli_service = self._cli_services_map[e_port.port_resource]
                     host_connected_ports_map[cli_service].append(
@@ -188,15 +185,11 @@ class MappingActions(object):
                     )
 
             param_map = {
-                cli_service: [
-                    [
-                        cli_service,
-                        sorted(connected_port_names),
-                        len(connected_port_names),
-                    ],
+                cli: [
+                    [cli, sorted(connected_port_names), len(connected_port_names)],
                     {},
                 ]
-                for cli_service, connected_port_names in host_connected_ports_map.items()
+                for cli, connected_port_names in host_connected_ports_map.items()
             }
 
         if not self._is_run_in_parallel:
@@ -228,9 +221,9 @@ class MappingActions(object):
         self.check_full_output(cli_service)
 
         for src, dst in ports:
-            match = re.search(r'ports:\s+{}-{}\D'.format(src, dst), output, re.I)
+            match = re.search(r"ports:\s+{}-{}\D".format(src, dst), output, re.I)
             match = match or re.search(
-                r'\w+\s+{}\s+{}\s+\w+'.format(src, dst), output, re.I
+                r"\w+\s+{}\s+{}\s+\w+".format(src, dst), output, re.I
             )
             if match:
                 return True
@@ -238,7 +231,7 @@ class MappingActions(object):
         return False
 
     def wait_ports_not_in_pending_connections(
-            self, cli_service, ports, num_ports_to_connect
+        self, cli_service, ports, num_ports_to_connect
     ):
         """Wait for ports go away from pending connections.
 
@@ -254,7 +247,7 @@ class MappingActions(object):
             if not self.ports_in_pending_connections(cli_service, ports):
                 break
         else:
-            msg = 'There are some pending connections after {}sec'.format(
+            msg = "There are some pending connections after {}sec".format(
                 self._mapping_timeout
             )
             raise BaseRomeException(msg)
