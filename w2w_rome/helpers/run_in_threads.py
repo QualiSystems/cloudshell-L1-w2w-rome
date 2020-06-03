@@ -9,7 +9,7 @@ def run_in_threads(func, logger, param_map):
     :type func: function
     :type logger: logging.Logger
     :param param_map: cli_service: [args_list, kwargs_dict]
-    :type param_map: dict[cloudshell.cli.cli_service_impl.CliServiceImpl, list[list, dict]]
+    :type param_map: dict[cloudshell.cli.cli_service_impl.CliServiceImpl, list[list, dict]]  # noqa: E501
     :return: dict with cli_service: result
     :rtype: dict[cloudshell.cli.cli_service_impl.CliServiceImpl, str]
     """
