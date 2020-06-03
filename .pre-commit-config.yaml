@@ -3,12 +3,12 @@ repos:
     rev: v4.3.21
     hooks:
       - id: isort
-        language_version: python3.8
+        language_version: python3.7
   - repo: https://github.com/python/black
     rev: 19.10b0
     hooks:
       - id: black
-        language_version: python3.8
+        language_version: python3.7
   - repo: https://gitlab.com/pycqa/flake8
     rev: 3.8.2
     hooks:
@@ -20,4 +20,4 @@ repos:
           flake8-print,
           flake8-eradicate,
         ]
-        language_version: python3.8
+        language_version: python3.7
