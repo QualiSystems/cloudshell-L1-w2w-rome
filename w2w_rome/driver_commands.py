@@ -2,13 +2,15 @@
 # -*- coding: utf-8 -*-
 import re
 import sys
-
 from contextlib import contextmanager
 
 from cloudshell.layer_one.core.driver_commands_interface import DriverCommandsInterface
 from cloudshell.layer_one.core.response.response_info import (
-    GetStateIdResponseInfo, AttributeValueResponseInfo, ResourceDescriptionResponseInfo
+    AttributeValueResponseInfo,
+    GetStateIdResponseInfo,
+    ResourceDescriptionResponseInfo,
 )
+
 from w2w_rome.cli.rome_cli_handler import RomeCliHandler
 from w2w_rome.command_actions.mapping_actions import MappingActions
 from w2w_rome.command_actions.system_actions import SystemActions
@@ -25,27 +27,23 @@ class DriverCommands(DriverCommandsInterface):
 
     ADDRESS_PATTERN = re.compile(
         (
-            r'^(?P<host>[^:]+?):'
-            r'((?P<second_host>[^:]+?):)?'
-            r'(matrix)?(?P<letter>([abq]))(/.+)?$'
+            r"^(?P<host>[^:]+?):"
+            r"((?P<second_host>[^:]+?):)?"
+            r"(matrix)?(?P<letter>([abq]))(/.+)?$"
         ),
         re.IGNORECASE,
     )
 
     def __init__(self, logger, runtime_config):
-        """
-        :type logger: logging.Logger
-        :type runtime_config: cloudshell.layer_one.core.helper.runtime_configuration.RuntimeConfiguration
-        """
         self._logger = logger
         self._runtime_config = runtime_config
         self._cli_handler = RomeCliHandler(logger)
         self._second_cli_handler = None
 
-        self._mapping_timeout = runtime_config.read_key('MAPPING.TIMEOUT', 120)
-        self._mapping_check_delay = runtime_config.read_key('MAPPING.CHECK_DELAY', 3)
+        self._mapping_timeout = runtime_config.read_key("MAPPING.TIMEOUT", 120)
+        self._mapping_check_delay = runtime_config.read_key("MAPPING.CHECK_DELAY", 3)
         self.support_multiple_blades = runtime_config.read_key(
-            'SUPPORT_MULTIPLE_BLADES', False
+            "SUPPORT_MULTIPLE_BLADES", False
         )
 
         self.__ports_association_table = None
@@ -80,12 +78,12 @@ class DriverCommands(DriverCommandsInterface):
             system_actions = SystemActions(cli_services_lst, self._logger)
             board_tables_map = system_actions.get_board_tables_map()
             for cli_service, board_table in board_tables_map.items():
-                model_name = board_table['model_name']
-                self._logger.info('Connected to {}'.format(model_name))
+                model_name = board_table["model_name"]
+                self._logger.info("Connected to {}".format(model_name))
 
     def get_state_id(self):
-        """
-        Check if CS synchronized with the device.
+        """Check if CS synchronized with the device.
+
         :return: Synchronization ID, GetStateIdResponseInfo(-1) if not used
         :rtype: cloudshell.layer_one.core.response.response_info.GetStateIdResponseInfo
         :raises Exception: if command failed
@@ -97,7 +95,7 @@ class DriverCommands(DriverCommandsInterface):
                 chassis_name = session.send_command('show chassis sub_port_name')
                 return chassis_name
         """
-        return GetStateIdResponseInfo('-1')
+        return GetStateIdResponseInfo("-1")
 
     def set_state_id(self, state_id):
         """Set synchronization state id to the device.
@@ -112,9 +110,7 @@ class DriverCommands(DriverCommandsInterface):
 
     def _convert_cs_port_to_port_name(self, cs_port):
         _, matrix_letter = self._split_addresses_and_letter(cs_port)
-        return '{}{}'.format(
-            matrix_letter, cs_port.rsplit('/', 1)[-1].lstrip('0')
-        )
+        return "{}{}".format(matrix_letter, cs_port.rsplit("/", 1)[-1].lstrip("0"))
 
     def map_bidi(self, src_port, dst_port):
         """Create a bidirectional connection between source and destination ports.
@@ -127,7 +123,7 @@ class DriverCommands(DriverCommandsInterface):
         :raises Exception: if command failed
         """
         self._logger.info(
-            'MapBidi, SrcPort: {0}, DstPort: {1}'.format(src_port, dst_port)
+            "MapBidi, SrcPort: {0}, DstPort: {1}".format(src_port, dst_port)
         )
         src_port_name = self._convert_cs_port_to_port_name(src_port)
         dst_port_name = self._convert_cs_port_to_port_name(dst_port)
@@ -146,7 +142,7 @@ class DriverCommands(DriverCommandsInterface):
 
             if port_table.is_connected(src_logic_port, dst_logic_port, bidi=True):
                 self._logger.debug(
-                    'Ports {} and {} already connected'.format(
+                    "Ports {} and {} already connected".format(
                         src_port_name, dst_port_name
                     )
                 )
@@ -174,7 +170,7 @@ class DriverCommands(DriverCommandsInterface):
                     {(src_logic_port, dst_logic_port)}, bidi=True
                 )
                 raise ConnectionPortsError(
-                    'Cannot connect port {} to port {} during {}sec'.format(
+                    "Cannot connect port {} to port {} during {}sec".format(
                         src_logic_port.original_logical_name,
                         dst_logic_port.original_logical_name,
                         self._mapping_timeout,
@@ -194,15 +190,13 @@ class DriverCommands(DriverCommandsInterface):
         """
         if len(dst_ports) != 1:
             raise BaseRomeException(
-                'MapUni operation is not allowed for multiple Dst ports'
+                "MapUni operation is not allowed for multiple Dst ports"
             )
         _, letter = self._split_addresses_and_letter(src_port)
-        if letter.startswith('Q'):
-            raise NotSupportedError(
-                "MapUni for matrix Q doesn't supported"
-            )
-        self._logger.info('MapUni, SrcPort: {0}, DstPort: {1}'.format(
-            src_port, dst_ports[0])
+        if letter.startswith("Q"):
+            raise NotSupportedError("MapUni for matrix Q doesn't supported")
+        self._logger.info(
+            "MapUni, SrcPort: {0}, DstPort: {1}".format(src_port, dst_ports[0])
         )
 
         src_port_name = self._convert_cs_port_to_port_name(src_port)
@@ -222,7 +216,7 @@ class DriverCommands(DriverCommandsInterface):
 
             if port_table.is_connected(src_logic_port, dst_logic_port):
                 self._logger.debug(
-                    'Ports {} and {} already connected'.format(
+                    "Ports {} and {} already connected".format(
                         src_port_name, dst_port_name
                     )
                 )
@@ -237,7 +231,7 @@ class DriverCommands(DriverCommandsInterface):
 
             if not port_table.is_connected(src_logic_port, dst_logic_port):
                 raise ConnectionPortsError(
-                    'Cannot connect port {} to port {} during {}sec'.format(
+                    "Cannot connect port {} to port {} during {}sec".format(
                         src_port_name, dst_port_name, self._mapping_timeout
                     )
                 )
@@ -252,25 +246,25 @@ class DriverCommands(DriverCommandsInterface):
         """
         letter = None
         err_msg = (
-            'Incorrect address. Resource address should specify MatrixA, MatrixB and '
-            'MatrixQ. Format <host>:[<second_host>:]<matrix_letter>. '
-            'Second host is used in Q128 devices.'
+            "Incorrect address. Resource address should specify MatrixA, MatrixB and "
+            "MatrixQ. Format <host>:[<second_host>:]<matrix_letter>. "
+            "Second host is used in Q128 devices."
         )
         if not self.support_multiple_blades:
             try:
                 match = self.ADDRESS_PATTERN.search(address)
-                first_host = match.group('host')
-                second_host = match.group('second_host')
-                letter = match.group('letter').upper()
+                first_host = match.group("host")
+                second_host = match.group("second_host")
+                letter = match.group("letter").upper()
             except AttributeError:
                 self._logger.error(err_msg)
                 raise BaseRomeException(err_msg)
-            if second_host and letter != 'Q':
+            if second_host and letter != "Q":
                 raise BaseRomeException(err_msg)
 
             hosts = tuple(filter(None, (first_host, second_host)))
         else:
-            hosts = (address, )
+            hosts = (address,)
         return hosts, letter
 
     @contextmanager
@@ -301,8 +295,8 @@ class DriverCommands(DriverCommandsInterface):
             multiple blades address should be IP:[Matrix]A|B, '192.168.42.240:MatrixB'
         :type address: str
         :return: resource description
-        :rtype: cloudshell.layer_one.core.response.response_info.ResourceDescriptionResponseInfo
-        :raises cloudshell.layer_one.core.layer_one_driver_exception.LayerOneDriverException: Layer one exception.
+        :rtype: cloudshell.layer_one.core.response.response_info.ResourceDescriptionResponseInfo  # noqa: E501
+        :raises cloudshell.layer_one.core.layer_one_driver_exception.LayerOneDriverException: Layer one exception.  # noqa: E501
         """
         _, letter = self._split_addresses_and_letter(address)
 
@@ -327,7 +321,7 @@ class DriverCommands(DriverCommandsInterface):
         :return: None
         :raises Exception: if command failed
         """
-        self._logger.info('MapClear, Ports: {}'.format(', '.join(ports)))
+        self._logger.info("MapClear, Ports: {}".format(", ".join(ports)))
         port_names = map(self._convert_cs_port_to_port_name, ports)
 
         with self._get_cli_services_lst() as cli_services_lst:
@@ -350,7 +344,7 @@ class DriverCommands(DriverCommandsInterface):
                 ]
                 raise BaseRomeException(
                     "Cannot disconnect all ports. Ports: {} left connected".format(
-                        ', '.join(map(' - '.join, connected_port_names))
+                        ", ".join(map(" - ".join, connected_port_names))
                     )
                 )
 
@@ -367,11 +361,11 @@ class DriverCommands(DriverCommandsInterface):
         """
         if len(dst_ports) != 1:
             raise BaseRomeException(
-                'MapClearTo operation is not allowed for multiple Dst ports'
+                "MapClearTo operation is not allowed for multiple Dst ports"
             )
 
         self._logger.info(
-            'MapClearTo, SrcPort: {0}, DstPort: {1}'.format(src_port, dst_ports[0])
+            "MapClearTo, SrcPort: {0}, DstPort: {1}".format(src_port, dst_ports[0])
         )
 
         src_port_name = self._convert_cs_port_to_port_name(src_port)
@@ -406,7 +400,7 @@ class DriverCommands(DriverCommandsInterface):
             if connected_ports:
                 raise BaseRomeException(
                     "Cannot disconnect ports: {}".format(
-                        ' - '.join((src_logic_port.name, dst_logic_port.name))
+                        " - ".join((src_logic_port.name, dst_logic_port.name))
                     )
                 )
 
@@ -418,19 +412,19 @@ class DriverCommands(DriverCommandsInterface):
         :param attribute_name: attribute name, "Port Speed"
         :type attribute_name: str
         :return: attribute value
-        :rtype: cloudshell.layer_one.core.response.response_info.AttributeValueResponseInfo
+        :rtype: cloudshell.layer_one.core.response.response_info.AttributeValueResponseInfo  # noqa: E501
         :raises Exception: if command failed
         """
-        serial_number = 'Serial Number'
-        if len(cs_address.split('/')) == 1 and attribute_name == serial_number:
+        serial_number = "Serial Number"
+        if len(cs_address.split("/")) == 1 and attribute_name == serial_number:
             with self._get_cli_services_lst() as cli_services_lst:
                 system_actions = SystemActions(cli_services_lst, self._logger)
                 board_tables_map = system_actions.get_board_tables_map()
             return AttributeValueResponseInfo(
-                board_tables_map.values()[0].get('serial_number')
+                board_tables_map.values()[0].get("serial_number")
             )
         else:
-            msg = 'Attribute {} for {} is not available'.format(
+            msg = "Attribute {} for {} is not available".format(
                 attribute_name, cs_address
             )
             raise BaseRomeException(msg)
@@ -445,22 +439,23 @@ class DriverCommands(DriverCommandsInterface):
         :param attribute_value: value, "10000"
         :type attribute_value: str
         :return: attribute value
-        :rtype: cloudshell.layer_one.core.response.response_info.AttributeValueResponseInfo
+        :rtype: cloudshell.layer_one.core.response.response_info.AttributeValueResponseInfo  # noqa: E501
         :raises Exception: if command failed
         """
-        if attribute_name == 'Serial Number':
+        if attribute_name == "Serial Number":
             return
         else:
             raise BaseRomeException(
-                'SetAttribute {} is not supported'.format(attribute_name)
+                "SetAttribute {} is not supported".format(attribute_name)
             )
 
     def map_tap(self, src_port, dst_ports):
         return self.map_uni(src_port, dst_ports)
 
     def set_speed_manual(self, src_port, dst_port, speed, duplex):
-        """
-        Set connection speed. Is not used with the new standard
+        """Set connection speed.
+
+        Is not used with the new standard
         :param src_port:
         :param dst_port:
         :param speed:
@@ -469,7 +464,7 @@ class DriverCommands(DriverCommandsInterface):
         """
         self._logger.debug(
             'Command "set_speed_manual" was called with args: src_port - {}, '
-            'dst_port - {}, speed - {}, duplex - {}'.format(
+            "dst_port - {}, speed - {}, duplex - {}".format(
                 src_port, dst_port, speed, duplex
             )
         )

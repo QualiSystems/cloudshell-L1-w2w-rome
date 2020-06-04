@@ -10,11 +10,10 @@ from w2w_rome.cli.rome_sessions import RomeSSHSession
 from w2w_rome.driver_commands import DriverCommands
 
 RUNTIME_CONFIG_PATH = os.path.join(
-    os.path.dirname(__file__),
-    'test_runtime_config.yaml',
+    os.path.dirname(__file__), "test_runtime_config.yaml",
 )
-DEFAULT_PROMPT = 'ROME[OPER]#'
-SHOW_BOARD = '''ROME[OPER]# show board 
+DEFAULT_PROMPT = "ROME[OPER]#"
+SHOW_BOARD = """ROME[OPER]# show board 
 CURR SW VERSION  creationDate(Feb 21 2019, 19:51:00)
 ROME STATUS      adminStatus(enabled) operStatus(enabled) alarmState(Cleared)
 ROME STATE       OPER
@@ -43,8 +42,8 @@ FPGA VER         proj6_fpga_2019Feb11_a.rbf
 TIME SOURCE      MANUAL
 AUTHENTICATION   local
 CONNECTION TYPE  ssh and telnet
-ROME[OPER]#'''
-PORT_SHOW_MATRIX_A = '''ROME[OPER]# port show                 
+ROME[OPER]#"""  # noqa: W291
+PORT_SHOW_MATRIX_A = """ROME[OPER]# port show                 
 ================ ============ =========== ============= ======= ============== ========
 Port             Admin Status Oper Status Port Status   Counter ConnectedTo    Logical
 ================ ============ =========== ============= ======= ============== ========
@@ -573,8 +572,8 @@ W256[1BW128]     Unlocked     Enabled     Disconnected  0                      B
 1BW131           Unlocked     Enabled     Disconnected  0                              
 1BW132           Unlocked     Enabled     Disconnected  0                              
 
-ROME[OPER]# '''
-PORT_SHOW_MATRIX_B = '''ROME[OPER]# port show                 
+ROME[OPER]# """  # noqa: W291
+PORT_SHOW_MATRIX_B = """ROME[OPER]# port show                 
 ================ ============ =========== ============= ======= ============== ========
 Port             Admin Status Oper Status Port Status   Counter ConnectedTo    Logical
 ================ ============ =========== ============= ======= ============== ========
@@ -1103,8 +1102,8 @@ W256[1BW128]     Unlocked     Enabled     Disconnected  0                      B
 1BW131           Unlocked     Enabled     Disconnected  0                              
 1BW132           Unlocked     Enabled     Disconnected  0                              
 
-ROME[OPER]# '''
-PORT_SHOW_MATRIX_Q = '''ROME[OPER]# port show                 
+ROME[OPER]# """  # noqa: W291
+PORT_SHOW_MATRIX_Q = """ROME[OPER]# port show                 
 ================ ============ =========== ============= ======= ============== ========
 Port             Admin Status Oper Status Port Status   Counter ConnectedTo    Logical
 ================ ============ =========== ============= ======= ============== ========
@@ -1633,8 +1632,8 @@ W256[1BW128]     Unlocked     Enabled     Disconnected  0                      Q
 1BW131           Unlocked     Enabled     Disconnected  0                              
 1BW132           Unlocked     Enabled     Disconnected  0                              
 
-ROME[OPER]# '''
-PORT_SHOW_MATRIX_Q128_1 = '''ROME[TECH]# port show
+ROME[OPER]# """  # noqa: W291
+PORT_SHOW_MATRIX_Q128_1 = """ROME[TECH]# port show
 ================ ============ =========== ============= ======= ============== ========
 Port             Admin Status Oper Status Port Status   Counter ConnectedTo    Logical
 ================ ============ =========== ============= ======= ============== ========
@@ -2163,8 +2162,8 @@ W256[1BW128]     Unlocked     Enabled     Disconnected  2                      P
 1BW131           Unlocked     Enabled     Disconnected  0                              
 1BW132           Unlocked     Enabled     Disconnected  0                              
 
-ROME[TECH]# '''
-PORT_SHOW_MATRIX_Q128_2 = '''ROME[TECH]# port show
+ROME[TECH]# """  # noqa: W291
+PORT_SHOW_MATRIX_Q128_2 = """ROME[TECH]# port show
 ================ ============ =========== ============= ======= ============== ========
 Port             Admin Status Oper Status Port Status   Counter ConnectedTo    Logical
 ================ ============ =========== ============= ======= ============== ========
@@ -2693,7 +2692,7 @@ W256[1BW128]     Unlocked     Enabled     Disconnected  0                      P
 1BW131           Unlocked     Enabled     Disconnected  0                              
 1BW132           Unlocked     Enabled     Disconnected  0                              
 
-ROME[TECH]# '''
+ROME[TECH]# """  # noqa: W291
 
 
 class Command(object):
@@ -2703,22 +2702,30 @@ class Command(object):
         self.regexp = regexp
 
     def is_equal_to_request(self, request):
-        return (not self.regexp and self.request == request
-                or self.regexp and re.search(self.request, request))
+        return (
+            not self.regexp
+            and self.request == request
+            or self.regexp
+            and re.search(self.request, request)
+        )
 
     def __repr__(self):
-        return 'Command({!r}, {!r}, {!r})'.format(self.request, self.response, self.regexp)
+        return "Command({!r}, {!r}, {!r})".format(
+            self.request, self.response, self.regexp
+        )
 
 
 class CliEmulator(object):
     def __init__(self, commands=None):
         self.request = None
 
-        self.commands = deque([
-            Command(None, DEFAULT_PROMPT),
-            Command('', DEFAULT_PROMPT),
-            Command('show board', SHOW_BOARD),
-        ])
+        self.commands = deque(
+            [
+                Command(None, DEFAULT_PROMPT),
+                Command("", DEFAULT_PROMPT),
+                Command("show board", SHOW_BOARD),
+            ]
+        )
 
         if commands:
             self.commands.extend(commands)
@@ -2730,8 +2737,10 @@ class CliEmulator(object):
             raise IndexError('Not expected request "{}"'.format(self.request))
 
         if not command.is_equal_to_request(self.request):
-            raise KeyError('Unexpected request - "{}"\n'
-                           'Expected - "{}"'.format(self.request, command.request))
+            raise KeyError(
+                'Unexpected request - "{}"\n'
+                'Expected - "{}"'.format(self.request, command.request)
+            )
 
         if isinstance(command.response, Exception):
             raise command.response
@@ -2746,20 +2755,21 @@ class CliEmulator(object):
 
     def check_calls(self):
         if self.commands:
-            commands = '\n'.join('\t\t- {}'.format(command.request) for command in self.commands)
-            raise ValueError('Not executed commands: \n{}'.format(commands))
+            commands = "\n".join(
+                "\t\t- {}".format(command.request) for command in self.commands
+            )
+            raise ValueError("Not executed commands: \n{}".format(commands))
 
 
 def create_patched_sessions(send_line_func_map, receive_all_func_map):
-
     def wrapped(host, *args, **kwargs):
         session = RomeSSHSession(host, *args, **kwargs)
-        name = 'session.{}.{{}}'.format(host)
+        name = "session.{}.{{}}".format(host)
         session.send_line = MagicMock(
-            name=name.format('send_line'), side_effect=send_line_func_map[host]
+            name=name.format("send_line"), side_effect=send_line_func_map[host]
         )
         session._receive_all = MagicMock(
-            name=name.format('_receive_all'), side_effect=receive_all_func_map[host]
+            name=name.format("_receive_all"), side_effect=receive_all_func_map[host]
         )
         return session
 
@@ -2769,7 +2779,7 @@ def create_patched_sessions(send_line_func_map, receive_all_func_map):
 class BaseRomeTestCase(TestCase):
     def setUp(self):
         self.runtime_config = RuntimeConfiguration(RUNTIME_CONFIG_PATH)
-        self.logger = MagicMock(name='logger')
+        self.logger = MagicMock(name="logger")
         self.send_line_func_map = {}
         self.receive_all_func_map = {}
 
@@ -2780,11 +2790,12 @@ class BaseRomeTestCase(TestCase):
 
     def patch_sessions(self):
         return patch(
-                'w2w_rome.cli.l1_cli_handler.RomeSSHSession',
-                side_effect=create_patched_sessions(
-                    self.send_line_func_map, self.receive_all_func_map
-                ),
+            "w2w_rome.cli.l1_cli_handler.RomeSSHSession",
+            side_effect=create_patched_sessions(
+                self.send_line_func_map, self.receive_all_func_map
+            ),
         )
 
     def tearDown(self):
-        self.driver_commands._cli_handler._cli._session_pool._session_manager._existing_sessions = []
+        sm = self.driver_commands._cli_handler._cli._session_pool._session_manager
+        sm._existing_sessions = []

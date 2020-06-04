@@ -7,7 +7,7 @@ from w2w_rome.helpers.errors import BaseRomeException
 
 class AutoloadHelper(object):
     def __init__(
-            self, resource_address, board_table, port_table, matrix_letter, logger
+        self, resource_address, board_table, port_table, matrix_letter, logger
     ):
         """Autoload helper.
 
@@ -24,7 +24,7 @@ class AutoloadHelper(object):
         self.resource_address = resource_address
         self.logger = logger
 
-        self._chassis_id = '1'
+        self._chassis_id = "1"
         self._chassis = None
 
     @property
@@ -32,11 +32,11 @@ class AutoloadHelper(object):
         if self._chassis is not None:
             return self._chassis
 
-        serial_number = self.board_table.get('serial_number')
-        model_name = self.board_table.get('model_name')
-        sw_version = self.board_table.get('sw_version')
+        serial_number = self.board_table.get("serial_number")
+        model_name = self.board_table.get("model_name")
+        sw_version = self.board_table.get("sw_version")
         chassis = Chassis(
-            self._chassis_id, self.resource_address, 'Rome Chassis', serial_number
+            self._chassis_id, self.resource_address, "Rome Chassis", serial_number
         )
         chassis.set_model_name(model_name)
         chassis.set_serial_number(serial_number)
@@ -46,12 +46,13 @@ class AutoloadHelper(object):
         return chassis
 
     def _build_blade(self, blade_name):
-        """
+        """Build blade.
+
         :type blade_name: str
         """
-        blade_model = 'Matrix ' + blade_name
-        serial_number = 'NA'
-        resource_model = 'Rome Matrix {}'.format(blade_name)
+        blade_model = "Matrix " + blade_name
+        serial_number = "NA"
+        resource_model = "Rome Matrix {}".format(blade_name)
         blade = Blade(blade_name.upper(), resource_model, serial_number)
         blade.set_model_name(blade_model)
         blade.set_serial_number(serial_number)
@@ -74,13 +75,9 @@ class AutoloadHelper(object):
                 continue
 
             str_port_id = logical_port.port_id.zfill(zfill_n)
-            port = Port(
-                str_port_id,
-                'Generic L1 Port',
-                'NA',
-            )
-            port.name = 'Port {}{}'.format(logical_port.blade_letter, str_port_id)
-            port.set_model_name('Port Paired')
+            port = Port(str_port_id, "Generic L1 Port", "NA",)
+            port.name = "Port {}{}".format(logical_port.blade_letter, str_port_id)
+            port.set_model_name("Port Paired")
             port.set_parent_resource(blade)
             ports_dict[logical_port.name] = port
 
@@ -92,10 +89,10 @@ class AutoloadHelper(object):
                 other_port.add_mapping(port)
 
     def _verify_matrix_letter(self):
-        if self.port_table.is_matrix_q and self.matrix_letter.upper() != 'Q':
+        if self.port_table.is_matrix_q and self.matrix_letter.upper() != "Q":
             raise BaseRomeException(
-                'This device has MPO ports. '
-                'You should specify MatrixQ in device address.'
+                "This device has MPO ports. "
+                "You should specify MatrixQ in device address."
             )
 
     def build_structure(self):

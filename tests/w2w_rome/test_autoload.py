@@ -1,45 +1,53 @@
 from cloudshell.layer_one.core.response.resource_info.entities.blade import Blade
 from cloudshell.layer_one.core.response.resource_info.entities.chassis import Chassis
 from cloudshell.layer_one.core.response.resource_info.entities.port import Port
-from mock import patch, MagicMock
+from mock import MagicMock, patch
 
 from w2w_rome.helpers.errors import BaseRomeException
 
-from tests.w2w_rome.base import BaseRomeTestCase, CliEmulator, Command, DEFAULT_PROMPT, \
-    SHOW_BOARD, PORT_SHOW_MATRIX_B, PORT_SHOW_MATRIX_A, PORT_SHOW_MATRIX_Q, \
-    PORT_SHOW_MATRIX_Q128_1, PORT_SHOW_MATRIX_Q128_2
+from tests.w2w_rome.base import (
+    DEFAULT_PROMPT,
+    PORT_SHOW_MATRIX_A,
+    PORT_SHOW_MATRIX_B,
+    PORT_SHOW_MATRIX_Q,
+    PORT_SHOW_MATRIX_Q128_1,
+    PORT_SHOW_MATRIX_Q128_2,
+    SHOW_BOARD,
+    BaseRomeTestCase,
+    CliEmulator,
+    Command,
+)
 
 
-@patch('cloudshell.cli.session.ssh_session.paramiko', MagicMock())
+@patch("cloudshell.cli.session.ssh_session.paramiko", MagicMock())
 @patch(
-    'cloudshell.cli.session.ssh_session.SSHSession._clear_buffer',
-    MagicMock(return_value=''),
+    "cloudshell.cli.session.ssh_session.SSHSession._clear_buffer",
+    MagicMock(return_value=""),
 )
 class RomeTestAutoload(BaseRomeTestCase):
     def test_autoload_without_matrix_letter(self):
-        host = '192.168.122.10'
-        address = '{}'.format(host)
+        host = "192.168.122.10"
+        address = "{}".format(host)
         with self.assertRaisesRegexp(
-                BaseRomeException,
-                r'Resource address should specify MatrixA, MatrixB or Q'
+            BaseRomeException,
+            r"Resource address should specify MatrixA, MatrixB and MatrixQ",
         ):
             self.driver_commands.get_resource_description(address)
 
     def test_autoload_matrix_b(self):
-        host = '192.168.122.10'
-        address = '{}:B'.format(host)
-        user = 'user'
-        password = 'password'
+        host = "192.168.122.10"
+        address = "{}:B".format(host)
+        user = "user"
+        password = "password"
         expected_ports_str_range = [str(i).zfill(3) for i in range(129, 257)]
 
-        emu = CliEmulator([
-            Command('', DEFAULT_PROMPT),
-            Command(
-                'port show',
-                PORT_SHOW_MATRIX_B,
-            ),
-            Command('show board', SHOW_BOARD),
-        ])
+        emu = CliEmulator(
+            [
+                Command("", DEFAULT_PROMPT),
+                Command("port show", PORT_SHOW_MATRIX_B,),
+                Command("show board", SHOW_BOARD),
+            ]
+        )
         self.send_line_func_map[host] = emu.send_line
         self.receive_all_func_map[host] = emu.receive_all
 
@@ -51,44 +59,43 @@ class RomeTestAutoload(BaseRomeTestCase):
 
         chassis = info.resource_info_list[0]
         self.assertIsInstance(chassis, Chassis)
-        self.assertEqual('9727-4733-2222', chassis.serial_number)
-        self.assertEqual('Rome Chassis', chassis.model_name)
+        self.assertEqual("9727-4733-2222", chassis.serial_number)
+        self.assertEqual("Rome Chassis", chassis.model_name)
         self.assertEqual(address, chassis.address)
         self.assertEqual(1, len(chassis.child_resources))
 
         blade = chassis.child_resources.values()[0]
         self.assertIsInstance(blade, Blade)
-        self.assertEqual('Rome Matrix B', blade.model_name)
-        self.assertEqual('NA', blade.serial_number)
-        self.assertEqual('Blade B', blade.name)
-        self.assertEqual(address + '/B', blade.address)
+        self.assertEqual("Rome Matrix B", blade.model_name)
+        self.assertEqual("NA", blade.serial_number)
+        self.assertEqual("Blade B", blade.name)
+        self.assertEqual(address + "/B", blade.address)
         self.assertEqual(128, len(blade.child_resources))
         self.assertItemsEqual(
-            expected_ports_str_range,
-            blade.child_resources.keys(),
+            expected_ports_str_range, blade.child_resources.keys(),
         )
         self.assertItemsEqual(
-            map('Port B{}'.format, expected_ports_str_range),
+            map("Port B{}".format, expected_ports_str_range),
             (port.name for port in blade.child_resources.values()),
         )
         self.assertItemsEqual(
-            map((address + '/B/{}').format, expected_ports_str_range),
+            map((address + "/B/{}").format, expected_ports_str_range),
             (port.address for port in blade.child_resources.values()),
         )
 
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual('Port B{}'.format(port.resource_id), port.name)
+            self.assertEqual("Port B{}".format(port.resource_id), port.name)
             if port.mapping:
                 connected_ports.append(port)
 
         self.assertEqual(3, len(connected_ports))
         self.assertDictEqual(
             {
-                'Port B247': 'Port B246',
-                'Port B249': 'Port B253',
-                'Port B253': 'Port B249',
+                "Port B247": "Port B246",
+                "Port B249": "Port B253",
+                "Port B253": "Port B249",
             },
             {p.name: p.mapping.name for p in connected_ports},
         )
@@ -96,20 +103,19 @@ class RomeTestAutoload(BaseRomeTestCase):
         emu.check_calls()
 
     def test_autoload_matrix_a(self):
-        host = '192.168.122.10'
-        address = '{}:A'.format(host)
-        user = 'user'
-        password = 'password'
+        host = "192.168.122.10"
+        address = "{}:A".format(host)
+        user = "user"
+        password = "password"
         expected_ports_str_range = [str(i).zfill(3) for i in range(1, 129)]
 
-        emu = CliEmulator([
-            Command('', DEFAULT_PROMPT),
-            Command(
-                'port show',
-                PORT_SHOW_MATRIX_A,
-            ),
-            Command('show board', SHOW_BOARD),
-        ])
+        emu = CliEmulator(
+            [
+                Command("", DEFAULT_PROMPT),
+                Command("port show", PORT_SHOW_MATRIX_A,),
+                Command("show board", SHOW_BOARD),
+            ]
+        )
         self.send_line_func_map[host] = emu.send_line
         self.receive_all_func_map[host] = emu.receive_all
 
@@ -121,61 +127,59 @@ class RomeTestAutoload(BaseRomeTestCase):
 
         chassis = info.resource_info_list[0]
         self.assertIsInstance(chassis, Chassis)
-        self.assertEqual('9727-4733-2222', chassis.serial_number)
-        self.assertEqual('Rome Chassis', chassis.model_name)
+        self.assertEqual("9727-4733-2222", chassis.serial_number)
+        self.assertEqual("Rome Chassis", chassis.model_name)
         self.assertEqual(address, chassis.address)
         self.assertEqual(1, len(chassis.child_resources))
 
         blade = chassis.child_resources.values()[0]
         self.assertIsInstance(blade, Blade)
-        self.assertEqual('Rome Matrix A', blade.model_name)
-        self.assertEqual('NA', blade.serial_number)
-        self.assertEqual('Blade A', blade.name)
-        self.assertEqual(address + '/A', blade.address)
+        self.assertEqual("Rome Matrix A", blade.model_name)
+        self.assertEqual("NA", blade.serial_number)
+        self.assertEqual("Blade A", blade.name)
+        self.assertEqual(address + "/A", blade.address)
         self.assertEqual(128, len(blade.child_resources))
         self.assertItemsEqual(
-            expected_ports_str_range,
-            blade.child_resources.keys(),
+            expected_ports_str_range, blade.child_resources.keys(),
         )
         self.assertItemsEqual(
-            map('Port A{}'.format, expected_ports_str_range),
+            map("Port A{}".format, expected_ports_str_range),
             (port.name for port in blade.child_resources.values()),
         )
         self.assertItemsEqual(
-            map((address + '/A/{}').format, expected_ports_str_range),
+            map((address + "/A/{}").format, expected_ports_str_range),
             (port.address for port in blade.child_resources.values()),
         )
 
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual('Port A{}'.format(port.resource_id), port.name)
+            self.assertEqual("Port A{}".format(port.resource_id), port.name)
             if port.mapping:
                 connected_ports.append(port)
 
         self.assertEqual(len(connected_ports), 1)
         self.assertDictEqual(
-            {'Port A002': 'Port A001'},
+            {"Port A002": "Port A001"},
             {p.name: p.mapping.name for p in connected_ports},
         )
 
         emu.check_calls()
 
     def test_autoload_matrix_q(self):
-        host = '192.168.122.10'
-        address = '{}:Q'.format(host)
-        user = 'user'
-        password = 'password'
+        host = "192.168.122.10"
+        address = "{}:Q".format(host)
+        user = "user"
+        password = "password"
         expected_ports_str_range = [str(i).zfill(2) for i in range(1, 65)]
 
-        emu = CliEmulator([
-            Command('', DEFAULT_PROMPT),
-            Command(
-                'port show',
-                PORT_SHOW_MATRIX_Q,
-            ),
-            Command('show board', SHOW_BOARD),
-        ])
+        emu = CliEmulator(
+            [
+                Command("", DEFAULT_PROMPT),
+                Command("port show", PORT_SHOW_MATRIX_Q,),
+                Command("show board", SHOW_BOARD),
+            ]
+        )
         self.send_line_func_map[host] = emu.send_line
         self.receive_all_func_map[host] = emu.receive_all
 
@@ -187,98 +191,87 @@ class RomeTestAutoload(BaseRomeTestCase):
 
         chassis = info.resource_info_list[0]
         self.assertIsInstance(chassis, Chassis)
-        self.assertEqual('9727-4733-2222', chassis.serial_number)
-        self.assertEqual('Rome Chassis', chassis.model_name)
+        self.assertEqual("9727-4733-2222", chassis.serial_number)
+        self.assertEqual("Rome Chassis", chassis.model_name)
         self.assertEqual(address, chassis.address)
         self.assertEqual(1, len(chassis.child_resources))
 
         blade = chassis.child_resources.values()[0]
         self.assertIsInstance(blade, Blade)
-        self.assertEqual('Rome Matrix Q', blade.model_name)
-        self.assertEqual('NA', blade.serial_number)
-        self.assertEqual('Blade Q', blade.name)
-        self.assertEqual(address + '/Q', blade.address)
+        self.assertEqual("Rome Matrix Q", blade.model_name)
+        self.assertEqual("NA", blade.serial_number)
+        self.assertEqual("Blade Q", blade.name)
+        self.assertEqual(address + "/Q", blade.address)
         self.assertEqual(64, len(blade.child_resources))
         self.assertItemsEqual(
-            expected_ports_str_range,
-            blade.child_resources.keys(),
+            expected_ports_str_range, blade.child_resources.keys(),
         )
         self.assertItemsEqual(
-            map('Port Q{}'.format, expected_ports_str_range),
+            map("Port Q{}".format, expected_ports_str_range),
             (port.name for port in blade.child_resources.values()),
         )
         self.assertItemsEqual(
-            map((address + '/Q/{}').format, expected_ports_str_range),
+            map((address + "/Q/{}").format, expected_ports_str_range),
             (port.address for port in blade.child_resources.values()),
         )
 
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual('Port Q{}'.format(port.resource_id), port.name)
+            self.assertEqual("Port Q{}".format(port.resource_id), port.name)
             if port.mapping:
                 connected_ports.append(port)
 
         self.assertEqual(2, len(connected_ports))
         self.assertDictEqual(
-            {
-                'Port Q01': 'Port Q02',
-                'Port Q02': 'Port Q01',
-            },
+            {"Port Q01": "Port Q02", "Port Q02": "Port Q01"},
             {p.name: p.mapping.name for p in connected_ports},
         )
 
         emu.check_calls()
 
     def test_autoload_matrix_q_choosed_another_matrix(self):
-        host = '192.168.122.10'
-        address = '{}:A'.format(host)
-        user = 'user'
-        password = 'password'
+        host = "192.168.122.10"
+        address = "{}:A".format(host)
+        user = "user"
+        password = "password"
 
-        emu = CliEmulator([
-            Command('', DEFAULT_PROMPT),
-            Command(
-                'port show',
-                PORT_SHOW_MATRIX_Q,
-            ),
-            Command('show board', SHOW_BOARD),
-        ])
+        emu = CliEmulator(
+            [
+                Command("", DEFAULT_PROMPT),
+                Command("port show", PORT_SHOW_MATRIX_Q,),
+                Command("show board", SHOW_BOARD),
+            ]
+        )
         self.send_line_func_map[host] = emu.send_line
         self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
-        with self.assertRaisesRegexp(BaseRomeException, r'You should specify MatrixQ'):
+        with self.assertRaisesRegexp(BaseRomeException, r"You should specify MatrixQ"):
             self.driver_commands.get_resource_description(address)
 
         emu.check_calls()
 
     def test_autoload_matrix_q128(self):
-        first_host = '192.168.122.10'
-        second_host = '192.168.122.11'
-        address = '{first_host}:{second_host}:q'.format(**locals())
-        user = 'user'
-        password = 'password'
+        first_host = "192.168.122.10"
+        second_host = "192.168.122.11"
+        address = "{first_host}:{second_host}:q".format(**locals())
+        user = "user"
+        password = "password"
         expected_ports_str_range = [str(i).zfill(3) for i in range(1, 129)]
 
         emu1 = CliEmulator(
             [
-                Command('', DEFAULT_PROMPT),
-                Command(
-                    'port show',
-                    PORT_SHOW_MATRIX_Q128_1,
-                ),
-                Command('show board', SHOW_BOARD),
+                Command("", DEFAULT_PROMPT),
+                Command("port show", PORT_SHOW_MATRIX_Q128_1,),
+                Command("show board", SHOW_BOARD),
             ],
         )
         emu2 = CliEmulator(
             [
-                Command('', DEFAULT_PROMPT),
-                Command(
-                    'port show',
-                    PORT_SHOW_MATRIX_Q128_2,
-                ),
-                Command('show board', SHOW_BOARD),
+                Command("", DEFAULT_PROMPT),
+                Command("port show", PORT_SHOW_MATRIX_Q128_2,),
+                Command("show board", SHOW_BOARD),
             ]
         )
 
@@ -298,44 +291,40 @@ class RomeTestAutoload(BaseRomeTestCase):
 
         chassis = info.resource_info_list[0]
         self.assertIsInstance(chassis, Chassis)
-        self.assertEqual('9727-4733-2222', chassis.serial_number)
-        self.assertEqual('Rome Chassis', chassis.model_name)
+        self.assertEqual("9727-4733-2222", chassis.serial_number)
+        self.assertEqual("Rome Chassis", chassis.model_name)
         self.assertEqual(address, chassis.address)
         self.assertEqual(1, len(chassis.child_resources))
 
         blade = chassis.child_resources.values()[0]
         self.assertIsInstance(blade, Blade)
-        self.assertEqual('Rome Matrix Q', blade.model_name)
-        self.assertEqual('NA', blade.serial_number)
-        self.assertEqual('Blade Q', blade.name)
-        self.assertEqual(address + '/Q', blade.address)
+        self.assertEqual("Rome Matrix Q", blade.model_name)
+        self.assertEqual("NA", blade.serial_number)
+        self.assertEqual("Blade Q", blade.name)
+        self.assertEqual(address + "/Q", blade.address)
         self.assertEqual(128, len(blade.child_resources))
         self.assertItemsEqual(
-            expected_ports_str_range,
-            blade.child_resources.keys(),
+            expected_ports_str_range, blade.child_resources.keys(),
         )
         self.assertItemsEqual(
-            map('Port Q{}'.format, expected_ports_str_range),
+            map("Port Q{}".format, expected_ports_str_range),
             (port.name for port in blade.child_resources.values()),
         )
         self.assertItemsEqual(
-            map((address + '/Q/{}').format, expected_ports_str_range),
+            map((address + "/Q/{}").format, expected_ports_str_range),
             (port.address for port in blade.child_resources.values()),
         )
 
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual('Port Q{}'.format(port.resource_id), port.name)
+            self.assertEqual("Port Q{}".format(port.resource_id), port.name)
             if port.mapping:
                 connected_ports.append(port)
 
         self.assertEqual(2, len(connected_ports))
         self.assertDictEqual(
-            {
-                'Port Q001': 'Port Q002',
-                'Port Q002': 'Port Q001',
-            },
+            {"Port Q001": "Port Q002", "Port Q002": "Port Q001"},
             {p.name: p.mapping.name for p in connected_ports},
         )
 
