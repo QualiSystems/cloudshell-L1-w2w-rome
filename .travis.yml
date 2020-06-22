@@ -7,6 +7,7 @@ jobs:
     - env: TOXENV=pre-commit
       python: 3.7
     - stage: Create GitHub release
+      script: ignore
       before_deploy:
         - export AUTHOR_EMAIL="$(git log -1 $TRAVIS_COMMIT --pretty="%cE")"
         - export AUTHOR_NAME="$(git log -1 $TRAVIS_COMMIT --pretty="%aN")"
@@ -19,7 +20,7 @@ jobs:
         draft: true
         api_key:
           secure: "A9Y4TGeSdlyIzwXVIdraBw/Q8gzSQNYmaPPZyt2VkoaLokIFnMa9gAAaBUtMrqMsCkQ7lwpXGJCrPmXsIfwO8huCcJSjR1a+O2pX+7g6rl5sF5L5Gt38R9iu8nr24LUIotcy0HL+SK/0zs/DsRCPCKPJqvAPUi0MEnGe/TJcdlbaCnK+++aDTn84EqqwqGkd/oFXttjg655rPfzfkLdd8/uWea62Fx7+KQJz+NXzKYatOSur57xv3dfZ4pr2P1gRHo18gkViP98Bw10qDbN5mowDgCLC7QzqBHTRv6p/TmKrARMbs6hvsaX3ZqeA0Vzltlxz+cHETdUGRraSRv4rYLpxCMeOylhOMydnYSRcbiCdNVRnczbrroiRww06iFvXLirk1t+kwxY1r0sg78bDvxdUSpHkBuAL9BkMoYyq+Gf2nWMimozqiCZhWmSioKI6tiFq/bpGWBJqSH1gcKPWTxc0VO1YZXxXioilMxtUqG0tCOTTilYGL4iCgaLHVDDdILdKfwGCVnt+OZdBheuHdKKru6Jn77y19HNA7Zs3qjBM3p04NdCte1yWum91omfAIcSMJPzcntkvim9uk89+tAs1FNp1Qj7ltWHpIGzf7BNn1LMLgQJJLc+SBDAtJskh4DDdN/b673zCZsLCXJBuOlWaEQp8lGmLJF0nBnZtT1g="
-        name: Wave2Wave Rome L1 Shell v4.1.4 v$GIT_TAG
+        name: Wave2Wave Rome L1 Shell v$GIT_TAG
         target_commitish: master
         on:
           branch: master
