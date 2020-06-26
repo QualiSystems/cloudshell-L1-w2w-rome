@@ -8,9 +8,9 @@
 
 Release date: 10/03/2020
 
-Shell version: 4.1.4
+Shell version: 4.2.0
 
-Document version: 1.3
+Document version: 1.4
 
 # In This Guide
 
@@ -62,6 +62,8 @@ The L1 switch families and models are listed in the following table:
 |L1 Switch Blade|Rome Matrix A|Rome Module type A|
 |L1 Switch Blade|Rome Matrix B|Rome Module type B|
 |L1 Switch Blade|Rome Matrix Q|Rome Module with Q ports|
+|L1 Switch Blade|Rome Matrix X|Rome Module type X|
+|L1 Switch Blade|Rome Matrix Y|Rome Module type Y|
 |L1 Switch Port|Generic L1 Port|Generic L1 Port|
 
 #### **Rome Attributes**
@@ -140,20 +142,22 @@ This section describes how to import the L1 shell and configure and modify the s
       1. In **Resource Manager Client>Admin**, right-click **Resource Families** and select **Import**.
       2. Select the *C:\Program Files (x86)\QualiSystems\CloudShell\Server\Drivers\cloudshell-L1-w2w-rome\datamodel\w2w_rome_ResourceConfiguration.xml* file.
       3. Click **Open**.
-	
-  5. Create an L1 resource.
+
+  5. Update a **MappingCompatibilityRulesData.xml** file. Copy the file from the driver folder to the *C:\Program Files (x86)\QualiSystems\CloudShell\Server* folder. If you updated this file previously then just edit this file and add rules that correspond to the Rome device - Rome Matrix A/B/X/Y
+
+  6. Create an L1 resource.
       1. In **Resource Explorer**, right-click **Root** and select **New>Resource**.
-      2. Enter the **Name** and **Address**. If **SUPPORT MULTIPLE BLADES** is set to False (by default), you will need to specify the address as **\<IP\>:\<\[Matrix\]A/B/Q\>**, for example 192.168.1.12:MatrixA, 192.168.1.12:Q (for Q64) or 192.168.1.12:192.168.1.13:Q (for Q128) 
+      2. Enter the **Name** and **Address**. If **SUPPORT MULTIPLE BLADES** is set to False (by default), you will need to specify the address as **\<IP\>:\<\[Matrix\]A/B/Q/XY\>**, for example 192.168.1.12:MatrixA, 192.168.1.12:Q (for Q64) or 192.168.1.12:192.168.1.13:Q (for Q128), 192.168.1.12:XY
       3. Select the **L1 Switch** family.
       4. Ensure that the correct **Model** Rome Chassis and **Driver** ROME are selected.
       5. Click **OK**.
 	
-  6. Auto Load the new resource.
+  7. Auto Load the new resource.
       1. In **Resource Explorer**, right-click the new resource and select **Configuration**.
       2. In the **Internal Resources** pane, right-click the switch and select **Exclude**. 
       3. Click the **Auto Load** button at the bottom of the **Configuration** tab.
 	
-  7. Define the resource connections on the L1 switch.
+  8. Define the resource connections on the L1 switch.
       1. Right-click the resource and select **Configuration>Connections**.
       2. Connect a resource's port to a different port in the switch resource by clicking each port's **Connected To** button, selecting the resource's **Family** and **Resource**, and selecting the port to connect.
       3. Click **OK** in the **Resource connection** dialog box.
