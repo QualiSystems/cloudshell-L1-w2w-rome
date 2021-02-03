@@ -2,6 +2,7 @@ import itertools
 import random
 import re
 from copy import copy
+from typing import List
 
 from w2w_rome.helpers.cached_property import cached_property
 from w2w_rome.helpers.errors import (
@@ -15,7 +16,7 @@ class SubPort(object):
     """Sub port that keep fiber port for one direction."""
 
     PORT_PATTERN = re.compile(
-        r"^(?P<direction>[EW])(?P<port_id>\d+)"
+        r"(?P<direction>[EW])(?P<port_id>\d+)"
         r"\[(?P<port_full_name>\w+?)\]\s+"
         r"(?P<admin_status>(locked|unlocked))\s+"
         r"(?P<oper_status>(enabled|disabled))\s+"
@@ -23,7 +24,7 @@ class SubPort(object):
         r"\d+\s+"
         r"((?P<conn_to_direction>[EW])(?P<conn_to_port_id>\d+)"
         r"\[\w+\])?\s+"
-        r"(?P<logical_name>[ABQPXY]\d+)\s*$",
+        r"(?P<logical_name>[ABQPXY]\d+)",
         re.IGNORECASE,
     )
 
@@ -140,6 +141,29 @@ class SubPort(object):
             group_dict["logical_name"].upper(),
             port_resource,
         )
+
+    @classmethod
+    def parse_sub_ports(cls, port_table_out, port_resource):
+        # type: (str, str) -> List[SubPort]
+        sub_ports = []
+        for port_info in cls.PORT_PATTERN.findall(port_table_out):  # type: List[str]
+            # port_info = ('E', '20', '1AE20', 'Unlocked', 'Unlocked', 'Enabled',
+            #           'Enabled', 'Connected', 'Connected', '', 'W121[1AW121]', 'W',  # noqa
+            #           '121', 'P20')
+            sub_port = cls(
+                direction=port_info[0].upper(),
+                port_id=port_info[1],
+                port_full_name=port_info[2],
+                locked=port_info[3].lower() == "locked",
+                enabled=port_info[5].lower() == "enabled",
+                connected=port_info[7].lower() == "connected",
+                connected_to_direction=port_info[11].upper(),
+                connected_to_port_id=port_info[12],
+                logical=port_info[13].upper(),
+                port_resource=port_resource,
+            )
+            sub_ports.append(sub_port)
+        return sub_ports
 
     def verify_sub_port_is_not_locked_or_disabled(self):
         """Check that Sub Ports are not locked or disabled."""
@@ -346,11 +370,9 @@ class PortTable(object):
         :rtype: PortTable
         """
         port_table = cls()
-        for line in port_table_output.splitlines():
-            sub_port = SubPort.from_line(line, host)
-            if sub_port:
-                rome_logical_port = port_table.get_or_create(sub_port.logical)
-                rome_logical_port.add_sub_port(sub_port)
+        for sub_port in SubPort.parse_sub_ports(port_table_output, host):
+            rome_logical_port = port_table.get_or_create(sub_port.logical)
+            rome_logical_port.add_sub_port(sub_port)
         port_table.validate(port_table_output)
         return port_table
 
