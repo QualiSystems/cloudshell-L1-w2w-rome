@@ -32,7 +32,7 @@ jobs:
         run: |
           python_version="${{ matrix.python-version }}"
           py_version="${python_version/./}"
-          TOXENV="py$py_version
+          TOXENV="py$py_version"
           echo $TOXENV
           echo "TOXENV=$TOXENV" >> $GITHUB_ENV
       - name: Run tox
@@ -61,24 +61,6 @@ jobs:
         env:
           TOXENV: pre-commit
         run: tox
-  pack:
-    name: Pack the Shell
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.7
-      - name: Install dependencies
-        run: |
-          python -m pip install pip -U
-          pip install tox
-      - name: Build
-        env:
-          TOXENV: pack
-        run: tox
   check-version:
     name: Check version
     # only for PRs in master
@@ -93,3 +75,4 @@ jobs:
           cd ${{ github.repository }}
           git checkout -qf ${{ github.head_ref }}
           ! git diff --exit-code --quiet origin/master version.txt
+
