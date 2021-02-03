@@ -16,6 +16,7 @@ from tests.w2w_rome.base import (
     PORT_SHOW_MATRIX_Q128_1,
     PORT_SHOW_MATRIX_Q128_2,
     PORT_SHOW_MATRIX_Q128_2_CHANGED_PORT,
+    PORT_SHOW_MATRIX_Q_BROKEN_TABLE_OUTPUT,
     PORT_SHOW_MATRIX_XY,
     PORT_SHOW_MATRIX_XY_CHANGED_PORT,
     SHOW_BOARD,
@@ -247,6 +248,70 @@ class RomeTestAutoload(BaseRomeTestCase):
             [
                 Command("", DEFAULT_PROMPT),
                 Command("port show", PORT_SHOW_MATRIX_Q,),
+                Command("show board", SHOW_BOARD),
+            ]
+        )
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
+
+        self.driver_commands.login(address, user, password)
+        info = self.driver_commands.get_resource_description(address)
+
+        self.assertIsNotNone(info)
+        self.assertEqual(1, len(info.resource_info_list))
+
+        chassis = info.resource_info_list[0]
+        self.assertIsInstance(chassis, Chassis)
+        self.assertEqual("9727-4733-2222", chassis.serial_number)
+        self.assertEqual("Rome Chassis", chassis.model_name)
+        self.assertEqual(address, chassis.address)
+        self.assertEqual(1, len(chassis.child_resources))
+
+        blade = chassis.child_resources.values()[0]
+        self.assertIsInstance(blade, Blade)
+        self.assertEqual("Rome Matrix Q", blade.model_name)
+        self.assertEqual("NA", blade.serial_number)
+        self.assertEqual("Blade Q", blade.name)
+        self.assertEqual(address + "/Q", blade.address)
+        self.assertEqual(64, len(blade.child_resources))
+        self.assertItemsEqual(
+            expected_ports_str_range, blade.child_resources.keys(),
+        )
+        self.assertItemsEqual(
+            map("Port Q{}".format, expected_ports_str_range),
+            (port.name for port in blade.child_resources.values()),
+        )
+        self.assertItemsEqual(
+            map((address + "/Q/{}").format, expected_ports_str_range),
+            (port.address for port in blade.child_resources.values()),
+        )
+
+        connected_ports = []
+        for port_id, port in blade.child_resources.items():
+            self.assertIsInstance(port, Port)
+            self.assertEqual("Port Q{}".format(port.resource_id), port.name)
+            if port.mapping:
+                connected_ports.append(port)
+
+        self.assertEqual(2, len(connected_ports))
+        self.assertDictEqual(
+            {"Port Q01": "Port Q02", "Port Q02": "Port Q01"},
+            {p.name: p.mapping.name for p in connected_ports},
+        )
+
+        emu.check_calls()
+
+    def test_autoload_matrix_q_broken_table_output(self):
+        host = "192.168.122.10"
+        address = "{}:Q".format(host)
+        user = "user"
+        password = "password"
+        expected_ports_str_range = [str(i).zfill(2) for i in range(1, 65)]
+
+        emu = CliEmulator(
+            [
+                Command("", DEFAULT_PROMPT),
+                Command("port show", PORT_SHOW_MATRIX_Q_BROKEN_TABLE_OUTPUT),
                 Command("show board", SHOW_BOARD),
             ]
         )
