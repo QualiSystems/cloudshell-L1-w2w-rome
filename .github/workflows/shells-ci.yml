@@ -75,4 +75,24 @@ jobs:
           cd ${{ github.repository }}
           git checkout -qf ${{ github.head_ref }}
           ! git diff --exit-code --quiet origin/master version.txt
-
+  create-gh-release:
+    needs: [ tests, pre-commit ]
+    if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set envs
+        run: |
+          version="$(cat version.txt | tr -d ' \t\n\r')"
+          repo_owner=${{ github.repository }}
+          index=`expr index "$repo_owner" /`
+          repo=${repo_owner:index}
+          echo "TAG=$version" >> $GITHUB_ENV
+          echo "REPO=$repo" >> $GITHUB_ENV
+      - name: Create GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
+          name: ${{ env.REPO }} ${{ env.TAG }}
+          tag: ${{ env.TAG }}
+          commit: master
