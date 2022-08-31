@@ -71,7 +71,9 @@ def set_port_connected(sub_port_name, connected_to_sub_port_name, port_show_outp
         )
 
     sub_port = SubPort.parse_sub_ports(sub_port_match.group(), "")[0]
-    connected_sub_port = SubPort.parse_sub_ports(connected_sub_port_match.group(), "")[0]
+    connected_sub_port = SubPort.parse_sub_ports(connected_sub_port_match.group(), "")[
+        0
+    ]
 
     sub_port.connected = True
     sub_port.connected_to_direction = connected_sub_port.direction
@@ -106,7 +108,9 @@ def set_port_disconnected(sub_port_name, port_show_output):
         re.MULTILINE,
     )
     if connected_sub_port_match is not None:
-        connected_sub_port = SubPort.parse_sub_ports(connected_sub_port_match.group(), "")[0]
+        connected_sub_port = SubPort.parse_sub_ports(
+            connected_sub_port_match.group(), ""
+        )[0]
         connected_sub_port.connected = False
         connected_sub_port.connected_to_direction = ""
         connected_sub_port.connected_to_sub_port_id = ""
@@ -261,7 +265,10 @@ ROME[TECH]# 08-05-2019 09:20 CONNECTING...
                     "connection create E3 to W4",
                     """ROME[TECH]# connection create E3 to W4""",
                 ),
-                Command("connection show pending", get_connection_pending("E3", "W4"),),
+                Command(
+                    "connection show pending",
+                    get_connection_pending("E3", "W4"),
+                ),
                 Command("connection show pending", CONNECTION_PENDING_EMPTY),
                 Command("port show", connected_port_show_a),
             ]

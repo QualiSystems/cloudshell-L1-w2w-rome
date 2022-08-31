@@ -1,16 +1,16 @@
 repos:
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v4.3.21
+  - repo: https://github.com/timothycrosley/isort
+    rev: 5.10.1
     hooks:
       - id: isort
         language_version: python3.7
   - repo: https://github.com/python/black
-    rev: 19.10b0
+    rev: 22.6.0
     hooks:
       - id: black
         language_version: python3.7
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.8.2
+  - repo: https://github.com/pycqa/flake8
+    rev: 5.0.4
     hooks:
       - id: flake8
         additional_dependencies: [
@@ -19,5 +19,11 @@ repos:
           flake8-comprehensions,
           flake8-print,
           flake8-eradicate,
+          flake8-requirements-absolute-imports,
+        ]
+        args: [
+          --project-base-module=w2w_rome,
+          "--known-modules=cloudshell-cli:[cloudshell.cli],cloudshell-l1-networking-core:[cloudshell.layer_one.core],cloudshell-core:[cloudshell.core]"
         ]
         language_version: python3.7
+        exclude: ^tests/

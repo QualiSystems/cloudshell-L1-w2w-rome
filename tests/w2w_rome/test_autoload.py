@@ -51,7 +51,10 @@ class RomeTestAutoload(BaseRomeTestCase):
         emu = CliEmulator(
             [
                 Command("", DEFAULT_PROMPT),
-                Command("port show", PORT_SHOW_MATRIX_B,),
+                Command(
+                    "port show",
+                    PORT_SHOW_MATRIX_B,
+                ),
                 Command("show board", SHOW_BOARD),
             ]
         )
@@ -79,7 +82,8 @@ class RomeTestAutoload(BaseRomeTestCase):
         self.assertEqual(address + "/B", blade.address)
         self.assertEqual(128, len(blade.child_resources))
         self.assertItemsEqual(
-            expected_ports_str_range, blade.child_resources.keys(),
+            expected_ports_str_range,
+            blade.child_resources.keys(),
         )
         self.assertItemsEqual(
             map("Port B{}".format, expected_ports_str_range),
@@ -119,7 +123,10 @@ class RomeTestAutoload(BaseRomeTestCase):
         emu = CliEmulator(
             [
                 Command("", DEFAULT_PROMPT),
-                Command("port show", PORT_SHOW_MATRIX_A,),
+                Command(
+                    "port show",
+                    PORT_SHOW_MATRIX_A,
+                ),
                 Command("show board", SHOW_BOARD),
             ]
         )
@@ -147,7 +154,8 @@ class RomeTestAutoload(BaseRomeTestCase):
         self.assertEqual(address + "/A", blade.address)
         self.assertEqual(128, len(blade.child_resources))
         self.assertItemsEqual(
-            expected_ports_str_range, blade.child_resources.keys(),
+            expected_ports_str_range,
+            blade.child_resources.keys(),
         )
         self.assertItemsEqual(
             map("Port A{}".format, expected_ports_str_range),
@@ -183,7 +191,10 @@ class RomeTestAutoload(BaseRomeTestCase):
         emu = CliEmulator(
             [
                 Command("", DEFAULT_PROMPT),
-                Command("port show", PORT_SHOW_MATRIX_A_CHANGED_PORT,),
+                Command(
+                    "port show",
+                    PORT_SHOW_MATRIX_A_CHANGED_PORT,
+                ),
                 Command("show board", SHOW_BOARD),
             ]
         )
@@ -211,7 +222,8 @@ class RomeTestAutoload(BaseRomeTestCase):
         self.assertEqual(address + "/A", blade.address)
         self.assertEqual(128, len(blade.child_resources))
         self.assertItemsEqual(
-            expected_ports_str_range, blade.child_resources.keys(),
+            expected_ports_str_range,
+            blade.child_resources.keys(),
         )
         self.assertItemsEqual(
             map("Port A{}".format, expected_ports_str_range),
@@ -247,7 +259,10 @@ class RomeTestAutoload(BaseRomeTestCase):
         emu = CliEmulator(
             [
                 Command("", DEFAULT_PROMPT),
-                Command("port show", PORT_SHOW_MATRIX_Q,),
+                Command(
+                    "port show",
+                    PORT_SHOW_MATRIX_Q,
+                ),
                 Command("show board", SHOW_BOARD),
             ]
         )
@@ -275,7 +290,8 @@ class RomeTestAutoload(BaseRomeTestCase):
         self.assertEqual(address + "/Q", blade.address)
         self.assertEqual(64, len(blade.child_resources))
         self.assertItemsEqual(
-            expected_ports_str_range, blade.child_resources.keys(),
+            expected_ports_str_range,
+            blade.child_resources.keys(),
         )
         self.assertItemsEqual(
             map("Port Q{}".format, expected_ports_str_range),
@@ -339,7 +355,8 @@ class RomeTestAutoload(BaseRomeTestCase):
         self.assertEqual(address + "/Q", blade.address)
         self.assertEqual(64, len(blade.child_resources))
         self.assertItemsEqual(
-            expected_ports_str_range, blade.child_resources.keys(),
+            expected_ports_str_range,
+            blade.child_resources.keys(),
         )
         self.assertItemsEqual(
             map("Port Q{}".format, expected_ports_str_range),
@@ -374,7 +391,10 @@ class RomeTestAutoload(BaseRomeTestCase):
         emu = CliEmulator(
             [
                 Command("", DEFAULT_PROMPT),
-                Command("port show", PORT_SHOW_MATRIX_Q,),
+                Command(
+                    "port show",
+                    PORT_SHOW_MATRIX_Q,
+                ),
                 Command("show board", SHOW_BOARD),
             ]
         )
@@ -398,14 +418,20 @@ class RomeTestAutoload(BaseRomeTestCase):
         emu1 = CliEmulator(
             [
                 Command("", DEFAULT_PROMPT),
-                Command("port show", PORT_SHOW_MATRIX_Q128_1,),
+                Command(
+                    "port show",
+                    PORT_SHOW_MATRIX_Q128_1,
+                ),
                 Command("show board", SHOW_BOARD),
             ],
         )
         emu2 = CliEmulator(
             [
                 Command("", DEFAULT_PROMPT),
-                Command("port show", PORT_SHOW_MATRIX_Q128_2,),
+                Command(
+                    "port show",
+                    PORT_SHOW_MATRIX_Q128_2,
+                ),
                 Command("show board", SHOW_BOARD),
             ]
         )
@@ -439,7 +465,8 @@ class RomeTestAutoload(BaseRomeTestCase):
         self.assertEqual(address + "/Q", blade.address)
         self.assertEqual(128, len(blade.child_resources))
         self.assertItemsEqual(
-            expected_ports_str_range, blade.child_resources.keys(),
+            expected_ports_str_range,
+            blade.child_resources.keys(),
         )
         self.assertItemsEqual(
             map("Port Q{}".format, expected_ports_str_range),
@@ -477,14 +504,20 @@ class RomeTestAutoload(BaseRomeTestCase):
         emu1 = CliEmulator(
             [
                 Command("", DEFAULT_PROMPT),
-                Command("port show", PORT_SHOW_MATRIX_Q128_1,),
+                Command(
+                    "port show",
+                    PORT_SHOW_MATRIX_Q128_1,
+                ),
                 Command("show board", SHOW_BOARD),
             ],
         )
         emu2 = CliEmulator(
             [
                 Command("", DEFAULT_PROMPT),
-                Command("port show", PORT_SHOW_MATRIX_Q128_2_CHANGED_PORT,),
+                Command(
+                    "port show",
+                    PORT_SHOW_MATRIX_Q128_2_CHANGED_PORT,
+                ),
                 Command("show board", SHOW_BOARD),
             ]
         )
@@ -518,7 +551,8 @@ class RomeTestAutoload(BaseRomeTestCase):
         self.assertEqual(address + "/Q", blade.address)
         self.assertEqual(128, len(blade.child_resources))
         self.assertItemsEqual(
-            expected_ports_str_range, blade.child_resources.keys(),
+            expected_ports_str_range,
+            blade.child_resources.keys(),
         )
         self.assertItemsEqual(
             map("Port Q{}".format, expected_ports_str_range),
@@ -555,7 +589,10 @@ class RomeTestAutoload(BaseRomeTestCase):
         emu = CliEmulator(
             [
                 Command("", DEFAULT_PROMPT),
-                Command("port show", PORT_SHOW_MATRIX_XY,),
+                Command(
+                    "port show",
+                    PORT_SHOW_MATRIX_XY,
+                ),
                 Command("show board", SHOW_BOARD),
             ]
         )
@@ -584,7 +621,8 @@ class RomeTestAutoload(BaseRomeTestCase):
         self.assertEqual(address + "/X", blade_x.address)
         self.assertEqual(128, len(blade_x.child_resources))
         self.assertItemsEqual(
-            expected_ports_str_range, blade_x.child_resources.keys(),
+            expected_ports_str_range,
+            blade_x.child_resources.keys(),
         )
         self.assertItemsEqual(
             map("Port X{}".format, expected_ports_str_range),
@@ -604,7 +642,8 @@ class RomeTestAutoload(BaseRomeTestCase):
         self.assertEqual(address + "/Y", blade_y.address)
         self.assertEqual(128, len(blade_y.child_resources))
         self.assertItemsEqual(
-            expected_ports_str_range, blade_y.child_resources.keys(),
+            expected_ports_str_range,
+            blade_y.child_resources.keys(),
         )
         self.assertItemsEqual(
             map("Port Y{}".format, expected_ports_str_range),
@@ -654,7 +693,10 @@ class RomeTestAutoload(BaseRomeTestCase):
         emu = CliEmulator(
             [
                 Command("", DEFAULT_PROMPT),
-                Command("port show", PORT_SHOW_MATRIX_XY_CHANGED_PORT,),
+                Command(
+                    "port show",
+                    PORT_SHOW_MATRIX_XY_CHANGED_PORT,
+                ),
                 Command("show board", SHOW_BOARD),
             ]
         )
@@ -683,7 +725,8 @@ class RomeTestAutoload(BaseRomeTestCase):
         self.assertEqual(address + "/X", blade_x.address)
         self.assertEqual(128, len(blade_x.child_resources))
         self.assertItemsEqual(
-            expected_ports_str_range, blade_x.child_resources.keys(),
+            expected_ports_str_range,
+            blade_x.child_resources.keys(),
         )
         self.assertItemsEqual(
             map("Port X{}".format, expected_ports_str_range),
@@ -703,7 +746,8 @@ class RomeTestAutoload(BaseRomeTestCase):
         self.assertEqual(address + "/Y", blade_y.address)
         self.assertEqual(128, len(blade_y.child_resources))
         self.assertItemsEqual(
-            expected_ports_str_range, blade_y.child_resources.keys(),
+            expected_ports_str_range,
+            blade_y.child_resources.keys(),
         )
         self.assertItemsEqual(
             map("Port Y{}".format, expected_ports_str_range),

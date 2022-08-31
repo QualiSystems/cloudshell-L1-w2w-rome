@@ -10,7 +10,8 @@ from w2w_rome.cli.rome_sessions import RomeSSHSession
 from w2w_rome.driver_commands import DriverCommands
 
 RUNTIME_CONFIG_PATH = os.path.join(
-    os.path.dirname(__file__), "test_runtime_config.yaml",
+    os.path.dirname(__file__),
+    "test_runtime_config.yaml",
 )
 DEFAULT_PROMPT = "ROME[OPER]#"
 SHOW_BOARD = """ROME[OPER]# show board 

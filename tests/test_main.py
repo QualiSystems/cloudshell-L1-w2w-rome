@@ -1,7 +1,8 @@
 from unittest import TestCase
 
-from main import Main
 from mock import Mock, call, patch
+
+from main import Main
 
 
 class TestMain(TestCase):
