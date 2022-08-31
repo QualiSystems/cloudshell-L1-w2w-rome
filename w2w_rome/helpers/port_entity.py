@@ -17,13 +17,25 @@ class SubPort(object):
 
     PORT_PATTERN = re.compile(
         r"(?P<direction>[EW])(?P<port_id>\d+)"
-        r"\[(?P<port_full_name>\w+?)\]\s+"
+        r"\[(?P<port_full_name>\w+?)]\s+"
         r"(?P<admin_status>(locked|unlocked))\s+"
         r"(?P<oper_status>(enabled|disabled))\s+"
         r"(?P<port_status>((dis)?connected)|in process)\s+"
         r"\d+\s+"
         r"((?P<conn_to_direction>[EW])(?P<conn_to_port_id>\d+)"
-        r"\[\w+\])?\s+"
+        r"\[\w+])?\s+"
+        r"(?P<logical_name>[ABQPXY]\d+)",
+        re.IGNORECASE,
+    )
+    PORT_PATTERN_V2 = re.compile(
+        r"(?P<port_full_name>\w+?)\s+"
+        r"(?P<admin_status>(locked|unlocked))\s+"
+        r"(?P<oper_status>(enabled|disabled))\s+"
+        r"(?P<port_status>((dis)?connected)|in process)\s+"
+        r"\d+\s+"
+        r"((?P<conn_to_direction>[EW])(?P<conn_to_port_id>\d+)"
+        r"\[\w+])?\s+"
+        r"(?P<direction>[EW])(?P<port_id>\d+)\s*,\s*"
         r"(?P<logical_name>[ABQPXY]\d+)",
         re.IGNORECASE,
     )
@@ -122,44 +134,29 @@ class SubPort(object):
         return "{}{}".format(self.connected_to_direction, self.connected_to_sub_port_id)
 
     @classmethod
-    def from_line(cls, line, port_resource):
-        match = cls.PORT_PATTERN.search(line)
-
-        if match is None:
-            return
-
-        group_dict = match.groupdict("")
-        return cls(
-            group_dict["direction"].upper(),
-            group_dict["port_id"],
-            group_dict["port_full_name"],
-            group_dict["admin_status"].lower() == "locked",
-            group_dict["oper_status"].lower() == "enabled",
-            group_dict["port_status"].lower() == "connected",
-            group_dict.get("conn_to_direction", "").upper(),
-            group_dict.get("conn_to_port_id"),
-            group_dict["logical_name"].upper(),
-            port_resource,
-        )
-
-    @classmethod
     def parse_sub_ports(cls, port_table_out, port_resource):
         # type: (str, str) -> List[SubPort]
         sub_ports = []
-        for port_info in cls.PORT_PATTERN.findall(port_table_out):  # type: List[str]
+
+        port_info_list = list(cls.PORT_PATTERN.finditer(port_table_out))
+        if not port_info_list:
+            port_info_list = list(cls.PORT_PATTERN_V2.finditer(port_table_out))
+
+        for port_info in port_info_list:
             # port_info = ('E', '20', '1AE20', 'Unlocked', 'Unlocked', 'Enabled',
             #           'Enabled', 'Connected', 'Connected', '', 'W121[1AW121]', 'W',  # noqa
             #           '121', 'P20')
+            port_info = port_info.groupdict()
             sub_port = cls(
-                direction=port_info[0].upper(),
-                port_id=port_info[1],
-                port_full_name=port_info[2],
-                locked=port_info[3].lower() == "locked",
-                enabled=port_info[5].lower() == "enabled",
-                connected=port_info[7].lower() == "connected",
-                connected_to_direction=port_info[11].upper(),
-                connected_to_port_id=port_info[12],
-                logical=port_info[13].upper(),
+                direction=port_info["direction"].upper(),
+                port_id=port_info["port_id"],
+                port_full_name=port_info["port_full_name"],
+                locked=port_info["admin_status"].lower() == "locked",
+                enabled=port_info["oper_status"].lower() == "enabled",
+                connected=port_info["port_status"].lower() == "connected",
+                connected_to_direction=(port_info["conn_to_direction"] or "").upper(),
+                connected_to_port_id=port_info["conn_to_port_id"] or "",
+                logical=port_info["logical_name"].upper(),
                 port_resource=port_resource,
             )
             sub_ports.append(sub_port)

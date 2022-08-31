@@ -70,8 +70,8 @@ def set_port_connected(sub_port_name, connected_to_sub_port_name, port_show_outp
             "Didn't find the sub port {}".format(connected_to_sub_port_name)
         )
 
-    sub_port = SubPort.from_line(sub_port_match.group(), "")
-    connected_sub_port = SubPort.from_line(connected_sub_port_match.group(), "")
+    sub_port = SubPort.parse_sub_ports(sub_port_match.group(), "")[0]
+    connected_sub_port = SubPort.parse_sub_ports(connected_sub_port_match.group(), "")[0]
 
     sub_port.connected = True
     sub_port.connected_to_direction = connected_sub_port.direction
@@ -98,7 +98,7 @@ def set_port_disconnected(sub_port_name, port_show_output):
     if sub_port_match is None:
         raise ValueError("Didn't find the sub port {}".format(sub_port_name))
 
-    sub_port = SubPort.from_line(sub_port_match.group(), "")
+    sub_port = SubPort.parse_sub_ports(sub_port_match.group(), "")[0]
 
     connected_sub_port_match = re.search(
         r"^{}\[.+$".format(sub_port.connected_to_sub_port_name),
@@ -106,7 +106,7 @@ def set_port_disconnected(sub_port_name, port_show_output):
         re.MULTILINE,
     )
     if connected_sub_port_match is not None:
-        connected_sub_port = SubPort.from_line(connected_sub_port_match.group(), "")
+        connected_sub_port = SubPort.parse_sub_ports(connected_sub_port_match.group(), "")[0]
         connected_sub_port.connected = False
         connected_sub_port.connected_to_direction = ""
         connected_sub_port.connected_to_sub_port_id = ""
