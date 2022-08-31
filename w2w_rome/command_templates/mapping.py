@@ -2,7 +2,6 @@ from collections import OrderedDict
 
 from cloudshell.cli.command_template.command_template import CommandTemplate
 
-ACTION_MAP = {}
 ERROR_MAP = OrderedDict(
     [
         (
@@ -15,10 +14,10 @@ ERROR_MAP = OrderedDict(
 )
 
 CONNECT = CommandTemplate(
-    "connection create {src_port} to {dst_port}", ACTION_MAP, ERROR_MAP
+    "connection create {src_port} to {dst_port}", error_map=ERROR_MAP
 )
 DISCONNECT = CommandTemplate(
-    "connection disconnect {src_port} from {dst_port}", ACTION_MAP, ERROR_MAP
+    "connection disconnect {src_port} from {dst_port}", error_map=ERROR_MAP
 )
-PORT_INFO = CommandTemplate("port show {port}", ACTION_MAP, ERROR_MAP)
+PORT_INFO = CommandTemplate("port show {port}", error_map=ERROR_MAP)
 CONNECTION_SHOW_PENDING = CommandTemplate("connection show pending")
