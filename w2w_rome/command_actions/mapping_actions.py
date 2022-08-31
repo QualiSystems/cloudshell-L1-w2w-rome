@@ -83,7 +83,9 @@ class MappingActions(object):
         """
         self._connect(cli_service, src_port_name, dst_port_name)
         self.wait_ports_not_in_pending_connections(
-            cli_service, [(src_port_name, dst_port_name)], num_ports_to_connect,
+            cli_service,
+            [(src_port_name, dst_port_name)],
+            num_ports_to_connect,
         )
 
     def connect(self, src_logic_port, dst_logic_port, bidi=True):
@@ -134,7 +136,9 @@ class MappingActions(object):
         :rtype: str
         """
         return CommandTemplateExecutor(
-            cli_service, command_template.DISCONNECT, self.CONNECTION_PENDING_RESET_MAP,
+            cli_service,
+            command_template.DISCONNECT,
+            self.CONNECTION_PENDING_RESET_MAP,
         ).execute_command(src_port=src_port, dst_port=dst_port)
 
     def _disconnect_and_wait(
