@@ -2,11 +2,15 @@ name: CI
 
 on:
   push:
-    branches:
-      - "*"
+    paths-ignore:
+      - "README.md"
+      - "docs/readme.md"
+      - "docs/readme.rst"
   pull_request:
-    branches:
-      - "*"
+    paths-ignore:
+      - "README.md"
+      - "docs/readme.md"
+      - "docs/readme.rst"
   release:
     types: [published]
 
@@ -38,9 +42,8 @@ jobs:
       - name: Run tox
         run: tox
       - name: Upload coverage report
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v2
         with:
-          file: .coverage
           fail_ci_if_error: true
           verbose: true
   pre-commit:
@@ -69,12 +72,26 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Check version
+      - name: Get current version
+        id: currentVersion
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq e ".metadata.template_version" shell-definition.yaml
+      - name: Save shell-definition.yaml from master
         run: |
           git clone https://github.com/${{ github.repository }}.git ${{ github.repository }}
+          BASE_DIR=`pwd`
           cd ${{ github.repository }}
           git checkout -qf ${{ github.head_ref }}
-          ! git diff --exit-code --quiet origin/master version.txt
+          git show master:shell-definition.yaml > $BASE_DIR/tmp.yaml
+      - name: Get master version
+        id: masterVersion
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq e ".metadata.template_version" tmp.yaml
+      - name: Check version
+        run: |
+          ! diff <(echo "${{ steps.currentVersion.outputs.result }}") <(echo "${{ steps.masterVersion.outputs.result }}")
   create-gh-release:
     needs: [ tests, pre-commit ]
     if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' }}
