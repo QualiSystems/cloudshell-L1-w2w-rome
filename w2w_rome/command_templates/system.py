@@ -2,7 +2,6 @@ from collections import OrderedDict
 
 from cloudshell.cli.command_template.command_template import CommandTemplate
 
-ACTION_MAP = OrderedDict()
 ERROR_MAP = OrderedDict(
     [
         (
@@ -14,5 +13,5 @@ ERROR_MAP = OrderedDict(
     ]
 )
 
-SHOW_BOARD = CommandTemplate("show board", ACTION_MAP, ERROR_MAP)
-PORT_SHOW = CommandTemplate("port show", ACTION_MAP, ERROR_MAP)
+SHOW_BOARD = CommandTemplate("show board", error_map=ERROR_MAP)
+PORT_SHOW = CommandTemplate("port show", error_map=ERROR_MAP)

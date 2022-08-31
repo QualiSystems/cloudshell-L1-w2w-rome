@@ -142,11 +142,11 @@ class SubPort(object):
         if not port_info_list:
             port_info_list = list(cls.PORT_PATTERN_V2.finditer(port_table_out))
 
-        for port_info in port_info_list:
+        for port_match in port_info_list:
             # port_info = ('E', '20', '1AE20', 'Unlocked', 'Unlocked', 'Enabled',
             #           'Enabled', 'Connected', 'Connected', '', 'W121[1AW121]', 'W',  # noqa
             #           '121', 'P20')
-            port_info = port_info.groupdict()
+            port_info = port_match.groupdict()
             sub_port = cls(
                 direction=port_info["direction"].upper(),
                 port_id=port_info["port_id"],
