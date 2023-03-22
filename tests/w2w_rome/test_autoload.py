@@ -1057,3 +1057,30 @@ class RomeTestAutoload(BaseRomeTestCase):
         )
 
         emu.check_calls()
+
+    def test_autoload_matrix_q_choosed_another_matrix(self):
+        host = "192.168.122.10"
+        address = "{}:A".format(host)
+        user = "user"
+        password = "password"
+
+        emu = CliEmulator(
+            [
+                Command("", DEFAULT_PROMPT),
+                Command(
+                    "port show",
+                    PORT_SHOW_MATRIX_Q,
+                ),
+                Command("show board", SHOW_BOARD),
+            ]
+        )
+        self.send_line_func_map[host] = emu.send_line
+        self.receive_all_func_map[host] = emu.receive_all
+
+        self.driver_commands.login(address, user, password)
+        with self.assertRaisesRegexp(
+            BaseRomeException, r"No 'A' ports found on the device"
+        ):
+            self.driver_commands.get_resource_description(address)
+
+        emu.check_calls()
