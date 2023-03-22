@@ -63,7 +63,11 @@ class AutoloadHelper(object):
 
     def build_ports_and_blades(self):
         ports_dict = {}
-        zfill_n = max((len(rlp.port_id) for rlp in self.port_table))
+        zfill_n = max(
+            len(rlp.port_id)
+            for rlp in self.port_table
+            if rlp.blade_letter in self.matrix_letter
+        )
 
         for blade in self._build_blades(self.matrix_letter):
             for logical_port in self.port_table:
