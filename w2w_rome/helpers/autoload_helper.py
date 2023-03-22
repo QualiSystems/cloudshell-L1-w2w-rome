@@ -2,6 +2,8 @@ from cloudshell.layer_one.core.response.resource_info.entities.blade import Blad
 from cloudshell.layer_one.core.response.resource_info.entities.chassis import Chassis
 from cloudshell.layer_one.core.response.resource_info.entities.port import Port
 
+from w2w_rome.helpers.errors import BaseRomeException
+
 
 class AutoloadHelper(object):
     def __init__(
@@ -87,5 +89,15 @@ class AutoloadHelper(object):
                 other_port.add_mapping(port)
 
     def build_structure(self):
+        self._validate_port_table()
         self.build_ports_and_blades()
         return self.chassis
+
+    def _validate_port_table(self):
+        for logical_port in self.port_table:
+            if logical_port.blade_letter in self.matrix_letter:
+                break
+        else:
+            raise BaseRomeException(
+                "No '{}' ports found on the device".format(self.matrix_letter)
+            )
