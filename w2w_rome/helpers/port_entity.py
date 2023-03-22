@@ -415,15 +415,6 @@ class PortTable(object):
         return new_port_table
 
     def validate(self, output):
-        blade_name = self.logical_ports[0].blade_letter
-        msg = "The Port Table isn't loaded correctly. Loaded {} ports".format(
-            len(self.logical_ports)
-        )
-        if blade_name in tuple("ABXY") and len(self.logical_ports) != 256:
-            raise BaseRomeException(msg)
-        elif blade_name == "Q" and len(self.logical_ports) not in (64, 128):
-            raise BaseRomeException(msg)
-
         msg = "Not all sub ports are loaded. Output is:\n{}".format(output)
         for lp in self.logical_ports:
             for rp in lp.rome_ports:
