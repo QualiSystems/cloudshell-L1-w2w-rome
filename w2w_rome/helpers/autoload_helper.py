@@ -2,8 +2,6 @@ from cloudshell.layer_one.core.response.resource_info.entities.blade import Blad
 from cloudshell.layer_one.core.response.resource_info.entities.chassis import Chassis
 from cloudshell.layer_one.core.response.resource_info.entities.port import Port
 
-from w2w_rome.helpers.errors import BaseRomeException
-
 
 class AutoloadHelper(object):
     def __init__(
@@ -88,14 +86,6 @@ class AutoloadHelper(object):
                 other_port = ports_dict[connected_to_port.name]
                 other_port.add_mapping(port)
 
-    def _verify_matrix_letter(self):
-        if self.port_table.is_matrix_q and self.matrix_letter.upper() != "Q":
-            raise BaseRomeException(
-                "This device has MPO ports. "
-                "You should specify MatrixQ in device address."
-            )
-
     def build_structure(self):
-        self._verify_matrix_letter()
         self.build_ports_and_blades()
         return self.chassis
