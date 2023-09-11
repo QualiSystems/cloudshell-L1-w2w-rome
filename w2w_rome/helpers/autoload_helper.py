@@ -1,34 +1,36 @@
+from __future__ import annotations
+
+from collections.abc import Generator
+from typing import TYPE_CHECKING
+
 from cloudshell.layer_one.core.response.resource_info.entities.blade import Blade
 from cloudshell.layer_one.core.response.resource_info.entities.chassis import Chassis
 from cloudshell.layer_one.core.response.resource_info.entities.port import Port
-
 from w2w_rome.helpers.errors import BaseRomeException
 
+if TYPE_CHECKING:
+    from w2w_rome.helpers.port_entity import PortTable
 
-class AutoloadHelper(object):
+
+class AutoloadHelper:
     def __init__(
-        self, resource_address, board_table, port_table, matrix_letter, logger
-    ):
-        """Autoload helper.
-
-        :param resource_address: the address that we got from CS without changes!
-        :type resource_address: str
-        :type board_table: dict
-        :type port_table: w2w_rome.helpers.port_entity.PortTable
-        :type matrix_letter: str
-        :type logger: logging.Logger
-        """
+        self,
+        resource_address: str,
+        board_table: dict,
+        port_table: PortTable,
+        matrix_letter: str,
+    ) -> None:
+        """Autoload helper."""
         self.board_table = board_table
         self.port_table = port_table
         self.matrix_letter = matrix_letter
         self.resource_address = resource_address
-        self.logger = logger
 
-        self._chassis_id = "1"
-        self._chassis = None
+        self._chassis_id: str = "1"
+        self._chassis: Chassis | None = None
 
     @property
-    def chassis(self):
+    def chassis(self) -> Chassis:
         if self._chassis is not None:
             return self._chassis
 
@@ -45,23 +47,19 @@ class AutoloadHelper(object):
         self._chassis = chassis
         return chassis
 
-    def _build_blades(self, blade_name):
-        """Build blades.
-
-        :type blade_name: str
-        :rtype: list[Blade]
-        """
+    def _build_blades(self, blade_name: str) -> Generator:
+        """Build blades."""
         for name in tuple(blade_name):  # ('A',) or ('Q',) or ('X', 'Y')
-            blade_model = "Matrix " + name
+            blade_model = f"Matrix {name}"
             serial_number = "NA"
-            resource_model = "Rome Matrix {}".format(name)
+            resource_model = f"Rome Matrix {name}"
             blade = Blade(name.upper(), resource_model, serial_number)
             blade.set_model_name(blade_model)
             blade.set_serial_number(serial_number)
             blade.set_parent_resource(self.chassis)
             yield blade
 
-    def build_ports_and_blades(self):
+    def build_ports_and_blades(self) -> None:
         ports_dict = {}
         zfill_n = max(
             len(rlp.port_id)
@@ -76,7 +74,7 @@ class AutoloadHelper(object):
 
                 str_port_id = logical_port.port_id.zfill(zfill_n)
                 port = Port(str_port_id, "Generic L1 Port", "NA")
-                port.name = "Port {}{}".format(logical_port.blade_letter, str_port_id)
+                port.name = f"Port {logical_port.blade_letter}{str_port_id}"
                 port.set_model_name("Port Paired")
                 port.set_parent_resource(blade)
                 ports_dict[logical_port.name] = port
@@ -88,16 +86,16 @@ class AutoloadHelper(object):
                 other_port = ports_dict[connected_to_port.name]
                 other_port.add_mapping(port)
 
-    def build_structure(self):
+    def build_structure(self) -> Chassis:
         self._validate_port_table()
         self.build_ports_and_blades()
         return self.chassis
 
-    def _validate_port_table(self):
+    def _validate_port_table(self) -> None:
         for logical_port in self.port_table:
             if logical_port.blade_letter in self.matrix_letter:
                 break
         else:
             raise BaseRomeException(
-                "No '{}' ports found on the device".format(self.matrix_letter)
+                f"No '{self.matrix_letter}' ports found on the device"
             )

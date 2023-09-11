@@ -100,7 +100,7 @@ def test_sub_port_q(line):
     ),
 )
 def test_sub_port_p(line):
-    """P is Q128"""
+    """P is Q128."""
     ports = SubPort.parse_sub_ports(line, "")
 
     assert len(ports) == 1

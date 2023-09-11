@@ -1,18 +1,21 @@
-from multiprocessing.pool import ThreadPool
+from __future__ import annotations
 
+from multiprocessing.pool import ThreadPool
+from typing import TYPE_CHECKING, Callable
+
+from cloudshell.layer_one.core.helper.logger import get_l1_logger
 from w2w_rome.helpers.errors import GotErrorInThreads
 
+if TYPE_CHECKING:
+    from cloudshell.cli.service.cli_service_impl import CliServiceImpl
 
-def run_in_threads(func, logger, param_map):
-    """Run function in the threads.
+logger = get_l1_logger(name=__name__)
 
-    :type func: function
-    :type logger: logging.Logger
-    :param param_map: cli_service: [args_list, kwargs_dict]
-    :type param_map: dict[cloudshell.cli.cli_service_impl.CliServiceImpl, list[list, dict]]  # noqa: E501
-    :return: dict with cli_service: result
-    :rtype: dict[cloudshell.cli.cli_service_impl.CliServiceImpl, str]
-    """
+
+def run_in_threads(
+    func: Callable, param_map: dict[CliServiceImpl, list[tuple[list, dict]]]
+) -> dict[CliServiceImpl, str]:
+    """Run function in the threads."""
     pool = ThreadPool(processes=len(param_map))
     async_results = {
         cli_service: pool.apply_async(func, args=args, kwds=kwargs)
@@ -26,9 +29,7 @@ def run_in_threads(func, logger, param_map):
             results_map[cli_service] = async_result.get()
         except Exception as e:
             errors.append(e)
-            logger.exception(
-                "Got exception on the host {}".format(cli_service.session.host)
-            )
+            logger.exception(f"Got exception on the host {cli_service.session.host}")
 
     if errors:
         raise GotErrorInThreads("Got exception on the host, look in the logs")

@@ -1,6 +1,5 @@
 import re
-
-from mock import MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from w2w_rome.helpers.errors import (
     BaseRomeException,
@@ -38,37 +37,33 @@ ROME[TECH]# """
 
 
 def get_connection_pending(src_port, dst_port):
-    return """ROME[TECH]# 08-18-2019 12:37 CONNECTING...
+    return f"""ROME[TECH]# 08-18-2019 12:37 CONNECTING...
 connection show pending
 Connection execution status: delayed due to command in process
                              Perform "homing run"
 
 Command in process:
-connect, ports: {}-{}, status: in process with payload
+connect, ports: {src_port}-{dst_port}, status: in process with payload
 
 ======= ========= ========= ================== ======= ===================
 Request Port1     Port2     Command            Source  User
 ======= ========= ========= ================== ======= ===================
 
-ROME[TECH]# """.format(
-        src_port, dst_port
-    )
+ROME[TECH]# """
 
 
 def set_port_connected(sub_port_name, connected_to_sub_port_name, port_show_output):
     sub_port_match = re.search(
-        r"^{}\[.+$".format(sub_port_name), port_show_output, re.MULTILINE
+        rf"^{sub_port_name}\[.+$", port_show_output, re.MULTILINE
     )
     connected_sub_port_match = re.search(
-        r"^{}\[.+$".format(connected_to_sub_port_name), port_show_output, re.MULTILINE
+        rf"^{connected_to_sub_port_name}\[.+$", port_show_output, re.MULTILINE
     )
 
     if sub_port_match is None:
-        raise ValueError("Didn't find the sub port {}".format(sub_port_name))
+        raise ValueError(f"Didn't find the sub port {sub_port_name}")
     if connected_sub_port_match is None:
-        raise ValueError(
-            "Didn't find the sub port {}".format(connected_to_sub_port_name)
-        )
+        raise ValueError(f"Didn't find the sub port {connected_to_sub_port_name}")
 
     sub_port = SubPort.parse_sub_ports(sub_port_match.group(), "")[0]
     connected_sub_port = SubPort.parse_sub_ports(connected_sub_port_match.group(), "")[
@@ -94,16 +89,16 @@ def set_port_connected(sub_port_name, connected_to_sub_port_name, port_show_outp
 
 def set_port_disconnected(sub_port_name, port_show_output):
     sub_port_match = re.search(
-        r"^{}\[.+$".format(sub_port_name), port_show_output, re.MULTILINE
+        rf"^{sub_port_name}\[.+$", port_show_output, re.MULTILINE
     )
 
     if sub_port_match is None:
-        raise ValueError("Didn't find the sub port {}".format(sub_port_name))
+        raise ValueError(f"Didn't find the sub port {sub_port_name}")
 
     sub_port = SubPort.parse_sub_ports(sub_port_match.group(), "")[0]
 
     connected_sub_port_match = re.search(
-        r"^{}\[.+$".format(sub_port.connected_to_sub_port_name),
+        rf"^{sub_port.connected_to_sub_port_name}\[.+$",
         port_show_output,
         re.MULTILINE,
     )
@@ -136,11 +131,11 @@ def set_port_disconnected(sub_port_name, port_show_output):
 class RomeTestMapUni(BaseRomeTestCase):
     def test_map_uni_with_a_few_dst_ports(self):
         host = "192.168.122.10"
-        address = "{}:B".format(host)
+        address = f"{host}:B"
         user = "user"
         password = "password"
-        src_port = "{}/1/010".format(address)
-        dst_ports = ["{}/1/{}".format(address, port_num) for port_num in (12, 14, 16)]
+        src_port = f"{address}/1/010"
+        dst_ports = [f"{address}/1/{port_num}" for port_num in (12, 14, 16)]
 
         emu = CliEmulator()
         self.send_line_func_map[host] = emu.send_line
@@ -148,7 +143,7 @@ class RomeTestMapUni(BaseRomeTestCase):
 
         self.driver_commands.login(address, user, password)
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             BaseRomeException, r"(?i)is not allowed for multiple dst ports"
         ):
             self.driver_commands.map_uni(src_port, dst_ports)
@@ -157,11 +152,11 @@ class RomeTestMapUni(BaseRomeTestCase):
 
     def test_map_uni_with_connected_ports(self):
         host = "192.168.122.10"
-        address = "{}:A".format(host)
+        address = f"{host}:A"
         user = "user"
         password = "password"
-        src_port = "{}/1/001".format(address)
-        dst_ports = ["{}/1/002".format(address)]
+        src_port = f"{address}/1/001"
+        dst_ports = [f"{address}/1/002"]
 
         emu = CliEmulator(
             [Command("", DEFAULT_PROMPT), Command("port show", PORT_SHOW_MATRIX_A)]
@@ -176,11 +171,11 @@ class RomeTestMapUni(BaseRomeTestCase):
 
     def test_map_uni(self):
         host = "192.168.122.10"
-        address = "{}:A".format(host)
+        address = f"{host}:A"
         user = "user"
         password = "password"
-        src_port = "{}/1/003".format(address)
-        dst_ports = ["{}/1/004".format(address)]
+        src_port = f"{address}/1/003"
+        dst_ports = [f"{address}/1/004"]
         self.driver_commands._mapping_check_delay = 0.1
 
         connected_port_show_a = set_port_connected("E3", "W4", PORT_SHOW_MATRIX_A)
@@ -211,11 +206,11 @@ ROME[TECH]# 08-05-2019 09:20 CONNECTING...
 
     def test_map_uni_changed_ports(self):
         host = "192.168.122.10"
-        address = "{}:B".format(host)
+        address = f"{host}:B"
         user = "user"
         password = "password"
-        src_port = "{}/1/135".format(address)
-        dst_ports = ["{}/1/255".format(address)]
+        src_port = f"{address}/1/135"
+        dst_ports = [f"{address}/1/255"]
         self.driver_commands._mapping_check_delay = 0.1
 
         connected_port_show_a = set_port_connected(
@@ -248,11 +243,11 @@ ROME[TECH]# 08-05-2019 09:20 CONNECTING...
 
     def test_map_uni_a_few_checks(self):
         host = "192.168.122.10"
-        address = "{}:A".format(host)
+        address = f"{host}:A"
         user = "user"
         password = "password"
-        src_port = "{}/1/003".format(address)
-        dst_ports = ["{}/1/004".format(address)]
+        src_port = f"{address}/1/003"
+        dst_ports = [f"{address}/1/004"]
 
         self.driver_commands._mapping_check_delay = 0.1
 
@@ -283,11 +278,11 @@ ROME[TECH]# 08-05-2019 09:20 CONNECTING...
 
     def test_map_uni_failed(self):
         host = "192.168.122.10"
-        address = "{}:A".format(host)
+        address = f"{host}:A"
         user = "user"
         password = "password"
-        src_port = "{}/1/006".format(address)
-        dst_ports = ["{}/1/004".format(address)]
+        src_port = f"{address}/1/006"
+        dst_ports = [f"{address}/1/004"]
 
         self.driver_commands._mapping_timeout = 0.1
         self.driver_commands._mapping_check_delay = 0.1
@@ -316,7 +311,7 @@ ROME[TECH]#
 
         self.driver_commands.login(address, user, password)
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             ConnectionPortsError, "Cannot connect port A6 to port A4"
         ):
             self.driver_commands.map_uni(src_port, dst_ports)
@@ -325,11 +320,11 @@ ROME[TECH]#
 
     def test_map_uni_for_matrix_q(self):
         host = "192.168.122.10"
-        address = "{}:Q".format(host)
+        address = f"{host}:Q"
         user = "user"
         password = "password"
-        src_port = "{}/1/03".format(address)
-        dst_ports = ["{}/1/04".format(address)]
+        src_port = f"{address}/1/03"
+        dst_ports = [f"{address}/1/04"]
 
         emu = CliEmulator()
         self.send_line_func_map[host] = emu.send_line
@@ -337,7 +332,7 @@ ROME[TECH]#
 
         self.driver_commands.login(address, user, password)
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             NotSupportedError, "MapUni for matrix Q doesn't supported"
         ):
             self.driver_commands.map_uni(src_port, dst_ports)
@@ -346,11 +341,11 @@ ROME[TECH]#
 
     def test_map_uni_for_matrix_xy(self):
         host = "192.168.122.10"
-        address = "{}:XY".format(host)
+        address = f"{host}:XY"
         user = "user"
         password = "password"
-        src_port = "{}/Y/011".format(address)
-        dst_ports = ["{}/X/014".format(address)]
+        src_port = f"{address}/Y/011"
+        dst_ports = [f"{address}/X/014"]
         self.driver_commands._mapping_check_delay = 0.1
 
         connected_port_show_a = set_port_connected("E11", "W14", PORT_SHOW_MATRIX_XY)
@@ -388,11 +383,11 @@ ROME[TECH]# 08-05-2019 09:20 CONNECTING...
 class RomeTestMapBidi(BaseRomeTestCase):
     def test_map_bidi_with_connected_ports(self):
         host = "192.168.122.10"
-        address = "{}:B".format(host)
+        address = f"{host}:B"
         user = "user"
         password = "password"
-        src_port = "{}/1/249".format(address)
-        dst_port = "{}/1/253".format(address)
+        src_port = f"{address}/1/249"
+        dst_port = f"{address}/1/253"
 
         emu = CliEmulator(
             [Command("", DEFAULT_PROMPT), Command("port show", PORT_SHOW_MATRIX_B)]
@@ -407,11 +402,11 @@ class RomeTestMapBidi(BaseRomeTestCase):
 
     def test_map_bidi_one_connection(self):
         host = "192.168.122.10"
-        address = "{}:A".format(host)
+        address = f"{host}:A"
         user = "user"
         password = "password"
-        src_port = "{}/1/001".format(address)
-        dst_port = "{}/1/002".format(address)
+        src_port = f"{address}/1/001"
+        dst_port = f"{address}/1/002"
         self.driver_commands._mapping_check_delay = 0.1
 
         connected_port_show_a = set_port_connected("E2", "W1", PORT_SHOW_MATRIX_A)
@@ -443,11 +438,11 @@ ROME[TECH]# 08-06-2019 09:01 CONNECTING...
 
     def test_map_bidi(self):
         host = "192.168.122.10"
-        address = "{}:A".format(host)
+        address = f"{host}:A"
         user = "user"
         password = "password"
-        src_port = "{}/1/003".format(address)
-        dst_port = "{}/1/004".format(address)
+        src_port = f"{address}/1/003"
+        dst_port = f"{address}/1/004"
         self.driver_commands._mapping_check_delay = 0.1
 
         connected_port_show_a = set_port_connected("E3", "W4", PORT_SHOW_MATRIX_A)
@@ -480,11 +475,11 @@ ROME[TECH]# 08-06-2019 09:01 CONNECTING...
 
     def test_map_bidi_failed(self):
         host = "192.168.122.10"
-        address = "{}:A".format(host)
+        address = f"{host}:A"
         user = "user"
         password = "password"
-        src_port = "{}/1/003".format(address)
-        dst_port = "{}/1/004".format(address)
+        src_port = f"{address}/1/003"
+        dst_port = f"{address}/1/004"
         self.driver_commands._mapping_check_delay = 0.1
 
         connected_port_show_a = set_port_connected("E3", "W4", PORT_SHOW_MATRIX_A)
@@ -519,7 +514,7 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 
         self.driver_commands.login(address, user, password)
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             ConnectionPortsError, "Cannot connect port A3 to port A4"
         ):
             self.driver_commands.map_bidi(src_port, dst_port)
@@ -528,11 +523,11 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 
     def test_map_bidi_a_few_checks(self):
         host = "192.168.122.10"
-        address = "{}:A".format(host)
+        address = f"{host}:A"
         user = "user"
         password = "password"
-        src_port = "{}/1/003".format(address)
-        dst_port = "{}/1/004".format(address)
+        src_port = f"{address}/1/003"
+        dst_port = f"{address}/1/004"
 
         self.driver_commands._mapping_check_delay = 0.1
 
@@ -570,11 +565,11 @@ ROME[TECH]# 08-06-2019 09:01 CONNECTING...
 
     def test_map_bidi_q_ports(self):
         host = "192.168.122.10"
-        address = "{}:Q".format(host)
+        address = f"{host}:Q"
         user = "user"
         password = "password"
-        src_port = "{}/1/003".format(address)
-        dst_port = "{}/1/004".format(address)
+        src_port = f"{address}/1/003"
+        dst_port = f"{address}/1/004"
         self.driver_commands._mapping_check_delay = 0.1
 
         connected_port_show = set_port_connected("E5", "W8", PORT_SHOW_MATRIX_Q)
@@ -620,11 +615,11 @@ ROME[TECH]# 08-06-2019 09:01 CONNECTING...
     def test_map_bidi_q128_ports(self):
         first_host = "192.168.122.10"
         second_host = "192.168.122.11"
-        address = "{}:{}:Q".format(first_host, second_host)
+        address = f"{first_host}:{second_host}:Q"
         user = "user"
         password = "password"
-        src_port = "{}/1/003".format(address)
-        dst_port = "{}/1/004".format(address)
+        src_port = f"{address}/1/003"
+        dst_port = f"{address}/1/004"
         self.driver_commands._mapping_check_delay = 0.1
 
         port_show_q1 = set_port_connected("E3", "W4", PORT_SHOW_MATRIX_Q128_1)
@@ -694,11 +689,11 @@ ROME[TECH]# 08-06-2019 09:01 CONNECTING...
     def test_map_bidi_q128_failed(self):
         first_host = "192.168.122.10"
         second_host = "192.168.122.11"
-        address = "{}:{}:Q".format(first_host, second_host)
+        address = f"{first_host}:{second_host}:Q"
         user = "user"
         password = "password"
-        src_port = "{}/1/003".format(address)
-        dst_port = "{}/1/004".format(address)
+        src_port = f"{address}/1/003"
+        dst_port = f"{address}/1/004"
         self.driver_commands._mapping_check_delay = 0.1
 
         port_show_q1 = set_port_connected("E3", "W4", PORT_SHOW_MATRIX_Q128_1)
@@ -759,7 +754,7 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
         with self.patch_sessions():
             self.driver_commands.login(address, user, password)
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             ConnectionPortsError, "Cannot connect port P3 to port P4"
         ):
             self.driver_commands.map_bidi(src_port, dst_port)
@@ -769,11 +764,11 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 
     def test_map_bidi_xy(self):
         host = "192.168.122.10"
-        address = "{}:XY".format(host)
+        address = f"{host}:XY"
         user = "user"
         password = "password"
-        src_port = "{}/Y/013".format(address)
-        dst_port = "{}/X/014".format(address)
+        src_port = f"{address}/Y/013"
+        dst_port = f"{address}/X/014"
         self.driver_commands._mapping_check_delay = 0.1
 
         connected_port_show_xy = set_port_connected("E13", "W14", PORT_SHOW_MATRIX_XY)
@@ -815,10 +810,10 @@ ROME[TECH]# 08-06-2019 09:01 CONNECTING...
 class RomeTestMapClear(BaseRomeTestCase):
     def test_map_clear_matrix_b(self):
         host = "192.168.122.10"
-        address = "{}:B".format(host)
+        address = f"{host}:B"
         user = "user"
         password = "password"
-        ports = ["{}/1/{}".format(address, port_id) for port_id in (249, 218, 246)]
+        ports = [f"{address}/1/{port_id}" for port_id in (249, 218, 246)]
         self.driver_commands._mapping_check_delay = 0.1
 
         disconnected_port_show_b = set_port_disconnected("E246", PORT_SHOW_MATRIX_B)
@@ -870,10 +865,10 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 
     def test_map_clear_matrix_b_a_few_checks(self):
         host = "192.168.122.10"
-        address = "{}:B".format(host)
+        address = f"{host}:B"
         user = "user"
         password = "password"
-        ports = ["{}/1/{}".format(address, port_id) for port_id in (249, 218, 246)]
+        ports = [f"{address}/1/{port_id}" for port_id in (249, 218, 246)]
         self.driver_commands._mapping_check_delay = 0.1
 
         disconnected_port_show_b = set_port_disconnected("E246", PORT_SHOW_MATRIX_B)
@@ -931,10 +926,10 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 
     def test_map_clear_matrix_q(self):
         host = "192.168.122.10"
-        address = "{}:Q".format(host)
+        address = f"{host}:Q"
         user = "user"
         password = "password"
-        ports = ["{}/1/1".format(address)]
+        ports = [f"{address}/1/1"]
         self.driver_commands._mapping_check_delay = 0.1
 
         disconnected_ports_show = set_port_disconnected("E1", PORT_SHOW_MATRIX_Q)
@@ -1028,10 +1023,10 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
     def test_map_clear_matrix_q128(self):
         first_host = "192.168.122.10"
         second_host = "192.168.122.11"
-        address = "{}:{}:Q".format(first_host, second_host)
+        address = f"{first_host}:{second_host}:Q"
         user = "user"
         password = "password"
-        ports = ["{}/1/1".format(address)]
+        ports = [f"{address}/1/1"]
         self.driver_commands._mapping_check_delay = 0.1
 
         ports_show_1 = set_port_disconnected("E1", PORT_SHOW_MATRIX_Q128_1)
@@ -1142,10 +1137,10 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
     def test_map_clear_matrix_q128_changed_port(self):
         first_host = "192.168.122.10"
         second_host = "192.168.122.11"
-        address = "{}:{}:Q".format(first_host, second_host)
+        address = f"{first_host}:{second_host}:Q"
         user = "user"
         password = "password"
-        ports = ["{}/1/1".format(address)]
+        ports = [f"{address}/1/1"]
         self.driver_commands._mapping_check_delay = 0.1
 
         ports_show_1 = set_port_disconnected("E1", PORT_SHOW_MATRIX_Q128_1)
@@ -1255,7 +1250,7 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 
     def test_map_clear_matrix_xy(self):
         host = "192.168.122.10"
-        address = "{}:XY".format(host)
+        address = f"{host}:XY"
         user = "user"
         password = "password"
         ports = [p.format(address) for p in ("{}/Y/001", "{}/X/007")]
@@ -1310,10 +1305,10 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 
     def test_map_clear_matrix_xy_changed_port(self):
         host = "192.168.122.10"
-        address = "{}:XY".format(host)
+        address = f"{host}:XY"
         user = "user"
         password = "password"
-        ports = ["{}/Y/002".format(address)]
+        ports = [f"{address}/Y/002"]
         self.driver_commands._mapping_check_delay = 0.1
 
         disconnected_port_show_xy = set_port_disconnected(
@@ -1363,11 +1358,11 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 class RomeTestMapClearTo(BaseRomeTestCase):
     def test_map_clear_to_matrix_b(self):
         host = "192.168.122.10"
-        address = "{}:B".format(host)
+        address = f"{host}:B"
         user = "user"
         password = "password"
-        src_port = "{}/1/249".format(address)
-        dst_ports = ["{}/1/253".format(address)]
+        src_port = f"{address}/1/249"
+        dst_ports = [f"{address}/1/253"]
         self.driver_commands._mapping_check_delay = 0.1
 
         disconnected_port_show_b = set_port_disconnected("E249", PORT_SHOW_MATRIX_B)
@@ -1400,11 +1395,11 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 
     def test_map_clear_to_matrix_b_a_few_checks(self):
         host = "192.168.122.10"
-        address = "{}:B".format(host)
+        address = f"{host}:B"
         user = "user"
         password = "password"
-        src_port = "{}/1/249".format(address)
-        dst_ports = ["{}/1/253".format(address)]
+        src_port = f"{address}/1/249"
+        dst_ports = [f"{address}/1/253"]
 
         self.driver_commands._mapping_check_delay = 0.1
 
@@ -1441,11 +1436,11 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 
     def test_map_clear_to_matrix_q(self):
         host = "192.168.122.10"
-        address = "{}:Q".format(host)
+        address = f"{host}:Q"
         user = "user"
         password = "password"
-        src_port = "{}/1/1".format(address)
-        dst_ports = ["{}/1/2".format(address)]
+        src_port = f"{address}/1/1"
+        dst_ports = [f"{address}/1/2"]
         self.driver_commands._mapping_check_delay = 0.1
 
         disconnected_ports_show = set_port_disconnected("E1", PORT_SHOW_MATRIX_Q)
@@ -1503,11 +1498,11 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
     def test_map_clear_to_matrix_q_128(self):
         first_host = "192.168.122.10"
         second_host = "192.168.122.11"
-        address = "{}:{}:Q".format(first_host, second_host)
+        address = f"{first_host}:{second_host}:Q"
         user = "user"
         password = "password"
-        src_port = "{}/1/1".format(address)
-        dst_ports = ["{}/1/2".format(address)]
+        src_port = f"{address}/1/1"
+        dst_ports = [f"{address}/1/2"]
         self.driver_commands._mapping_check_delay = 0.1
 
         ports_show_1 = set_port_disconnected("E1", PORT_SHOW_MATRIX_Q128_1)
@@ -1581,11 +1576,11 @@ ROME[TECH]# 08-05-2019 12:19 DISCONNECTING...
 
     def test_map_clear_to_matrix_xy(self):
         host = "192.168.122.10"
-        address = "{}:XY".format(host)
+        address = f"{host}:XY"
         user = "user"
         password = "password"
-        src_port = "{}/Y/1".format(address)
-        dst_ports = ["{}/X/1".format(address)]
+        src_port = f"{address}/Y/1"
+        dst_ports = [f"{address}/X/1"]
         self.driver_commands._mapping_check_delay = 0.1
 
         disconnected_port_show_xy = set_port_disconnected("E1", PORT_SHOW_MATRIX_XY)

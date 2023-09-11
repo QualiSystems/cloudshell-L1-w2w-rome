@@ -1,6 +1,5 @@
 from unittest import TestCase
-
-from mock import Mock, call, patch
+from unittest.mock import Mock, call, patch
 
 from main import Main
 
@@ -113,7 +112,7 @@ class TestMain(TestCase):
         )
         command_logger.setLevel.assert_called_once_with(log_level)
         importlib_mod.import_module.assert_called_once_with(
-            "{}.driver_commands".format(driver_name), package=None
+            f"{driver_name}.driver_commands", package=None
         )
         driver_commands_mod.DriverCommands.assert_called_once_with(
             command_logger, runtime_config_instance

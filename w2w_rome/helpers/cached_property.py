@@ -1,4 +1,4 @@
-class cached_property(object):
+class cached_property:
     """A property that is only computed once per instance.
 
     Then replaces itself with an ordinary attribute.

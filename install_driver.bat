@@ -16,7 +16,7 @@ if exist %LIB_FOLDER% rd /s /q %LIB_FOLDER%
 if exist %SCRIPTS_FOLDER% rd /s /q %SCRIPTS_FOLDER%
 if exist %TCL_FOLDER% rd /s /q %TCL_FOLDER%
 
-set QS_PYTHON_REGEXP="^2.*"
+set QS_PYTHON_REGEXP="^3.*"
 set QS_PYTHON=%1
 
 if not defined QS_PYTHON (

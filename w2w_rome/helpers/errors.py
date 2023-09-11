@@ -1,4 +1,4 @@
-class BaseRomeException(Exception):
+class BaseRomeException(Exception):  # noqa: N818
     pass
 
 
@@ -11,7 +11,7 @@ class ConnectedToDifferentPortsError(BaseRomeException):
 
 
 class NotSupportedError(BaseRomeException):
-    """This function doesn't supported."""
+    """Function doesn't supported."""
 
 
 class GotErrorInThreads(BaseRomeException):

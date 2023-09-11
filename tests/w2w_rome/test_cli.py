@@ -1,4 +1,4 @@
-from mock import MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from w2w_rome.cli.template_executor import RomeTemplateExecutor
 from w2w_rome.helpers.port_entity import PortTable

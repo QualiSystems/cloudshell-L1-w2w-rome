@@ -1,10 +1,9 @@
 from itertools import chain
+from unittest.mock import MagicMock, patch
 
 from cloudshell.layer_one.core.response.resource_info.entities.blade import Blade
 from cloudshell.layer_one.core.response.resource_info.entities.chassis import Chassis
 from cloudshell.layer_one.core.response.resource_info.entities.port import Port
-from mock import MagicMock, patch
-
 from w2w_rome.helpers.errors import BaseRomeException
 
 from tests.w2w_rome.base import (
@@ -36,8 +35,8 @@ from tests.w2w_rome.base import (
 class RomeTestAutoload(BaseRomeTestCase):
     def test_autoload_without_matrix_letter(self):
         host = "192.168.122.10"
-        address = "{}".format(host)
-        with self.assertRaisesRegexp(
+        address = f"{host}"
+        with self.assertRaisesRegex(
             BaseRomeException,
             r"Resource address should specify MatrixA, MatrixB, MatrixQ or MatrixXY",
         ):
@@ -45,7 +44,7 @@ class RomeTestAutoload(BaseRomeTestCase):
 
     def test_autoload_matrix_b(self):
         host = "192.168.122.10"
-        address = "{}:B".format(host)
+        address = f"{host}:B"
         user = "user"
         password = "password"
         expected_ports_str_range = [str(i).zfill(3) for i in range(129, 257)]
@@ -99,7 +98,7 @@ class RomeTestAutoload(BaseRomeTestCase):
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual("Port B{}".format(port.resource_id), port.name)
+            self.assertEqual(f"Port B{port.resource_id}", port.name)
             if port.mapping:
                 connected_ports.append(port)
 
@@ -117,7 +116,7 @@ class RomeTestAutoload(BaseRomeTestCase):
 
     def test_autoload_matrix_a(self):
         host = "192.168.122.10"
-        address = "{}:A".format(host)
+        address = f"{host}:A"
         user = "user"
         password = "password"
         expected_ports_str_range = [str(i).zfill(3) for i in range(1, 129)]
@@ -171,7 +170,7 @@ class RomeTestAutoload(BaseRomeTestCase):
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual("Port A{}".format(port.resource_id), port.name)
+            self.assertEqual(f"Port A{port.resource_id}", port.name)
             if port.mapping:
                 connected_ports.append(port)
 
@@ -185,7 +184,7 @@ class RomeTestAutoload(BaseRomeTestCase):
 
     def test_autoload_matrix_a_changed_port(self):
         host = "192.168.122.10"
-        address = "{}:A".format(host)
+        address = f"{host}:A"
         user = "user"
         password = "password"
         expected_ports_str_range = [str(i).zfill(3) for i in range(1, 129)]
@@ -239,7 +238,7 @@ class RomeTestAutoload(BaseRomeTestCase):
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual("Port A{}".format(port.resource_id), port.name)
+            self.assertEqual(f"Port A{port.resource_id}", port.name)
             if port.mapping:
                 connected_ports.append(port)
 
@@ -253,7 +252,7 @@ class RomeTestAutoload(BaseRomeTestCase):
 
     def test_autoload_matrix_q(self):
         host = "192.168.122.10"
-        address = "{}:Q".format(host)
+        address = f"{host}:Q"
         user = "user"
         password = "password"
         expected_ports_str_range = [str(i).zfill(2) for i in range(1, 65)]
@@ -307,7 +306,7 @@ class RomeTestAutoload(BaseRomeTestCase):
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual("Port Q{}".format(port.resource_id), port.name)
+            self.assertEqual(f"Port Q{port.resource_id}", port.name)
             if port.mapping:
                 connected_ports.append(port)
 
@@ -321,7 +320,7 @@ class RomeTestAutoload(BaseRomeTestCase):
 
     def test_autoload_matrix_q_broken_table_output(self):
         host = "192.168.122.10"
-        address = "{}:Q".format(host)
+        address = f"{host}:Q"
         user = "user"
         password = "password"
         expected_ports_str_range = [str(i).zfill(2) for i in range(1, 65)]
@@ -372,7 +371,7 @@ class RomeTestAutoload(BaseRomeTestCase):
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual("Port Q{}".format(port.resource_id), port.name)
+            self.assertEqual(f"Port Q{port.resource_id}", port.name)
             if port.mapping:
                 connected_ports.append(port)
 
@@ -457,7 +456,7 @@ class RomeTestAutoload(BaseRomeTestCase):
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual("Port Q{}".format(port.resource_id), port.name)
+            self.assertEqual(f"Port Q{port.resource_id}", port.name)
             if port.mapping:
                 connected_ports.append(port)
 
@@ -543,7 +542,7 @@ class RomeTestAutoload(BaseRomeTestCase):
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual("Port Q{}".format(port.resource_id), port.name)
+            self.assertEqual(f"Port Q{port.resource_id}", port.name)
             if port.mapping:
                 connected_ports.append(port)
 
@@ -558,7 +557,7 @@ class RomeTestAutoload(BaseRomeTestCase):
 
     def test_autoload_matrix_xy(self):
         host = "192.168.122.10"
-        address = "{}:XY".format(host)
+        address = f"{host}:XY"
         user = "user"
         password = "password"
         expected_ports_str_range = [str(i).zfill(3) for i in range(1, 129)]
@@ -638,9 +637,7 @@ class RomeTestAutoload(BaseRomeTestCase):
             self.assertIsInstance(port, Port)
             blade_letter = port.name.split(" ", 1)[1][0]
             self.assertIn(blade_letter, "XY")
-            self.assertEqual(
-                "Port {}{}".format(blade_letter, port.resource_id), port.name
-            )
+            self.assertEqual(f"Port {blade_letter}{port.resource_id}", port.name)
             if port.mapping:
                 connected_ports.append(port)
 
@@ -662,7 +659,7 @@ class RomeTestAutoload(BaseRomeTestCase):
 
     def test_autoload_matrix_xy_changed_port(self):
         host = "192.168.122.10"
-        address = "{}:XY".format(host)
+        address = f"{host}:XY"
         user = "user"
         password = "password"
         expected_ports_str_range = [str(i).zfill(3) for i in range(1, 129)]
@@ -742,9 +739,7 @@ class RomeTestAutoload(BaseRomeTestCase):
             self.assertIsInstance(port, Port)
             blade_letter = port.name.split(" ", 1)[1][0]
             self.assertIn(blade_letter, "XY")
-            self.assertEqual(
-                "Port {}{}".format(blade_letter, port.resource_id), port.name
-            )
+            self.assertEqual(f"Port {blade_letter}{port.resource_id}", port.name)
             if port.mapping:
                 connected_ports.append(port)
 
@@ -766,7 +761,7 @@ class RomeTestAutoload(BaseRomeTestCase):
 
     def test_autoload_matrix_load_a_from_mix_a_and_q(self):
         host = "192.168.122.10"
-        address = "{}:A".format(host)
+        address = f"{host}:A"
         user = "user"
         password = "password"
         expected_ports_str_range = [str(i).zfill(3) for i in range(1, 129)]
@@ -820,7 +815,7 @@ class RomeTestAutoload(BaseRomeTestCase):
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual("Port A{}".format(port.resource_id), port.name)
+            self.assertEqual(f"Port A{port.resource_id}", port.name)
             if port.mapping:
                 connected_ports.append(port)
 
@@ -841,7 +836,7 @@ class RomeTestAutoload(BaseRomeTestCase):
 
     def test_autoload_matrix_load_q_from_mix_a_and_q(self):
         host = "192.168.122.10"
-        address = "{}:Q".format(host)
+        address = f"{host}:Q"
         user = "user"
         password = "password"
         expected_ports_str_range = [str(i).zfill(2) for i in range(1, 33)]
@@ -895,7 +890,7 @@ class RomeTestAutoload(BaseRomeTestCase):
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual("Port Q{}".format(port.resource_id), port.name)
+            self.assertEqual(f"Port Q{port.resource_id}", port.name)
             if port.mapping:
                 connected_ports.append(port)
 
@@ -912,7 +907,7 @@ class RomeTestAutoload(BaseRomeTestCase):
 
     def test_autoload_matrix_load_b_from_mix_q_and_b(self):
         host = "192.168.122.10"
-        address = "{}:B".format(host)
+        address = f"{host}:B"
         user = "user"
         password = "password"
         expected_ports_str_range = [str(i).zfill(3) for i in range(1, 129)]
@@ -966,7 +961,7 @@ class RomeTestAutoload(BaseRomeTestCase):
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual("Port B{}".format(port.resource_id), port.name)
+            self.assertEqual(f"Port B{port.resource_id}", port.name)
             if port.mapping:
                 connected_ports.append(port)
 
@@ -989,7 +984,7 @@ class RomeTestAutoload(BaseRomeTestCase):
 
     def test_autoload_matrix_load_q_from_mix_q_and_b(self):
         host = "192.168.122.10"
-        address = "{}:Q".format(host)
+        address = f"{host}:Q"
         user = "user"
         password = "password"
         expected_ports_str_range = [str(i).zfill(2) for i in range(1, 33)]
@@ -1043,7 +1038,7 @@ class RomeTestAutoload(BaseRomeTestCase):
         connected_ports = []
         for port_id, port in blade.child_resources.items():
             self.assertIsInstance(port, Port)
-            self.assertEqual("Port Q{}".format(port.resource_id), port.name)
+            self.assertEqual(f"Port Q{port.resource_id}", port.name)
             if port.mapping:
                 connected_ports.append(port)
 
@@ -1060,7 +1055,7 @@ class RomeTestAutoload(BaseRomeTestCase):
 
     def test_autoload_matrix_q_choosed_another_matrix(self):
         host = "192.168.122.10"
-        address = "{}:A".format(host)
+        address = f"{host}:A"
         user = "user"
         password = "password"
 
@@ -1078,7 +1073,7 @@ class RomeTestAutoload(BaseRomeTestCase):
         self.receive_all_func_map[host] = emu.receive_all
 
         self.driver_commands.login(address, user, password)
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             BaseRomeException, r"No 'A' ports found on the device"
         ):
             self.driver_commands.get_resource_description(address)

@@ -1,4 +1,8 @@
+from __future__ import annotations
+
+import functools
 import re
+from typing import TYPE_CHECKING
 
 import w2w_rome.command_templates.system as command_template
 from w2w_rome.cli.template_executor import (
@@ -7,47 +11,40 @@ from w2w_rome.cli.template_executor import (
 from w2w_rome.helpers.port_entity import PortTable
 from w2w_rome.helpers.run_in_threads import run_in_threads
 
+if TYPE_CHECKING:
+    from cloudshell.cli.service.cli_service import CliService
 
-class SystemActions(object):
-    def __init__(self, cli_services, logger):
-        """Autoload actions.
 
-        :param cli_services: default mode cli_services
-        :type cli_services: list[cloudshell.cli.cli_service_impl.CliServiceImpl]
-        :type logger: logging.Logger
-        """
+class SystemActions:
+    def __init__(self, cli_services: list[CliService]) -> None:
+        """System actions."""
         self._cli_services = cli_services
-        self._logger = logger
-        self._is_run_in_parallel = len(cli_services) > 1
+        self._is_run_in_parallel: bool = len(cli_services) > 1
 
     @staticmethod
-    def _get_port_table(cli_service):
+    def _get_port_table(cli_service: CliService) -> PortTable:
         port_table_output = CommandTemplateExecutor(
             cli_service, command_template.PORT_SHOW
         ).execute_command()
         return PortTable.from_output(port_table_output, cli_service.session.host)
 
-    def get_port_table(self):
-        """Get port table from hosts and concatenating it.
-
-        :rtype: PortTable
-        """
+    def get_port_table(self) -> PortTable:
+        """Get port table from hosts and concatenating it."""
         if not self._is_run_in_parallel:
             port_table = self._get_port_table(self._cli_services[0])
         else:
             param_map = {
                 cli_service: [[cli_service], {}] for cli_service in self._cli_services
             }
-            results_map = run_in_threads(self._get_port_table, self._logger, param_map)
-            port_table = reduce(PortTable.__add__, results_map.values())  # noqa: F821
+            results_map = run_in_threads(self._get_port_table, param_map)
+            port_table = functools.reduce(
+                PortTable.__add__, results_map.values()
+            )  # noqa: F821
         return port_table
 
     @staticmethod
-    def _board_table(cli_service):
-        """Get board table.
-
-        :rtype: dict
-        """
+    def _board_table(cli_service: CliService) -> dict[str, str]:
+        """Get board table."""
         board_table = {}
         output = CommandTemplateExecutor(
             cli_service, command_template.SHOW_BOARD
@@ -72,12 +69,8 @@ class SystemActions(object):
 
         return board_table
 
-    def get_board_tables_map(self):
-        """Get board tables from hosts.
-
-        :return: dict[cli_service, dict with board table info[
-        :rtype: dict[cloudshell.cli.cli_service_impl.CliServiceImpl, dict]
-        """
+    def get_board_tables_map(self) -> dict[CliService, dict[str, str]]:
+        """Get board tables from hosts."""
         if not self._is_run_in_parallel:
             results_map = {
                 self._cli_services[0]: self._board_table(self._cli_services[0])
@@ -86,5 +79,5 @@ class SystemActions(object):
             param_map = {
                 cli_service: [[cli_service], {}] for cli_service in self._cli_services
             }
-            results_map = run_in_threads(self._board_table, self._logger, param_map)
+            results_map = run_in_threads(self._board_table, param_map)
         return results_map

@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import re
 import time
 from collections import defaultdict
+from typing import TYPE_CHECKING
 
 import w2w_rome.command_templates.mapping as command_template
 from w2w_rome.cli.template_executor import (
@@ -9,18 +12,18 @@ from w2w_rome.cli.template_executor import (
 from w2w_rome.helpers.errors import BaseRomeException, NotSupportedError
 from w2w_rome.helpers.run_in_threads import run_in_threads
 
+if TYPE_CHECKING:
+    from cloudshell.cli.service.cli_service import CliService
+    from cloudshell.cli.session.expect_session import ExpectSession
+    from w2w_rome.helpers.port_entity import LogicalPort
 
-def reset_connection_pending(session, logger):
-    """Reset connection pending.
 
-    :type session: cloudshell.cli.session.expect_session.ExpectSession
-    :type logger: logging.Logger
-    """
-    session.hardware_expect("homing run", r"(?i)RECOVERY FINISHED SUCCESSFULLY", logger)
+def reset_connection_pending(session: ExpectSession) -> None:
+    """Reset connection pending."""
+    session.hardware_expect("homing run", r"(?i)RECOVERY FINISHED SUCCESSFULLY")
     session.hardware_expect(
         "connection set command-execution enable",
         r"connection execution is enabled",
-        logger,
     )
     raise BaseRomeException(
         "Multiple Cross Connect Severe Failure. Problem with a connection. "
@@ -28,17 +31,18 @@ def reset_connection_pending(session, logger):
     )
 
 
-class MappingActions(object):
+class MappingActions:
     CONNECTION_PENDING_RESET_MAP = {
         "(?i)Multiple Cross Connect Severe Failure": reset_connection_pending,
     }
 
-    def __init__(self, cli_services, logger, mapping_timeout, mapping_check_delay):
+    def __init__(
+        self, cli_services: list[CliService], mapping_timeout, mapping_check_delay
+    ) -> None:
         """Mapping actions.
 
         :param cli_services: default mode cli_services
         :type cli_services: list[cloudshell.cli.cli_service_impl.CliServiceImpl]
-        :type logger: logging.Logger
         :type mapping_timeout: int
         :type mapping_check_delay: int
         """
@@ -46,25 +50,19 @@ class MappingActions(object):
         self._mapping_timeout = mapping_timeout
         self._cli_services = cli_services
         self._cli_services_map = {cli.session.host: cli for cli in cli_services}
-        self._logger = logger
         self._is_run_in_parallel = len(cli_services) > 1
 
-    def check_full_output(self, cli_service):
+    def check_full_output(self, cli_service: CliService) -> None:
         for key, action in self.CONNECTION_PENDING_RESET_MAP.items():
             if re.search(key, cli_service.session.full_buffer):
-                action(cli_service.session, self._logger)
+                action(cli_service.session)
 
         cli_service.session.full_buffer = ""
 
-    def _connect(self, cli_service, src_port_name, dst_port_name):
-        """Connect ports by name.
-
-        :type cli_service: cloudshell.cli.cli_service_impl.CliServiceImpl
-        :type src_port_name: str
-        :type dst_port_name: str
-        :return: output
-        :rtype: str
-        """
+    def _connect(
+        self, cli_service: CliService, src_port_name: str, dst_port_name: str
+    ) -> str:
+        """Connect ports by name."""
         return CommandTemplateExecutor(
             cli_service,
             command_template.CONNECT,
@@ -72,15 +70,13 @@ class MappingActions(object):
         ).execute_command(src_port=src_port_name, dst_port=dst_port_name)
 
     def _connect_and_wait(
-        self, cli_service, src_port_name, dst_port_name, num_ports_to_connect
-    ):
-        """Connect multiple ports.
-
-        :type cli_service: cloudshell.cli.cli_service_impl.CliServiceImpl
-        :type src_port_name: str
-        :type dst_port_name: str
-        :type num_ports_to_connect: int
-        """
+        self,
+        cli_service: CliService,
+        src_port_name: str,
+        dst_port_name: str,
+        num_ports_to_connect: int,
+    ) -> None:
+        """Connect multiple ports."""
         self._connect(cli_service, src_port_name, dst_port_name)
         self.wait_ports_not_in_pending_connections(
             cli_service,
@@ -88,13 +84,13 @@ class MappingActions(object):
             num_ports_to_connect,
         )
 
-    def connect(self, src_logic_port, dst_logic_port, bidi=True):
-        """Connect logical ports.
-
-        :type src_logic_port: w2w_rome.helpers.port_entity.LogicalPort
-        :type dst_logic_port: w2w_rome.helpers.port_entity.LogicalPort
-        :type bidi: bool
-        """
+    def connect(
+        self,
+        src_logic_port: LogicalPort,
+        dst_logic_port: LogicalPort,
+        bidi: bool = True,
+    ) -> None:
+        """Connect logical ports."""
         if not bidi:
             if src_logic_port.is_q_port:
                 raise NotSupportedError("Uni connections not supported for Q ports")
@@ -124,17 +120,10 @@ class MappingActions(object):
             args, kwargs = params
             self._connect_and_wait(*args, **kwargs)
         else:
-            run_in_threads(self._connect_and_wait, self._logger, param_map)
+            run_in_threads(self._connect_and_wait, param_map)
 
-    def _disconnect(self, cli_service, src_port, dst_port):
-        """Disconnect ports by name.
-
-        :type cli_service: cloudshell.cli.cli_service_impl.CliServiceImpl
-        :type src_port: str
-        :type dst_port: str
-        :return: output
-        :rtype: str
-        """
+    def _disconnect(self, cli_service: CliService, src_port: str, dst_port: str) -> str:
+        """Disconnect ports by name."""
         return CommandTemplateExecutor(
             cli_service,
             command_template.DISCONNECT,
@@ -142,14 +131,12 @@ class MappingActions(object):
         ).execute_command(src_port=src_port, dst_port=dst_port)
 
     def _disconnect_and_wait(
-        self, cli_service, connected_port_names, num_ports_to_disconnect
-    ):
-        """Disconnect connected port names and wait they are not in pending.
-
-        :type cli_service: cloudshell.cli.cli_service_impl.CliServiceImpl
-        :type connected_port_names: list[tuple[str, str]]
-        :type num_ports_to_disconnect: int
-        """
+        self,
+        cli_service: CliService,
+        connected_port_names: list[tuple[str, str]],
+        num_ports_to_disconnect: int,
+    ) -> None:
+        """Disconnect connected port names and wait they are not in pending."""
         for src, dst in connected_port_names:
             self._disconnect(cli_service, src, dst)
 
@@ -157,12 +144,12 @@ class MappingActions(object):
             cli_service, connected_port_names, num_ports_to_disconnect
         )
 
-    def disconnect(self, connected_logic_ports, bidi=False):
-        """Disconnect logical ports.
-
-        :type connected_logic_ports: set[tuple[w2w_rome.helpers.port_entity.LogicalPort]]  # noqa
-        :type bidi: bool
-        """
+    def disconnect(
+        self,
+        connected_logic_ports: set[tuple[LogicalPort, LogicalPort]],
+        bidi: bool = False,
+    ) -> None:
+        """Disconnect logical ports."""
         if bidi:
             connected_port_names = []
             num_ports = 0
@@ -197,13 +184,15 @@ class MappingActions(object):
             }
 
         if not self._is_run_in_parallel:
-            params = param_map.values()[0]
+            params = list(param_map.values())[0]
             args, kwargs = params
             self._disconnect_and_wait(*args, **kwargs)
         else:
-            run_in_threads(self._disconnect_and_wait, self._logger, param_map)
+            run_in_threads(self._disconnect_and_wait, param_map)
 
-    def ports_in_pending_connections(self, cli_service, ports):
+    def ports_in_pending_connections(
+        self, cli_service: CliService, ports: list[tuple[str, str]]
+    ) -> bool:
         """Check ports in process or pending.
 
         Command in process:
@@ -225,33 +214,25 @@ class MappingActions(object):
         self.check_full_output(cli_service)
 
         for src, dst in ports:
-            match = re.search(r"ports:\s+{}-{}\D".format(src, dst), output, re.I)
-            match = match or re.search(
-                r"\w+\s+{}\s+{}\s+\w+".format(src, dst), output, re.I
-            )
+            match = re.search(rf"ports:\s+{src}-{dst}\D", output, re.I)
+            match = match or re.search(rf"\w+\s+{src}\s+{dst}\s+\w+", output, re.I)
             if match:
                 return True
 
         return False
 
     def wait_ports_not_in_pending_connections(
-        self, cli_service, ports, num_ports_to_connect
-    ):
-        """Wait for ports go away from pending connections.
-
-        :type cli_service: cloudshell.cli.cli_service_impl.CliServiceImpl
-        :param ports: src and dst ports that connects
-        :type ports: list[tuple[str, str]]
-        :param num_ports_to_connect: timeout depends on it
-        :type num_ports_to_connect: int
-        """
+        self,
+        cli_service: CliService,
+        ports: list[tuple[str, str]],
+        num_ports_to_connect: int,
+    ) -> None:
+        """Wait for ports go away from pending connections."""
         end_time = time.time() + (self._mapping_timeout * num_ports_to_connect)
         while time.time() < end_time:
             time.sleep(self._mapping_check_delay)
             if not self.ports_in_pending_connections(cli_service, ports):
                 break
         else:
-            msg = "There are some pending connections after {}sec".format(
-                self._mapping_timeout
-            )
+            msg = f"There are some pending connections after {self._mapping_timeout}sec"
             raise BaseRomeException(msg)

@@ -2,10 +2,9 @@ import os
 import re
 from collections import deque
 from unittest import TestCase
+from unittest.mock import MagicMock, patch
 
 from cloudshell.layer_one.core.helper.runtime_configuration import RuntimeConfiguration
-from mock import MagicMock, patch
-
 from w2w_rome.cli.rome_sessions import RomeSSHSession
 from w2w_rome.driver_commands import DriverCommands
 
@@ -6409,7 +6408,7 @@ ROME[OPER]#
 """  # noqa: W291
 
 
-class Command(object):
+class Command:
     def __init__(self, request, response, regexp=False):
         self.request = request
         self.response = response
@@ -6424,12 +6423,10 @@ class Command(object):
         )
 
     def __repr__(self):
-        return "Command({!r}, {!r}, {!r})".format(
-            self.request, self.response, self.regexp
-        )
+        return f"Command({self.request!r}, {self.response!r}, {self.regexp!r})"
 
 
-class CliEmulator(object):
+class CliEmulator:
     def __init__(self, commands=None):
         self.request = None
 
@@ -6448,7 +6445,7 @@ class CliEmulator(object):
         try:
             command = self.commands.popleft()
         except IndexError:
-            raise IndexError('Not expected request "{}"'.format(self.request))
+            raise IndexError(f'Not expected request "{self.request}"')
 
         if not command.is_equal_to_request(self.request):
             raise KeyError(
@@ -6470,15 +6467,15 @@ class CliEmulator(object):
     def check_calls(self):
         if self.commands:
             commands = "\n".join(
-                "\t\t- {}".format(command.request) for command in self.commands
+                f"\t\t- {command.request}" for command in self.commands
             )
-            raise ValueError("Not executed commands: \n{}".format(commands))
+            raise ValueError(f"Not executed commands: \n{commands}")
 
 
 def create_patched_sessions(send_line_func_map, receive_all_func_map):
     def wrapped(host, *args, **kwargs):
         session = RomeSSHSession(host, *args, **kwargs)
-        name = "session.{}.{{}}".format(host)
+        name = f"session.{host}.{{}}"
         session.send_line = MagicMock(
             name=name.format("send_line"), side_effect=send_line_func_map[host]
         )

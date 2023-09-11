@@ -1,32 +1,10 @@
 repos:
-  - repo: https://github.com/timothycrosley/isort
-    rev: 5.12.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.0.280
     hooks:
-      - id: isort
+      - id: ruff
+        args: [ --fix, --exit-non-zero-on-fix ]
   - repo: https://github.com/python/black
-    rev: 23.1.0
+    rev: 23.3.0
     hooks:
       - id: black
-  - repo: https://github.com/pycqa/flake8
-    rev: 5.0.4
-    hooks:
-      - id: flake8
-        additional_dependencies: [
-          flake8-docstrings,
-          flake8-builtins,
-          flake8-comprehensions,
-          flake8-print,
-          flake8-eradicate,
-          flake8-requirements-absolute-imports,
-        ]
-        args: [
-          --project-base-module=w2w_rome,
-          "--known-modules=cloudshell-cli:[cloudshell.cli],cloudshell-l1-networking-core:[cloudshell.layer_one.core],cloudshell-core:[cloudshell.core]"
-        ]
-        exclude: ^tests/
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.971
-    hooks:
-      - id: mypy
-        additional_dependencies: [ types-attrs ]
-        exclude: ^tests/
